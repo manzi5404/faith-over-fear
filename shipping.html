@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shipping | F>F</title>
+    <link rel="stylesheet" href="/src/css/style.css">
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
+      x-data="shopLogic()" 
+      x-init="init()">
+
+    <!-- Header -->
+    <header class="fixed w-full top-0 z-50 transition-all duration-300 bg-fof-black/80 backdrop-blur-lg border-b border-fof-accent/10" :class="scrolled ? 'border-b border-fof-accent/30 shadow-2xl' : ''">
+        <div class="container mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="/" class="group flex-shrink-0">
+                <div class="text-2xl md:text-3xl font-display font-bold tracking-tighter">
+                    <span class="text-fof-white group-hover:text-fof-accent transition-colors duration-200">F</span><span class="text-fof-accent">&gt;</span><span class="text-fof-white group-hover:text-fof-accent transition-colors duration-200">F</span>
+                </div>
+            </a>
+
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex items-center space-x-2 lg:space-x-4">
+                <a href="/" class="px-3 lg:px-4 py-2 text-xs lg:text-sm font-medium tracking-widest uppercase relative group text-fof-accent">
+                    Home
+                    <span class="absolute bottom-0 left-0 w-full h-0.5 bg-fof-accent"></span>
+                </a>
+                <a href="/shop.html" class="px-3 lg:px-4 py-2 text-xs lg:text-sm font-medium tracking-widest uppercase text-fof-white relative group after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-fof-accent after:transition-all after:duration-300 hover:after:w-full">
+                    New Arrivals
+                </a>
+                <a href="/lookbook.html" class="px-3 lg:px-4 py-2 text-xs lg:text-sm font-medium tracking-widest uppercase text-fof-white relative group after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-fof-accent after:transition-all after:duration-300 hover:after:w-full">
+                    Recent Drops
+                </a>
+                <a href="/about.html" class="px-3 lg:px-4 py-2 text-xs lg:text-sm font-medium tracking-widest uppercase text-fof-white relative group after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-fof-accent after:transition-all after:duration-300 hover:after:w-full">
+                    About
+                </a>
+                <a href="/contact.html" class="px-3 lg:px-4 py-2 text-xs lg:text-sm font-medium tracking-widest uppercase text-fof-white relative group after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-fof-accent after:transition-all after:duration-300 hover:after:w-full">
+                    Contact
+                </a>
+            </nav>
+
+            <!-- Icons -->
+            <div class="flex items-center space-x-2 md:space-x-4">
+                <!-- Cart Icon -->
+                <a href="/cart.html" class="group relative p-2 rounded-lg hover:bg-fof-accent/10 transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 md:w-6 md:h-6 text-fof-white group-hover:text-fof-accent transition-colors duration-200">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375 0 0 1 .75 0Z" />
+                    </svg>
+                    <!-- Cart Count Badge -->
+                    <template x-if="cartItems.length > 0">
+                        <span class="absolute top-0 right-0 bg-fof-accent text-fof-black text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-full" x-text="cartItems.length"></span>
+                    </template>
+                </a>
+
+                <!-- Mobile Menu Button -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 rounded-lg hover:bg-fof-accent/10 transition-colors duration-200 z-[60]">
+                    <svg x-show="!mobileMenuOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-fof-white">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                    <svg x-show="mobileMenuOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-fof-accent" x-cloak>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Overlay -->
+        <div x-show="mobileMenuOpen" 
+            x-cloak
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 bg-black/95 backdrop-blur-md z-[99] md:hidden" @click="mobileMenuOpen = false"></div>
+            
+        <div x-show="mobileMenuOpen" 
+            x-cloak
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="translate-x-full"
+            class="fixed right-0 top-0 bottom-0 w-full max-w-sm bg-fof-black/95 backdrop-blur-lg z-[100] md:hidden flex flex-col border-l border-fof-accent/20">
+            
+            <!-- Menu Top Bar -->
+            <div class="h-16 flex items-center justify-between px-4 border-b border-fof-accent/20">
+                <div class="text-2xl font-display font-bold tracking-tighter">
+                    F<span class="text-fof-accent">&gt;</span>F
+                </div>
+                <button @click="mobileMenuOpen = false" class="p-2 hover:bg-fof-accent/10 rounded-lg transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-fof-accent">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Menu Links -->
+            <nav class="flex-1 flex flex-col px-4 py-8 space-y-2 overflow-y-auto">
+                <a href="/index.html" @click="mobileMenuOpen = false" class="px-4 py-3 text-lg font-display uppercase tracking-widest text-fof-accent rounded-lg bg-fof-accent/5 border border-fof-accent/20 transition-all duration-200 hover:bg-fof-accent/10">Home</a>
+                <a href="/shop.html" @click="mobileMenuOpen = false" class="px-4 py-3 text-lg font-display uppercase tracking-widest text-fof-white rounded-lg hover:bg-fof-accent/10 border border-transparent hover:border-fof-accent/20 transition-all duration-200">New Arrivals</a>
+                <a href="/lookbook.html" @click="mobileMenuOpen = false" class="px-4 py-3 text-lg font-display uppercase tracking-widest text-fof-white rounded-lg hover:bg-fof-accent/10 border border-transparent hover:border-fof-accent/20 transition-all duration-200">Recent Drops</a>
+                <a href="/about.html" @click="mobileMenuOpen = false" class="px-4 py-3 text-lg font-display uppercase tracking-widest text-fof-white rounded-lg hover:bg-fof-accent/10 border border-transparent hover:border-fof-accent/20 transition-all duration-200">About</a>
+                <a href="/contact.html" @click="mobileMenuOpen = false" class="px-4 py-3 text-lg font-display uppercase tracking-widest text-fof-white rounded-lg hover:bg-fof-accent/10 border border-transparent hover:border-fof-accent/20 transition-all duration-200">Contact</a>
+            </nav>
+
+            <!-- Menu Socials -->
+            <div class="border-t border-fof-accent/20 px-4 py-6 flex justify-center space-x-8">
+                <a href="https://www.instagram.com/faithoverfear.rw_/" target="_blank" class="text-xs font-bold uppercase tracking-widest text-fof-white hover:text-fof-accent transition-colors duration-200">Instagram</a>
+                <a href="https://tiktok.com/@faithoverfear_brand" target="_blank" class="text-xs font-bold uppercase tracking-widest text-fof-white hover:text-fof-accent transition-colors duration-200">TikTok</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-24 min-h-screen">
+        <div class="container mx-auto px-6 py-12 max-w-3xl">
+            <h1 class="text-4xl md:text-5xl font-display font-bold uppercase mb-16 text-center">Deliveries & Returns</h1>
+            
+            <div class="space-y-16">
+                <section>
+                    <h2 class="text-2xl font-bold uppercase tracking-wide mb-6 text-fof-accent">Delivering Info</h2>
+                    <ul class="space-y-4 text-gray-400 list-disc list-inside">
+                        <li>**Kigali city:** All deliveries are done on wednesday and sunday (Free of charge).</li>
+                        <li>**In other provinces:** Deliveries may be done also in other provinces using courier in public transport but on buyer`s risk.</li>
+                        <li>All orders are packed in our signature matte black poly mailers with exclusive F>F stickers included.</li>
+                        <li>Orders are processed within 1-2 business days delivered on wednesday and sunday.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-2xl font-bold uppercase tracking-wide mb-6 text-fof-accent">Returns & Exchanges</h2>
+                    <div class="prose prose-invert">
+                        <p class="text-gray-400 mb-4">We want you to love your gear. If something isn't right, we're here to fix it.</p>
+                        <ul class="space-y-4 text-gray-400 list-disc list-inside">
+                            <li>Visit our <a href="/contact.html" class="text-white underline">Contact Page</a> to start a return.</li>
+                            <li>Items must be in original, unworn condition with tags attached.</li>
+                            <li>**Exchanges are free!** We want to get you the right size.</li>
+                            <li>Returns for a full refund have a small 1000 FRW processing fee deducted to cover restocking.</li>
+                            <li>Sale items are final sale.</li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-fof-dark border-t border-fof-gray py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Branding -->
+                <div class="col-span-1 md:col-span-2">
+                    <h2 class="text-3xl font-display font-bold mb-4">F<span class="text-fof-accent">&gt;</span>F</h2>
+                    <p class="text-gray-400 text-sm max-w-sm">
+                        Faith over Fear. Streetwear for the bold, the believers, and the brave. Designed for the streets, inspired by the spirit.
+                    </p>
+                    <div class="flex space-x-4 mt-6">
+                        <a href="https://www.instagram.com/faithoverfear.rw_/" target="_blank" class="text-gray-400 hover:text-fof-accent transition-colors" title="Instagram">
+                             <!-- Instagram Icon -->
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        </a>
+                        <a href="mailto:contact@faithoverfear.brand" class="text-gray-400 hover:text-fof-accent transition-colors" title="Email Us">
+                            <!-- Mail Icon -->
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        </a>
+                        <a href="https://tiktok.com/@faithoverfear_brand" target="_blank" class="text-gray-400 hover:text-fof-accent transition-colors" title="TikTok">
+                            <!-- TikTok Icon -->
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93v6.16c0 3.13-1.12 5.74-3.57 7.6-1.66 1.28-3.75 1.75-5.83 1.57-4.13-.37-7.49-3.95-7.61-8.11-.11-3.9 2.78-7.35 6.64-7.95 1.05-.16 2.12-.13 3.17.13v3.94c-1.69-.64-3.69-.47-5.26.47-2.14 1.3-2.91 3.97-1.74 6.18 1.15 2.15 4.14 3.07 6.35 1.94 1.69-.87 2.69-2.61 2.69-4.52V4.54c1.7 1.25 3.79 1.69 5.86 1.22V.02h-3.96c-.05 0-.08.01-.13.01z"/></svg> 
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Navigate Section -->
+                <div>
+                    <h3 class="text-white font-bold mb-4">Navigate</h3>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="/" class="hover:text-fof-accent transition-colors">Home</a></li>
+                        <li><a href="/shop.html" class="hover:text-fof-accent transition-colors">New Arrivals</a></li>
+                        <li><a href="/lookbook.html" class="hover:text-fof-accent transition-colors">Recent Drops</a></li>
+                        <li><a href="/about.html" class="hover:text-fof-accent transition-colors">About</a></li>
+                        <li><a href="/contact.html" class="hover:text-fof-accent transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support Section -->
+                <div>
+                    <h3 class="text-white font-bold mb-4">Support</h3>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="/faq.html" class="hover:text-fof-accent transition-colors">FAQ</a></li>
+                        <li><a href="/shipping.html" class="hover:text-fof-accent transition-colors">Deliveries & Returns</a></li>
+                        <li><a href="/terms.html" class="hover:text-fof-accent transition-colors">Terms</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-zinc-800 mt-12 pt-8 text-center text-xs text-gray-600 uppercase tracking-widest">
+                &copy; 2024 Faith Over Fear. All Rights Reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="/src/js/main.js"></script>
+</body>
+</html>
