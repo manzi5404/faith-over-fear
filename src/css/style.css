@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Oswald:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Oswald:wght@400;700&display=swap');
 
 :root {
     --header-height: 80px;
@@ -11,12 +11,14 @@
 }
 
 @layer base {
+    /* 
     @font-face {
         font-family: 'Integral CF';
         src: url('../fonts/IntegralCF-Bold.woff2') format('woff2');
         font-weight: 700;
         font-display: swap;
     }
+*/
 
     body {
         @apply bg-fof-black text-fof-white;
@@ -40,18 +42,24 @@
         width: 100%;
         height: var(--header-height);
         z-index: 1000;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         display: flex;
         align-items: center;
         background: transparent;
+        transform: translateY(0);
+    }
+
+    .site-header.header-hidden {
+        transform: translateY(-100%);
     }
 
     .site-header.scrolled {
-        background: var(--glass-bg);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid var(--glass-border);
+        background: rgba(5, 5, 5, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         height: 70px;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
     .site-header .container {

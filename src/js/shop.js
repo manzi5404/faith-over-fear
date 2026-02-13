@@ -40,49 +40,87 @@ const shopLogic = () => ({
     cartItems: [],
     get cartTotal() { return this.cartItems.reduce((r, t) => r + t.totalPrice, 0).toLocaleString(); },
     get cartTotalRaw() { return this.cartItems.reduce((r, t) => r + t.totalPrice, 0); },
-    init() { this.initCart(); },
+    get grandTotal() { return this.cartTotalRaw; },
+    get displayAmountNumeric() {
+        if (this.selectedProduct) {
+            return Number(this.selectedProduct.price) * Number(this.modalQuantity);
+        }
+        return this.cartTotalRaw;
+    },
+    init() {
+        this.initCart();
+        window.addEventListener('cart-updated', () => this.initCart());
+    },
     initCart() { this.cartItems = JSON.parse(localStorage.getItem("fof_cart")) || []; },
-    removeFromCart(r) {
-        this.cartItems.splice(r, 1);
+    persistCart() {
         localStorage.setItem("fof_cart", JSON.stringify(this.cartItems));
         window.dispatchEvent(new CustomEvent("cart-updated"));
     },
-    verifyPayment() {
-        const r = !this.selectedProduct;
-        const t = r ? this.cartTotal : this.totalPrice;
-        let e = "";
-        if (r) {
-            e = this.cartItems.map(a => `- ${a.name} (${a.selectedSize}) x${a.quantity}: ${(a.price * a.quantity).toLocaleString()} FRW`).join("\n");
-        } else {
-            e = `- ${this.selectedProduct.name} (${this.modalSize}) x${this.modalQuantity}: ${(this.selectedProduct.price * this.modalQuantity).toLocaleString()} FRW`;
+    updateQuantity(index, change) {
+        if (this.cartItems[index]) {
+            this.cartItems[index].quantity += change;
+            if (this.cartItems[index].quantity < 1) this.cartItems[index].quantity = 1;
+            this.cartItems[index].totalPrice = this.cartItems[index].price * this.cartItems[index].quantity;
+            this.persistCart();
         }
-        const n = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${"FOF-" + Math.random().toString(36).substr(2, 9).toUpperCase()}\n\nItems:\n${e}\n\nTOTAL AMOUNT: ${t} FRW\n----------------------------\nMerchant Code: 123-456\nName: Faith Over Fear LTD\n\nPlease confirm you have sent the payment by attaching a screenshot.`;
-        const o = `https://wa.me/250780000000?text=${encodeURIComponent(n)}`;
-        window.open(o, "_blank");
+    },
+    removeFromCart(index) {
+        this.cartItems.splice(index, 1);
+        this.persistCart();
+    },
+    verifyPayment() {
+        const isCartCheckout = !this.selectedProduct;
+        const total = isCartCheckout ? this.cartTotal : this.totalPrice;
+        let itemsList = "";
+
+        if (isCartCheckout) {
+            itemsList = this.cartItems.map(item => `- ${item.name} (${item.selectedSize}) x${item.quantity}: ${(item.price * item.quantity).toLocaleString()} FRW`).join("\n");
+        } else {
+            itemsList = `- ${this.selectedProduct.name} (${this.modalSize}) x${this.modalQuantity}: ${(this.selectedProduct.price * this.modalQuantity).toLocaleString()} FRW`;
+        }
+
+        const orderId = "FOF-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+        const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderId}\n\nItems:\n${itemsList}\n\nTOTAL AMOUNT: ${total} FRW\n----------------------------\nMerchant Code: 123-456\nName: Faith Over Fear LTD\n\nPlease confirm you have sent the payment by attaching a screenshot.`;
+
+        const whatsappUrl = `https://wa.me/250780000000?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, "_blank");
+
         this.paymentModalOpen = false;
-        if (r) {
+        if (isCartCheckout) {
             this.cartItems = [];
-            localStorage.removeItem("fof_cart");
-            window.dispatchEvent(new CustomEvent("cart-updated"));
+            this.persistCart();
         }
         window.dispatchEvent(new CustomEvent("notify", { detail: { message: "WhatsApp Opened! Complete verification there.", type: "success" } }));
     },
-    async copyToClipboard(r, t) {
+    async copyToClipboard(text, type) {
         try {
-            await navigator.clipboard.writeText(r);
-            this.copyFeedback = t;
+            await navigator.clipboard.writeText(text);
+            this.copyFeedback = type;
             setTimeout(() => this.copyFeedback = "", 2000);
-            window.dispatchEvent(new CustomEvent("notify", { detail: { message: `Copied ${t} to clipboard`, type: "success" } }));
-        } catch (e) {
-            console.error("Failed to copy: ", e);
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: `Copied ${type} to clipboard`, type: "success" } }));
+        } catch (err) {
+            console.error("Failed to copy: ", err);
         }
     },
-    addToCart(r, t = 1, e = "M") {
-        if (r.stock <= 0) return;
-        let i = JSON.parse(localStorage.getItem("fof_cart")) || [];
-        i.push({ ...r, selectedSize: e, quantity: t, totalPrice: r.originalPrice * t });
-        localStorage.setItem("fof_cart", JSON.stringify(i));
-        window.dispatchEvent(new CustomEvent("cart-updated"));
+    addToCart(product, qty = 1, size = "M") {
+        if (product.stock <= 0) return;
+
+        // Check if item already exists in cart with same size
+        const existingItemIndex = this.cartItems.findIndex(item => item.id === product.id && item.selectedSize === size);
+
+        if (existingItemIndex > -1) {
+            this.cartItems[existingItemIndex].quantity += qty;
+            this.cartItems[existingItemIndex].totalPrice = this.cartItems[existingItemIndex].price * this.cartItems[existingItemIndex].quantity;
+        } else {
+            this.cartItems.push({
+                ...product,
+                selectedSize: size,
+                quantity: qty,
+                totalPrice: product.price * qty
+            });
+        }
+
+        this.persistCart();
         window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Added to Cart", type: "success" } }));
     }
 });

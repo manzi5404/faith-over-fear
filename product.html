@@ -201,9 +201,11 @@
     <script type="module">
         import '../src/css/style.css';
         import Alpine from 'alpinejs';
+        import shopLogic from '../src/js/shop.js';
         import productLogic from '../src/js/product.js';
         
         document.addEventListener('alpine:init', () => {
+             Alpine.data('shopLogic', shopLogic);
              Alpine.data('productLogic', productLogic);
         });
 
