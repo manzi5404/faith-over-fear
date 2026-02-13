@@ -9,38 +9,20 @@
         [x-cloak] { display: none !important; }
     </style>
     <!-- Tailwind CSS (Using script specifically for styling consistency in this environment if needed, but linking style.css is preferred) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'fof-black': '#0a0a0a',
-                        'fof-dark': '#121212',
-                        'fof-gray': '#2a2a2a',
-                        'fof-white': '#f5f5f5',
-                        'fof-accent': '#ff3e3e',
-                    },
-                    fontFamily: {
-                        display: ['Oswald', 'sans-serif'],
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
       x-data="shopLogic()"
-      x-init="init()">
+      x-init="init()"
+      @scroll.window="scrolled = (window.pageYOffset > 50)"
+      :class="{ 'scrolled': scrolled }">
 
     <!-- Header -->
-    <header class="site-header" role="banner">
+    <header class="site-header" :class="{ 'scrolled': scrolled }" role="banner">
       <div class="container">
         <a href="/index.html" class="logo" aria-label="Faith Over Fear home">F<span class="logo-accent">&gt;</span>F</a>
 
-        <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-controls="primary-nav" aria-label="Toggle navigation">
+        <input type="checkbox" id="menu-toggle" class="menu-toggle" style="display: none;">
         <label for="menu-toggle" class="hamburger" aria-hidden="true"><span></span></label>
 
         <nav id="primary-nav" class="primary-nav" role="navigation">

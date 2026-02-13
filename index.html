@@ -12,14 +12,16 @@
   </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
       x-data="shopLogic()"
-      x-init="init()">
+      x-init="init()"
+      @scroll.window="scrolled = (window.pageYOffset > 50)"
+      :class="{ 'scrolled': scrolled }">
     
     <!-- Header -->
-    <header class="site-header" role="banner">
+    <header class="site-header" :class="{ 'scrolled': scrolled }" role="banner">
       <div class="container">
         <a href="/index.html" class="logo" aria-label="Faith Over Fear home">F<span class="logo-accent">&gt;</span>F</a>
 
-        <input type="checkbox" id="menu-toggle" class="menu-toggle" aria-controls="primary-nav" aria-label="Toggle navigation">
+        <input type="checkbox" id="menu-toggle" class="menu-toggle" style="display: none;">
         <label for="menu-toggle" class="hamburger" aria-hidden="true"><span></span></label>
 
         <nav id="primary-nav" class="primary-nav" role="navigation">
