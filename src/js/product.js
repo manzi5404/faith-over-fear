@@ -6,12 +6,36 @@ const productLogic = () => ({
     selectedSize: "",
     selectedColor: "",
     currentImage: 0,
+    relatedItems: [],
+    loadingPDP: true,
 
-    init() {
+    async init() {
+        this.loadingPDP = true;
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
-        const products = shopLogic().products;
 
+        // Wait for products to be loaded in the global shopLogic
+        let attempts = 0;
+        const maxAttempts = 15;
+
+        const tryInit = () => {
+            const shop = Alpine.$data(document.body);
+            if (shop && shop.products && shop.products.length > 0) {
+                this.loadProductData(id, shop.products);
+                this.loadingPDP = false;
+            } else if (attempts < maxAttempts) {
+                attempts++;
+                setTimeout(tryInit, 200);
+            } else {
+                console.error("Failed to load products from shopLogic");
+                this.loadingPDP = false;
+            }
+        };
+
+        tryInit();
+    },
+
+    loadProductData(id, products) {
         if (id) {
             this.product = products.find(p => p.id == id);
         }
@@ -24,6 +48,11 @@ const productLogic = () => ({
         if (this.product) {
             this.selectedSize = this.product.sizes ? this.product.sizes[0] : "";
             this.selectedColor = this.product.colors ? this.product.colors[0] : "";
+
+            // Find related items (same type, excluding current)
+            this.relatedItems = products
+                .filter(p => p.type === this.product.type && p.id !== this.product.id)
+                .slice(0, 4);
         }
     },
 
@@ -33,40 +62,35 @@ const productLogic = () => ({
             : "";
     },
 
+    get dynamicPrice() {
+        if (!this.product) return 0;
+        return this.product.price * this.quantity;
+    },
+
     addToCart() {
         if (!this.product) return;
 
-        let cart = JSON.parse(localStorage.getItem("fof_cart")) || [];
-
-        // Check if item already exists in cart with same size and color
-        const existingItemIndex = cart.findIndex(item =>
-            item.id === this.product.id &&
-            item.selectedSize === this.selectedSize &&
-            item.selectedColor === this.selectedColor
-        );
-
-        if (existingItemIndex > -1) {
-            cart[existingItemIndex].quantity += this.quantity;
-            cart[existingItemIndex].totalPrice = cart[existingItemIndex].price * cart[existingItemIndex].quantity;
+        const shop = Alpine.$data(document.body);
+        if (shop && typeof shop.addToCart === 'function') {
+            shop.addToCart(this.product, this.quantity, this.selectedSize);
         } else {
-            const item = {
-                ...this.product,
-                selectedSize: this.selectedSize,
-                selectedColor: this.selectedColor,
-                quantity: this.quantity,
-                totalPrice: this.product.price * this.quantity
-            };
-            cart.push(item);
+            console.error("shopLogic.addToCart not found");
         }
-
-        localStorage.setItem("fof_cart", JSON.stringify(cart));
-        window.dispatchEvent(new CustomEvent("cart-updated"));
-        window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Added " + this.product.name + " to Cart", type: "success" } }));
     },
 
     buyNow() {
         this.addToCart();
         window.location.href = "/cart.html";
+    },
+
+    payWithMoMo() {
+        if (!this.product) return;
+        const shop = Alpine.$data(document.body);
+        if (shop && typeof shop.initPayment === 'function') {
+            shop.initPayment(this.product, this.quantity, this.selectedSize);
+        } else {
+            console.error("shopLogic.initPayment not found");
+        }
     }
 });
 

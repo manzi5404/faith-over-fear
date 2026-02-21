@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>F>F | Faith over Fear</title>
     <link rel="stylesheet" href="/src/css/style.css">
+    <link rel="shortcut icon" href="images/Screenshot 2026-02-10 112008.png" type="image/x-icon">
     <style>
         [x-cloak] { display: none !important; }
     </style>
@@ -15,9 +16,26 @@
       x-init="init()"
       @scroll.window="scrolled = (window.pageYOffset > 50)"
       :class="{ 'scrolled': scrolled }">
+
+    <!-- Announcement Bar -->
+    <div x-data="{ announcements: [], current: 0, show: false }" 
+         @announcements-loaded.window="announcements = $event.detail; show = true"
+         x-show="show && announcements.length > 0" x-cloak
+         class="bg-fof-accent text-white py-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-center relative z-[1100]">
+        <div class="container mx-auto px-4">
+            <template x-for="(note, index) in announcements" :key="index">
+                <div x-show="current === index" 
+                     x-transition:enter="transition ease-out duration-500"
+                     x-transition:enter-start="opacity-0 transform translate-y-1"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     x-text="note.message"></div>
+            </template>
+        </div>
+        <div x-init="setInterval(() => { if(announcements.length > 1) current = (current + 1) % announcements.length }, 5000)"></div>
+    </div>
     
     <!-- Header -->
-    <header class="site-header" :class="{ 'scrolled': scrolled }" role="banner">
+    <header class="site-header" :class="{ 'scrolled': scrolled }" role="banner" x-data="{ user: null, init() { this.user = JSON.parse(localStorage.getItem('fof_user')) } }">
       <div class="container">
         <a href="/index.html" class="logo" aria-label="Faith Over Fear home">F<span class="logo-accent">&gt;</span>F</a>
 
@@ -31,6 +49,23 @@
             <li><a href="/lookbook.html">Recent Drops</a></li>
             <li><a href="/about.html">About</a></li>
             <li><a href="/contact.html">Contact</a></li>
+            <template x-if="!user">
+                <li><a href="/login.html" class="text-fof-accent">Login</a></li>
+            </template>
+            <template x-if="user">
+                <li class="relative group">
+                    <button class="text-[10px] uppercase tracking-widest font-bold text-fof-accent flex items-center">
+                        <span x-text="user.name"></span>
+                        <svg class="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-zinc-900 border border-fof-gray opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+                        <button @click="localStorage.removeItem('fof_token'); localStorage.removeItem('fof_user'); window.location.reload()" 
+                                class="w-full text-left px-4 py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-fof-accent hover:text-white transition-colors">
+                            Logout
+                        </button>
+                    </div>
+                </li>
+            </template>
             <li class="cta"><a href="/cart.html">Cart</a></li>
           </ul>
         </nav>
@@ -90,11 +125,11 @@
                         Streetwear that speaks louder than words. Join the movement. Wear your conviction.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-                        <a href="/shop.html" class="px-8 py-4 bg-fof-white text-fof-black font-bold uppercase tracking-widest hover:bg-fof-accent hover:text-white transition-all transform hover:scale-105 clip-image">
-                            Shop The Drop
+                        <a href="/signup.html" class="px-8 py-4 bg-fof-white text-fof-black font-bold uppercase tracking-widest hover:bg-fof-accent hover:text-white transition-all transform hover:scale-105 clip-image">
+                            Join the movement
                         </a>
-                        <a href="/lookbook.html" class="px-8 py-4 border border-fof-gray hover:border-fof-white transition-colors uppercase tracking-widest text-sm flex items-center justify-center">
-                            View Recent Drops
+                        <a href="/login.html" class="px-8 py-4 border border-fof-gray hover:border-fof-white transition-colors uppercase tracking-widest text-sm flex items-center justify-center">
+                            Login
                         </a>
                     </div>
                 </div>
@@ -123,58 +158,7 @@
             </div>
         </section>
 
-        <!-- Featured Categories Section -->
-        <section id="categories" class="py-24 bg-fof-black border-t border-fof-gray">
-            <div class="container mx-auto px-6">
-                <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-                    <div class="space-y-2">
-                        <p class="text-[10px] uppercase font-bold tracking-[0.4em] text-fof-accent">Navigation</p>
-                        <h2 class="text-4xl md:text-5xl font-display font-bold uppercase tracking-tight">Shop by <span class="text-white">Category</span></h2>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Category 1: The Essentials -->
-                    <a href="/shop.html" class="group relative aspect-[4/5] overflow-hidden bg-fof-dark border border-fof-gray">
-                        <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800" alt="Essentials" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-gradient-to-t from-fof-black via-transparent to-transparent opacity-60"></div>
-                        <div class="absolute inset-x-0 bottom-0 p-8 transform translate-y-2 transition-transform duration-500 group-hover:translate-y-0">
-                            <h3 class="text-2xl font-display font-bold uppercase tracking-widest mb-2">The Essentials</h3>
-                            <span class="inline-flex items-center text-[10px] font-bold uppercase tracking-[0.3em] text-fof-accent">
-                                Open Collection
-                                <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                            </span>
-                        </div>
-                    </a>
-
-                    <!-- Category 2: Graphic Drops -->
-                    <a href="/lookbook.html" class="group relative aspect-[4/5] overflow-hidden bg-fof-dark border border-fof-gray">
-                        <img src="https://images.unsplash.com/photo-1517445312882-6f233be0c58e?auto=format&fit=crop&q=80&w=800" alt="Special Drops" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-gradient-to-t from-fof-black via-transparent to-transparent opacity-60"></div>
-                        <div class="absolute inset-x-0 bottom-0 p-8 transform translate-y-2 transition-transform duration-500 group-hover:translate-y-0">
-                            <h3 class="text-2xl font-display font-bold uppercase tracking-widest mb-2">Graphic Drops</h3>
-                            <span class="inline-flex items-center text-[10px] font-bold uppercase tracking-[0.3em] text-fof-accent">
-                                Explore Store
-                                <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                            </span>
-                        </div>
-                    </a>
-
-                    <!-- Category 3: Kits & Sets -->
-                    <a href="/shop.html" class="group relative aspect-[4/5] overflow-hidden bg-fof-dark border border-fof-gray">
-                        <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=800" alt="Full Kits" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-gradient-to-t from-fof-black via-transparent to-transparent opacity-60"></div>
-                        <div class="absolute inset-x-0 bottom-0 p-8 transform translate-y-2 transition-transform duration-500 group-hover:translate-y-0">
-                            <h3 class="text-2xl font-display font-bold uppercase tracking-widest mb-2">Streetwear Kits</h3>
-                            <span class="inline-flex items-center text-[10px] font-bold uppercase tracking-[0.3em] text-fof-accent">
-                                Complete The Look
-                                <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                            </span>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </section>
+    
 
         <!-- Our Movement Section (Brand Vision) -->
         <section class="py-32 bg-fof-dark border-y border-zinc-900 relative overflow-hidden">
@@ -250,7 +234,7 @@
                         <div class="sm:col-span-2">
                             <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 font-bold">Amount (FRW)</label>
                             <input type="text" 
-                                   :value="(selectedProduct ? (Number(selectedProduct.price) * Number(modalQuantity)).toLocaleString() : grandTotal) + ' FRW'" 
+                                   :value="(selectedProduct ? (parseFloat(selectedProduct.price) * parseInt(modalQuantity)).toFixed(2) : grandTotal) + ' FRW'" 
                                    readonly 
                                    class="w-full bg-zinc-900 border border-zinc-800 p-3 text-sm text-white font-mono font-bold outline-none cursor-not-allowed rounded-sm">
                             <p class="text-[10px] text-gray-500 mt-1.5">Amount is automatically calculated from your order</p>
@@ -312,7 +296,7 @@
                         
                         <div class="flex justify-between items-center pt-3 mt-3 border-t border-zinc-700">
                             <span class="text-xs uppercase font-bold tracking-widest text-white">Total Amount</span>
-                            <span class="text-xl font-display font-bold text-fof-accent" x-text="(selectedProduct ? (Number(selectedProduct.price) * Number(modalQuantity)).toLocaleString() : grandTotal) + ' FRW'"></span>
+                            <span class="text-xl font-display font-bold text-fof-accent" x-text="(selectedProduct ? totalPrice : grandTotal) + ' FRW'"></span>
                         </div>
                     </div>
                 </div>
@@ -392,6 +376,27 @@
              class="fixed bottom-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3"
              :class="type === 'success' ? 'bg-zinc-800 text-fof-accent border border-fof-accent/20' : 'bg-red-900/90 text-white'">
              <span x-text="message"></span>
+        </div>
+
+        <!-- Auth Notification Modal -->
+        <div x-data="{ open: false }" 
+             @show-auth-modal.window="open = true"
+             x-show="open"
+             class="fixed inset-0 z-[110] flex items-center justify-center p-6"
+             x-cloak>
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-md" @click="open = false"></div>
+            <div class="relative bg-zinc-900 border border-fof-gray w-full max-w-sm p-8 text-center shadow-2xl"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100">
+                <h3 class="text-2xl font-display font-bold uppercase tracking-tight mb-4">Join the Movement</h3>
+                <p class="text-gray-400 text-sm mb-8 leading-relaxed">Unlock exclusive drops, track your orders, and join the Faith Over Fear community.</p>
+                <div class="space-y-4">
+                    <a href="/signup.html" class="block w-full bg-fof-white text-black font-bold uppercase py-4 text-xs tracking-widest hover:bg-fof-accent hover:text-white transition-all">Sign Up</a>
+                    <a href="/login.html" class="block w-full border border-zinc-800 text-white font-bold uppercase py-4 text-xs tracking-widest hover:bg-zinc-800 transition-all">Login</a>
+                </div>
+                <button @click="open = false" class="mt-6 text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 hover:text-white transition-colors">Maybe Later</button>
+            </div>
         </div>
 
     <script type="module" src="/src/js/main.js"></script>

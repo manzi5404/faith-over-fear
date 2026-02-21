@@ -47,6 +47,7 @@
         align-items: center;
         background: transparent;
         transform: translateY(0);
+        backdrop-filter: blur(8px);
     }
 
     .site-header.header-hidden {
@@ -56,7 +57,7 @@
     .site-header.scrolled {
         background: rgba(5, 5, 5, 0.7);
         backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(8px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         height: 70px;
         box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
@@ -186,7 +187,7 @@
             z-index: 1001;
             cursor: pointer;
             padding: 10px;
-            margin-right: -10px;
+            margin-right: -240px;
         }
 
         .hamburger span,
@@ -236,6 +237,55 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Product Card Hover Effects */
+    .product-card {
+        @apply relative overflow-hidden bg-fof-black border border-fof-gray transition-all duration-500;
+    }
+
+    .product-card .image-container {
+        @apply relative aspect-[4/5] overflow-hidden bg-fof-dark;
+    }
+
+    .product-card img {
+        @apply w-full h-full object-cover transition-all duration-700 ease-in-out;
+    }
+
+    .product-card .img-back {
+        @apply absolute inset-0 opacity-0 scale-105;
+    }
+
+    .product-card:hover .img-front {
+        @apply opacity-0 scale-95;
+    }
+
+    .product-card:hover .img-back {
+        @apply opacity-100 scale-100;
+    }
+
+    .product-card-overlay {
+        @apply absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 transition-opacity duration-300;
+    }
+
+    .product-card:hover .product-card-overlay {
+        @apply opacity-100;
+    }
+
+    .product-card-cta {
+        @apply px-6 py-3 bg-fof-white text-fof-black font-bold uppercase tracking-widest text-xs transform translate-y-4 transition-transform duration-300 hover:bg-fof-accent hover:text-white;
+    }
+
+    .product-card:hover .product-card-cta {
+        @apply translate-y-0;
+    }
+
+    .product-card .price-tag {
+        @apply absolute bottom-4 right-4 bg-fof-black/80 backdrop-blur-md border border-fof-gray px-3 py-1 font-mono text-sm font-bold transition-opacity duration-300;
+    }
+
+    .product-card:hover .price-tag {
+        @apply opacity-0;
     }
 }
 
