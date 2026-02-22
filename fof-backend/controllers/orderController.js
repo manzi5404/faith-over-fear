@@ -1,33 +1,43 @@
 const pool = require('../db/connection');
-const { createOrder } = require('../models/order');
 const { addOrderItem } = require('../models/orderItem');
-const { updateStock } = require('../models/product');
+// Removed updateStock import because we don't need stock for made-to-order
+// const { updateStock } = require('../models/product');
 
 async function placeOrder(req, res) {
-  const { customer_name, phone, items } = req.body;
+  const { customer_name, phone, items, totalAmount: clientTotal } = req.body;
+
+  // Validate numeric fields
+  items.forEach(item => {
+    item.quantity = Number(item.quantity);
+    item.price = Number(item.price);
+
+    if (isNaN(item.quantity) || item.quantity <= 0)
+      throw new Error(`Invalid quantity for product ${item.product_id}`);
+    if (isNaN(item.price) || item.price < 0)
+      throw new Error(`Invalid price for product ${item.product_id}`);
+  });
+
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
 
-    let totalAmount = 0;
+    // Calculate total
+    let calculatedTotal = 0;
     items.forEach(item => {
-      totalAmount += item.price * item.quantity;
+      calculatedTotal += item.price * item.quantity;
     });
+    const totalAmount = clientTotal || calculatedTotal;
 
+    // Insert main order
     const [orderResult] = await conn.query(
       'INSERT INTO orders (customer_name, phone, total_amount, status) VALUES (?, ?, ?, ?)',
       [customer_name, phone, totalAmount, 'pending']
     );
     const orderId = orderResult.insertId;
 
+    // Add order items (skip stock logic)
     for (let item of items) {
-      const stockUpdated = await updateStock(conn, item.product_id, item.quantity);
-
-      if (!stockUpdated) {
-        throw new Error(`Insufficient stock for product ${item.product_id}`);
-      }
-
-      await addOrderItem(conn, orderId, item.product_id, item.quantity, item.price);
+      await addOrderItem(conn, orderId, item.product_id, item.quantity, item.price, item.size);
     }
 
     await conn.commit();

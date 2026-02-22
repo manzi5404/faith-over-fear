@@ -22,6 +22,14 @@ async function createDrop(req, res) {
 async function listDrops(req, res) {
   try {
     const drops = await getDrops(req.query.active === 'true');
+
+    // ✅ Force images array for frontend compatibility
+    drops.forEach(drop => {
+      if (!drop.images || drop.images.length === 0) {
+        drop.images = drop.image_url ? [drop.image_url] : [];
+      }
+    });
+
     res.json({ success: true, drops });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });

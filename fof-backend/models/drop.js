@@ -1,10 +1,10 @@
 const pool = require('../db/connection');
 
 async function addDrop(drop) {
-  const { name, price, sizes, image_url, is_active } = drop;
+  const { name, type, price, stock, sizes, images, is_active } = drop;
   const [result] = await pool.query(
-    'INSERT INTO drops (name, price, sizes, image_url, is_active) VALUES (?, ?, ?, ?, ?)',
-    [name, price, JSON.stringify(sizes), image_url, is_active ? 1 : 0]
+    'INSERT INTO drops (name, type, price, stock, sizes, images, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [name, type || 'new-drop', price, stock || 0, JSON.stringify(sizes), JSON.stringify(images), is_active ? 1 : 0]
   );
   return result.insertId;
 }
@@ -14,14 +14,18 @@ async function getDrops(activeOnly = false) {
     ? 'SELECT * FROM drops WHERE is_active = 1'
     : 'SELECT * FROM drops';
   const [rows] = await pool.query(sql);
-  return rows;
+  return rows.map(row => ({
+    ...row,
+    images: typeof row.images === 'string' ? JSON.parse(row.images) : row.images,
+    sizes: typeof row.sizes === 'string' ? JSON.parse(row.sizes) : row.sizes
+  }));
 }
 
 async function editDrop(id, drop) {
-  const { name, price, sizes, image_url, is_active } = drop;
+  const { name, type, price, stock, sizes, images, is_active } = drop;
   const [rows] = await pool.query(
-    'UPDATE drops SET name = ?, price = ?, sizes = ?, image_url = ?, is_active = ? WHERE id = ?',
-    [name, price, JSON.stringify(sizes), image_url, is_active ? 1 : 0, id]
+    'UPDATE drops SET name = ?, type = ?, price = ?, stock = ?, sizes = ?, images = ?, is_active = ? WHERE id = ?',
+    [name, type, price, stock, JSON.stringify(sizes), JSON.stringify(images), is_active ? 1 : 0, id]
   );
   return rows.affectedRows > 0;
 }
