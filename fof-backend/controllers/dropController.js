@@ -25,6 +25,8 @@ async function listDrops(req, res) {
 
     // ✅ Force images array for frontend compatibility
     drops.forEach(drop => {
+      // Remove stock if it somehow came from the database rows map (though model should filter it out eventually if we drop the column)
+      // For now we just ensure images are handled correctly
       if (!drop.images || drop.images.length === 0) {
         drop.images = drop.image_url ? [drop.image_url] : [];
       }

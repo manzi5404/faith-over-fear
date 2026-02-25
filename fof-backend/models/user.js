@@ -37,11 +37,20 @@ async function getAllUserEmails() {
     return rows.map(row => row.email);
 }
 
+async function linkGoogleAccount(userId, googleId) {
+    const [result] = await pool.query(
+        'UPDATE users SET google_id = ? WHERE id = ?',
+        [googleId, userId]
+    );
+    return result.affectedRows > 0;
+}
+
 module.exports = {
     createUser,
     getUserByEmail,
     getUserById,
     getUserByGoogleId,
     updatePassword,
-    getAllUserEmails
+    getAllUserEmails,
+    linkGoogleAccount
 };

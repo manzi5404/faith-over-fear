@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Join | F>F</title>
     <link rel="stylesheet" href="/src/css/style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         [x-cloak] { display: none !important; }
     </style>
@@ -129,8 +130,37 @@
                 }
             },
 
-            loginWithGoogle() {
-                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Google Authentication coming soon', type: 'info' } }));
+            async loginWithGoogle() {
+                try {
+                    google.accounts.id.initialize({
+                        client_id: '982475376311-2oc1ao5h0va41pu525fniu7vma6uksf8.apps.googleusercontent.com',
+                        callback: async (response) => {
+                            this.loading = true;
+                            try {
+                                const backendRes = await fetch('/api/auth/google', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ token: response.credential })
+                                });
+                                const data = await backendRes.json();
+                                if (!backendRes.ok) throw new Error(data.message || 'Google login failed');
+
+                                localStorage.setItem('fof_token', data.token);
+                                localStorage.setItem('fof_user', JSON.stringify({ name: data.name, id: data.userId }));
+                                
+                                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Signed up with Google', type: 'success' } }));
+                                setTimeout(() => window.location.href = '/index.html', 1500);
+                            } catch (error) {
+                                window.dispatchEvent(new CustomEvent('notify', { detail: { message: error.message, type: 'error' } }));
+                            } finally {
+                                this.loading = false;
+                            }
+                        }
+                    });
+                    google.accounts.id.prompt();
+                } catch (error) {
+                    console.error('Google Auth Error:', error);
+                }
             }
         });
 

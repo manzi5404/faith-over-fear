@@ -51,8 +51,8 @@ const shopLogic = () => ({
             console.error("Failed to fetch products:", err);
             // Fallback for demo/dev if API is not ready
             this.products = [
-                { id: 1, name: "Urban Saint Tee", price: 60000, category: "Tops", type: "new-drop", images: ["https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=600"], sizes: ["S", "M", "L", "XL"], stock: 10, uiQuantity: 1, uiSize: "M", showDetails: false },
-                { id: 2, name: "Fearless Hoodie", price: 110000, category: "Outerwear", type: "new-drop", images: ["https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600"], sizes: ["M", "L", "XL"], stock: 5, uiQuantity: 1, uiSize: "M", showDetails: false }
+                { id: 1, name: "Urban Saint Tee", price: 60000, category: "Tops", type: "new-drop", images: ["https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=600"], sizes: ["S", "M", "L", "XL"], uiQuantity: 1, uiSize: "M", showDetails: false },
+                { id: 2, name: "Fearless Hoodie", price: 110000, category: "Outerwear", type: "new-drop", images: ["https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600"], sizes: ["M", "L", "XL"], uiQuantity: 1, uiSize: "M", showDetails: false }
             ];
         }
     },
@@ -92,9 +92,9 @@ const shopLogic = () => ({
     },
 
     initPayment(product, qty = 1, size = "M") {
-        if (this.storeSettings.purchasingDisabled || (product && product.stock <= 0)) {
+        if (this.storeSettings.purchasingDisabled) {
             window.dispatchEvent(new CustomEvent("notify", {
-                detail: { message: this.storeSettings.purchasingDisabled ? "Purchasing is currently disabled." : "Item is sold out.", type: "error" }
+                detail: { message: "Purchasing is currently disabled.", type: "error" }
             }));
             return;
         }
@@ -234,7 +234,7 @@ const shopLogic = () => ({
     },
 
     addToCart(product, qty = 1, size = "M") {
-        if (this.storeSettings.purchasingDisabled || product.stock <= 0) return;
+        if (this.storeSettings.purchasingDisabled) return;
 
         const existingItemIndex = this.cartItems.findIndex(item => item.id === product.id && item.selectedSize === size);
 

@@ -16,7 +16,7 @@
       :class="{ 'scrolled': scrolled }">
 
     <!-- Header -->
-    <header class="site-header" :class="{ 'scrolled': scrolled }" role="banner">
+    <header class="site-header" :class="{ 'scrolled': scrolled }" role="banner" x-data="{ user: null, init() { this.user = JSON.parse(localStorage.getItem('fof_user')) } }">
       <div class="container">
         <a href="/index.html" class="logo" aria-label="Faith Over Fear home">F<span class="logo-accent">&gt;</span>F</a>
 
@@ -30,6 +30,23 @@
             <li><a href="/lookbook.html">Recent Drops</a></li>
             <li><a href="/about.html">About</a></li>
             <li><a href="/contact.html">Contact</a></li>
+            <template x-if="!user">
+                <li><a href="/login.html" class="text-fof-accent">Login</a></li>
+            </template>
+            <template x-if="user">
+                <li class="relative group">
+                    <button class="text-[10px] uppercase tracking-widest font-bold text-fof-accent flex items-center">
+                        <span x-text="user.name"></span>
+                        <svg class="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-zinc-900 border border-fof-gray opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+                        <button @click="localStorage.removeItem('fof_token'); localStorage.removeItem('fof_user'); window.location.reload()" 
+                                class="w-full text-left px-4 py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-fof-accent hover:text-white transition-colors">
+                            Logout
+                        </button>
+                    </div>
+                </li>
+            </template>
             <li class="cta"><a href="/cart.html">Cart</a></li>
           </ul>
         </nav>
