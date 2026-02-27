@@ -145,11 +145,27 @@
                                  <div class="flex justify-between items-start mb-6">
                                      <div>
                                          <h3 class="text-xl font-bold uppercase leading-none mb-1 group-hover:text-fof-accent transition-colors" x-text="product.name"></h3>
-                                         <p class="text-gray-400 text-[10px] uppercase tracking-widest" x-text="product.category"></p>
+                                         <p class="text-gray-400 text-[10px] uppercase tracking-widest" x-text="product.category || product.dropName"></p>
                                      </div>
                                      <div class="text-right">
                                          <span class="text-xl font-mono text-fof-white" x-text="product.price.toLocaleString() + ' FRW'"></span>
                                      </div>
+                                 </div>
+
+                                 <!-- Waitlist Button -->
+                                 <div class="mt-auto">
+                                     <template x-if="product.isWaitlist">
+                                         <button @click="window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Joined waitlist for ' + product.name + '!', type: 'success' } }))"
+                                                 class="w-full py-3 bg-white text-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-fof-accent hover:text-white transition-all">
+                                             Join Waitlist
+                                         </button>
+                                     </template>
+                                     <template x-if="!product.isWaitlist">
+                                         <button @click="window.location.href='/product.html?id=' + product.id"
+                                                 class="w-full py-3 border border-fof-gray text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all">
+                                             See Details
+                                         </button>
+                                     </template>
                                  </div>
                              </div>
                          </div>

@@ -19,9 +19,18 @@ const signup = async (req, res) => {
         const password_hash = await bcrypt.hash(password, 12);
         const userId = await userModel.createUser({ email, password_hash, name });
 
-        const token = jwt.sign({ id: userId, email }, process.env.JWT_SECRET || 'fof_secret', { expiresIn: '1h' });
+        // For signup, we don't necessarily log them in as admin immediately in this flow,
+        // but we'll follow the same JWT pattern if we did.
+        const token = jwt.sign({ id: userId, email }, process.env.JWT_SECRET || 'fof_secret', { expiresIn: '2h' });
 
-        res.status(201).json({ token, userId, name });
+        res.cookie('auth_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 2 * 60 * 60 * 1000 // 2 hours
+        });
+
+        res.status(201).json({ success: true, userId, name, email });
     } catch (error) {
         res.status(500).json({ message: 'Something went wrong', error: error.message });
     }
@@ -35,6 +44,12 @@ const login = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        // Admin Whitelist Check
+        const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+        if (!adminEmails.includes(email.toLowerCase())) {
+            return res.status(403).json({ message: 'Unauthorized. This account does not have admin access.' });
+        }
+
         if (!user.password_hash) {
             return res.status(400).json({ message: 'Account registered with Google. Please use Google Login.' });
         }
@@ -44,9 +59,16 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET || 'fof_secret', { expiresIn: '1h' });
+        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET || 'fof_secret', { expiresIn: '2h' });
 
-        res.status(200).json({ token, userId: user.id, name: user.name });
+        res.cookie('auth_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 2 * 60 * 60 * 1000 // 2 hours
+        });
+
+        res.status(200).json({ success: true, userId: user.id, name: user.name, email: user.email });
     } catch (error) {
         res.status(500).json({ message: 'Something went wrong', error: error.message });
     }
@@ -61,9 +83,6 @@ const forgotPassword = async (req, res) => {
 
         const user = await userModel.getUserByEmail(email);
         if (!user) {
-            // Recommendation: Send 200 even if user doesn't exist for security, 
-            // but the requirement says "success or error". 
-            // I'll stick to 404 for clarity as per "Forgot password flow does not complete properly" context.
             return res.status(404).json({ message: 'User with this email does not exist' });
         }
 
@@ -72,8 +91,6 @@ const forgotPassword = async (req, res) => {
 
         await resetModel.createResetToken(user.id, resetToken, expiresAt);
 
-        // Dynamically get the protocol and host from the request headers if possible, 
-        // or use req.headers.origin which is usually the frontend URL.
         const frontendUrl = req.headers.origin || `${req.protocol}://${req.get('host')}`;
         const resetUrl = `${frontendUrl}/reset-password.html?token=${resetToken}`;
 
@@ -105,7 +122,6 @@ const resetPassword = async (req, res) => {
         const password_hash = await bcrypt.hash(newPassword, 12);
         await userModel.updatePassword(tokenInfo.user_id, password_hash);
 
-        // Clear all reset tokens for this user after successful reset
         await resetModel.deleteTokensByUserId(tokenInfo.user_id);
 
         res.status(200).json({ message: 'Password reset successful' });
@@ -128,23 +144,25 @@ const googleLogin = async (req, res) => {
         });
         const { name, email, sub: google_id } = ticket.getPayload();
 
+        // Admin Whitelist Check
+        const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+        if (!adminEmails.includes(email.toLowerCase())) {
+            return res.status(403).json({ message: 'Unauthorized. This account does not have admin access.' });
+        }
+
         let user = await userModel.getUserByGoogleId(google_id);
 
         if (!user) {
-            // Check if user exists with the same email
             user = await userModel.getUserByEmail(email);
             if (user) {
-                // Account Linking: User exists with email but hasn't linked Google yet
                 await userModel.linkGoogleAccount(user.id, google_id);
-                // Fetch updated user to ensure we have the linked ID (though not strictly necessary for the JWT)
                 user = await userModel.getUserById(user.id);
             } else {
-                // Account Creation: New user
                 const userId = await userModel.createUser({
                     email,
                     name,
                     google_id,
-                    password_hash: null // No password for Google users
+                    password_hash: null
                 });
                 user = await userModel.getUserById(userId);
             }
@@ -153,14 +171,31 @@ const googleLogin = async (req, res) => {
         const jwtToken = jwt.sign(
             { id: user.id, email: user.email },
             process.env.JWT_SECRET || 'fof_secret',
-            { expiresIn: '24h' } // Increased expiry for better UX, or keep '1h' if preferred
+            { expiresIn: '2h' }
         );
 
-        res.status(200).json({ token: jwtToken, userId: user.id, name: user.name });
+        res.cookie('auth_token', jwtToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 2 * 60 * 60 * 1000 // 2 hours
+        });
+
+        res.status(200).json({ success: true, userId: user.id, name: user.name, email: user.email });
     } catch (error) {
         console.error('Google Login Error:', error);
         res.status(500).json({ message: 'Google authentication failed', error: error.message });
     }
+};
+
+const logout = async (req, res) => {
+    res.clearCookie('auth_token');
+    res.status(200).json({ success: true, message: 'Logged out successfully' });
+};
+
+const verify = async (req, res) => {
+    // If the middleware verifyAdmin passes, we reach here
+    res.status(200).json({ success: true, user: req.user });
 };
 
 module.exports = {
@@ -168,5 +203,8 @@ module.exports = {
     login,
     forgotPassword,
     resetPassword,
-    googleLogin
+    googleLogin,
+    logout,
+    verify
 };
+

@@ -55,7 +55,10 @@
               <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-lg bg-slate-800 overflow-hidden flex-shrink-0 border border-slate-700 shadow-inner group-hover:scale-105 transition-transform">
                   <img v-if="getImages(drop)[0]" :src="getImages(drop)[0]" :alt="drop.name" class="w-full h-full object-cover" />
-                  <div v-else class="w-full h-full flex items-center justify-center text-slate-600 text-[10px] font-bold">NO IMG</div>
+                  <div v-else-if="drop.products?.[0]?.image_urls?.[0]" :src="drop.products[0].image_urls[0]" class="w-full h-full object-cover">
+                    <img :src="drop.products[0].image_urls[0]" class="w-full h-full object-cover" />
+                  </div>
+                  <div v-else class="w-full h-full flex items-center justify-center text-slate-600 text-[10px] font-bold">COLLECTION</div>
                 </div>
                 <div>
                   <div class="flex items-center gap-2">
@@ -65,12 +68,17 @@
                       :title="drop.is_active ? 'Active' : 'Inactive'"
                     ></span>
                   </div>
-                  <p class="text-xs text-slate-500 line-clamp-1 max-w-[200px]">{{ drop.description || 'No description' }}</p>
+                  <p class="text-xs text-slate-500 line-clamp-1 max-w-[200px]">
+                    {{ drop.products?.length || 0 }} Items • {{ drop.type }}
+                  </p>
                 </div>
               </div>
             </td>
             <td class="px-6 py-4">
-              <span class="font-mono text-slate-300 font-semibold">${{ parseFloat(drop.price).toLocaleString() }}</span>
+              <span class="font-mono text-slate-300 font-semibold" v-if="drop.products?.length > 0">
+                ${{ Math.min(...drop.products.map(p => p.price)) }} - ${{ Math.max(...drop.products.map(p => p.price)) }}
+              </span>
+              <span class="text-slate-500 text-xs" v-else>No items</span>
             </td>
             <td class="px-6 py-4">
               <span :class="['px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider', typeBadgeClass(drop.type)]">
@@ -79,9 +87,10 @@
             </td>
             <td class="px-6 py-4">
               <div class="flex flex-wrap gap-1 max-w-[120px]">
-                <span v-for="size in getSizes(drop)" :key="size" class="text-[8px] font-bold bg-slate-800 text-slate-400 px-1 border border-slate-700/50 rounded lowercase">
-                  {{ size }}
+                <span v-if="drop.products?.length > 0" class="text-[10px] text-slate-400 font-medium italic">
+                  {{ Array.from(new Set(drop.products.flatMap(p => p.sizes))).length }} Sizes
                 </span>
+                <span v-else class="text-[10px] text-slate-500 italic">N/A</span>
               </div>
             </td>
             <td class="px-6 py-4 text-right">
@@ -89,7 +98,7 @@
                 <button 
                   @click="$emit('edit', drop)"
                   class="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all"
-                  title="Edit Drop"
+                  title="Edit Collection"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -98,7 +107,7 @@
                 <button 
                   @click="$emit('delete', drop.id)"
                   class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
-                  title="Delete Drop"
+                  title="Delete Collection"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v2m3 3h.01" />

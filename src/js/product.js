@@ -46,12 +46,12 @@ const productLogic = () => ({
         }
 
         if (this.product) {
-            this.selectedSize = this.product.sizes ? this.product.sizes[0] : "";
-            this.selectedColor = this.product.colors ? this.product.colors[0] : "";
+            this.selectedSize = this.product.sizes && this.product.sizes.length > 0 ? this.product.sizes[0] : "";
+            this.selectedColor = this.product.colors && this.product.colors.length > 0 ? this.product.colors[0] : "";
 
-            // Find related items (same type, excluding current)
+            // Find related items (same dropType, excluding current)
             this.relatedItems = products
-                .filter(p => p.type === this.product.type && p.id !== this.product.id)
+                .filter(p => p.dropType === this.product.dropType && p.id !== this.product.id)
                 .slice(0, 4);
         }
     },

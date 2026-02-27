@@ -33,18 +33,22 @@ async function sendEmail({ email, subject, message, html }) {
 
 async function notifyNewDrop(userEmails, dropDetails) {
     const { name, price, images } = dropDetails;
-    const subject = `NEW DROP: ${name} is now available!`;
+    const dropName = name || 'New Collection';
+    const dropPrice = price ? `${price.toLocaleString()} FRW` : 'Coming Soon';
+    const dropImage = (images && images.length > 0) ? images[0] : 'https://placehold.co/400x400?text=F%3EF+Drop';
+
+    const subject = `NEW DROP: ${dropName} is now available!`;
     const html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 40px; text-align: center;">
             <h1 style="letter-spacing: -2px; font-size: 48px; margin-bottom: 0;">F&gt;F</h1>
             <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: #888; margin-top: 5px;">Faith Over Fear</p>
             
             <div style="margin: 40px 0;">
-                <img src="${images[0]}" alt="${name}" style="width: 100%; max-width: 400px; border: 1px solid #333;">
+                <img src="${dropImage}" alt="${dropName}" style="width: 100%; max-width: 400px; border: 1px solid #333;">
             </div>
             
-            <h2 style="text-transform: uppercase; font-size: 24px; margin-bottom: 10px;">${name}</h2>
-            <p style="font-size: 18px; color: #aaa; margin-bottom: 30px;">Available now for ${price.toLocaleString()} FRW</p>
+            <h2 style="text-transform: uppercase; font-size: 24px; margin-bottom: 10px;">${dropName}</h2>
+            <p style="font-size: 18px; color: #aaa; margin-bottom: 30px;">Available now for ${dropPrice}</p>
             
             <a href="https://yourwebsite.com/product.html" style="background: #fff; color: #000; text-decoration: none; padding: 15px 40px; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 2px;">Shop The Drop</a>
             

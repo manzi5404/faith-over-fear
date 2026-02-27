@@ -36,23 +36,36 @@ const shopLogic = () => ({
 
     async fetchProducts() {
         try {
-            const res = await fetch('/api/drops');
+            const res = await fetch('/api/drops?includeProducts=true');
             const data = await res.json();
             if (data.success) {
-                // Add default quantity and size to each product for UI reactivity
-                this.products = data.drops.map(p => ({
-                    ...p,
-                    showDetails: false, // Control for "See Details" flow
-                    uiQuantity: 1,
-                    uiSize: p.sizes ? p.sizes[0] : "M"
-                }));
+                // We have drops (collections). For the shop grid, we want to show all products if active.
+                let allProducts = [];
+                data.drops.forEach(drop => {
+                    if (drop.products && Array.isArray(drop.products)) {
+                        drop.products.forEach(p => {
+                            allProducts.push({
+                                ...p,
+                                dropName: drop.name,
+                                dropType: drop.type,
+                                showDetails: false,
+                                uiQuantity: 1,
+                                uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
+                                images: p.image_urls || [],
+                                // If the drop is inactive or some other logic, we might mark as waitlist
+                                isWaitlist: !drop.is_active || p.stock === 0 // Basic waitlist logic
+                            });
+                        });
+                    }
+                });
+                this.products = allProducts;
             }
         } catch (err) {
             console.error("Failed to fetch products:", err);
             // Fallback for demo/dev if API is not ready
             this.products = [
-                { id: 1, name: "Urban Saint Tee", price: 60000, category: "Tops", type: "new-drop", images: ["https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=600"], sizes: ["S", "M", "L", "XL"], uiQuantity: 1, uiSize: "M", showDetails: false },
-                { id: 2, name: "Fearless Hoodie", price: 110000, category: "Outerwear", type: "new-drop", images: ["https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600"], sizes: ["M", "L", "XL"], uiQuantity: 1, uiSize: "M", showDetails: false }
+                { id: 1, name: "Urban Saint Tee", price: 60000, category: "Tops", dropType: "new-drop", images: ["https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=600"], sizes: ["S", "M", "L", "XL"], uiQuantity: 1, uiSize: "M", showDetails: false, isWaitlist: false },
+                { id: 2, name: "Fearless Hoodie", price: 110000, category: "Outerwear", dropType: "new-drop", images: ["https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600"], sizes: ["M", "L", "XL"], uiQuantity: 1, uiSize: "M", showDetails: false, isWaitlist: false }
             ];
         }
     },
@@ -77,8 +90,8 @@ const shopLogic = () => ({
         }).sort((r, t) => this.sortBy === "price-asc" ? r.price - t.price : this.sortBy === "price-desc" ? t.price - r.price : t.id > r.id ? 1 : -1);
     },
 
-    get newDrops() { return this.products.filter(r => r.type === "new-drop"); },
-    get recentDrops() { return this.products.filter(r => r.type === "new-drop"); },
+    get newDrops() { return this.products.filter(r => r.dropType === "new-drop"); },
+    get recentDrops() { return this.products.filter(r => r.dropType === "recent-drop"); },
 
     get totalPrice() {
         if (!this.selectedProduct) return "0.00";

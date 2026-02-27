@@ -142,21 +142,31 @@
 
                      <!-- Actions -->
                     <div class="flex flex-col space-y-4">
-                        <div class="flex items-center space-x-4 h-16">
-                            <div class="flex items-center border border-zinc-800 h-full">
-                                <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity > 1 ? quantity-- : null">-</button>
-                                <span class="px-4 font-mono font-bold text-lg min-w-[3rem] text-center" x-text="quantity"></span>
-                                <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity++">+</button>
-                            </div>
-                            <button class="flex-1 bg-fof-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all h-full"
-                                    @click="addToCart()">
-                                Add To Cart
+                        <template x-if="product.isWaitlist">
+                            <button class="w-full bg-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all py-6"
+                                    @click="window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Joined waitlist for ' + product.name + '!', type: 'success' } }))">
+                                Join Waitlist
                             </button>
-                        </div>
-                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6"
-                                @click="payWithMoMo()">
-                            Pay with MoMo
-                        </button>
+                        </template>
+                        <template x-if="!product.isWaitlist">
+                            <div class="flex flex-col space-y-4">
+                                <div class="flex items-center space-x-4 h-16">
+                                    <div class="flex items-center border border-zinc-800 h-full">
+                                        <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity > 1 ? quantity-- : null">-</button>
+                                        <span class="px-4 font-mono font-bold text-lg min-w-[3rem] text-center" x-text="quantity"></span>
+                                        <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity++">+</button>
+                                    </div>
+                                    <button class="flex-1 bg-fof-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all h-full"
+                                            @click="addToCart()">
+                                        Add To Cart
+                                    </button>
+                                </div>
+                                <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6"
+                                        @click="payWithMoMo()">
+                                    Pay with MoMo
+                                </button>
+                            </div>
+                        </template>
                     </div>
 
                     <!-- Details Accordion -->
