@@ -126,6 +126,69 @@ const DropService = {
             console.error('Error deleting product:', error);
             throw error;
         }
+    },
+
+    // Store Config APIs
+    getStoreConfig: async () => {
+        try {
+            const response = await axios.get('/api/admin/store-config');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching store config:', error);
+            throw error;
+        }
+    },
+
+    updateStoreConfig: async (configData) => {
+        try {
+            const response = await axios.put('/api/admin/store-config', configData);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating store config:', error);
+            throw error;
+        }
+    },
+
+    // Reservation APIs
+    getReservations: async () => {
+        try {
+            const response = await axios.get('/api/admin/reservations');
+            return response.data.reservations || [];
+        } catch (error) {
+            console.error('Error fetching reservations:', error);
+            throw error;
+        }
+    },
+
+    updateReservationStatus: async (id, status) => {
+        try {
+            const response = await axios.patch(`/api/admin/reservations/${id}/status`, { status });
+            return response.data;
+        } catch (error) {
+            console.error('Error updating reservation status:', error);
+            throw error;
+        }
+    },
+
+    // Announcement APIs
+    getAnnouncement: async () => {
+        try {
+            const response = await axios.get('/api/announcement');
+            return response.data.announcement || null;
+        } catch (error) {
+            console.error('Error fetching announcement:', error);
+            throw error;
+        }
+    },
+
+    updateAnnouncement: async (announcementData) => {
+        try {
+            const response = await axios.put('/api/admin/announcement', announcementData);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating announcement:', error);
+            throw error;
+        }
     }
 };
 

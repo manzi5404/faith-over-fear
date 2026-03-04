@@ -1,5 +1,33 @@
 const jwt = require('jsonwebtoken');
 
+/**
+ * Basic Authentication Middleware
+ * Simply ensures the user is logged in with a valid token.
+ */
+const protect = (req, res, next) => {
+    const token = req.cookies.auth_token;
+
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'You must be logged in to access this resource' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fof_secret');
+        req.user = decoded;
+        next();
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ success: false, message: 'Session expired' });
+        }
+        res.clearCookie('auth_token');
+        return res.status(401).json({ success: false, message: 'Invalid or expired session' });
+    }
+};
+
+/**
+ * Administrative Authorization Middleware
+ * Verifies the user is logged in AND is on the whitelist.
+ */
 const verifyAdmin = (req, res, next) => {
     const token = req.cookies.auth_token;
 
@@ -9,12 +37,18 @@ const verifyAdmin = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fof_secret');
-        const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+
+        // Exact list of admin emails
+        const adminEmails = [
+            'manziroyal38@gmail.com',
+            'manziluckyun@gmail.com',
+            'cangebrunain@gmail.com'
+        ].map(e => e.trim().toLowerCase());
 
         if (!adminEmails.includes(decoded.email.toLowerCase())) {
-            // Immediately destroy session if email not on whitelist
-            res.clearCookie('auth_token');
-            return res.status(403).json({ success: false, message: 'Unauthorized. Non-admin account.' });
+            // Do not destroy the cookie, just deny access to admin features
+            // This allows them to stay logged in as a normal user
+            return res.status(403).json({ success: false, message: 'Unauthorized. This account does not have admin access' });
         }
 
         req.user = decoded;
@@ -28,4 +62,4 @@ const verifyAdmin = (req, res, next) => {
     }
 };
 
-module.exports = { verifyAdmin };
+module.exports = { protect, verifyAdmin };

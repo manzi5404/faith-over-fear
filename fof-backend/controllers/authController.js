@@ -44,11 +44,6 @@ const login = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Admin Whitelist Check
-        const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
-        if (!adminEmails.includes(email.toLowerCase())) {
-            return res.status(403).json({ message: 'Unauthorized. This account does not have admin access.' });
-        }
 
         if (!user.password_hash) {
             return res.status(400).json({ message: 'Account registered with Google. Please use Google Login.' });
@@ -138,17 +133,25 @@ const googleLogin = async (req, res) => {
             return res.status(400).json({ message: 'Token is required' });
         }
 
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
+        let ticket;
+        try {
+            ticket = await client.verifyIdToken({
+                idToken: token,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+        } catch (authError) {
+            console.error('Google Auth Verification Error:', authError);
+            if (authError.code === 'ETIMEDOUT' || authError.message.includes('timeout')) {
+                return res.status(503).json({
+                    success: false,
+                    message: 'Authentication service timeout. Please check your internet connection or try again later.'
+                });
+            }
+            throw authError; // Re-throw to be caught by the outer catch block
+        }
+
         const { name, email, sub: google_id } = ticket.getPayload();
 
-        // Admin Whitelist Check
-        const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
-        if (!adminEmails.includes(email.toLowerCase())) {
-            return res.status(403).json({ message: 'Unauthorized. This account does not have admin access.' });
-        }
 
         let user = await userModel.getUserByGoogleId(google_id);
 

@@ -40,6 +40,10 @@
                         <svg class="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div class="absolute right-0 mt-2 w-48 bg-zinc-900 border border-fof-gray opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+                        <a href="/reservations.html" 
+                                class="block w-full text-left px-4 py-3 text-[10px] uppercase tracking-widest font-bold border-b border-zinc-800 hover:bg-fof-accent hover:text-white transition-colors">
+                            My Reservations
+                        </a>
                         <button @click="localStorage.removeItem('fof_token'); localStorage.removeItem('fof_user'); window.location.reload()" 
                                 class="w-full text-left px-4 py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-fof-accent hover:text-white transition-colors">
                             Logout

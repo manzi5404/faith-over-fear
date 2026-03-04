@@ -46,8 +46,24 @@
           <div class="flex items-center gap-8">
             <span class="text-xl font-black tracking-tighter text-white">F<span class="text-blue-500">&gt;</span>F <span class="text-xs uppercase tracking-widest text-slate-500 ml-2 font-bold opacity-50">Admin</span></span>
             <div class="hidden md:flex items-center gap-1">
-              <a href="#" class="px-4 py-2 rounded-lg bg-blue-600/10 text-blue-400 text-sm font-bold border border-blue-500/20">Drops</a>
-              <!-- <a href="#" class="px-4 py-2 rounded-lg text-slate-500 text-sm font-semibold hover:text-white hover:bg-slate-800 transition-all">Orders</a> -->
+              <button 
+                @click="currentTab = 'drops'"
+                :class="['px-4 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'drops' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-500 hover:text-white hover:bg-slate-800']"
+              >
+                Drops
+              </button>
+              <button 
+                @click="currentTab = 'reservations'"
+                :class="['px-4 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'reservations' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-500 hover:text-white hover:bg-slate-800']"
+              >
+                Reservations
+              </button>
+              <button 
+                @click="currentTab = 'settings'"
+                :class="['px-4 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'settings' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-500 hover:text-white hover:bg-slate-800']"
+              >
+                Settings
+              </button>
             </div>
           </div>
           
@@ -91,12 +107,22 @@
         </section>
 
         <!-- Drop List -->
-        <section>
+        <section v-if="currentTab === 'drops'">
           <AdminDropList 
             :drops="drops" 
             @edit="handleEdit" 
             @delete="handleDelete" 
           />
+        </section>
+
+        <!-- Reservations -->
+        <section v-if="currentTab === 'reservations'">
+          <AdminReservations @updated="msg => notify(msg.message, msg.type)" />
+        </section>
+
+        <!-- Settings -->
+        <section v-if="currentTab === 'settings'">
+          <AdminSettings @updated="msg => notify(msg.message, msg.type)" />
         </section>
       </main>
     </div>
@@ -122,8 +148,11 @@
 import { ref, onMounted } from 'vue';
 import AdminDropList from './AdminDropList.vue';
 import AdminDropForm from './AdminDropForm.vue';
+import AdminSettings from './AdminSettings.vue';
+import AdminReservations from './AdminReservations.vue';
 import DropService from './DropService';
 
+const currentTab = ref('drops');
 const drops = ref([]);
 const showForm = ref(false);
 const editingDrop = ref(null);

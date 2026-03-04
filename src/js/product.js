@@ -8,6 +8,7 @@ const productLogic = () => ({
     currentImage: 0,
     relatedItems: [],
     loadingPDP: true,
+    viewedInstructions: false,
 
     async init() {
         this.loadingPDP = true;
@@ -90,6 +91,16 @@ const productLogic = () => ({
             shop.initPayment(this.product, this.quantity, this.selectedSize);
         } else {
             console.error("shopLogic.initPayment not found");
+        }
+    },
+
+    reserve() {
+        if (!this.product) return;
+        const shop = Alpine.$data(document.body);
+        if (shop && typeof shop.initReservation === 'function') {
+            shop.initReservation(this.product, this.selectedSize);
+        } else {
+            console.error("shopLogic.initReservation not found");
         }
     }
 });

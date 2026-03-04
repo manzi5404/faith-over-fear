@@ -17,6 +17,22 @@ const shopLogic = () => ({
     senderName: "",
     senderPhone: "",
     cartItems: [],
+    storeConfig: {
+        store_mode: 'live',
+        announcement_message: '',
+        banner_enabled: false
+    },
+    showAnnouncement: false,
+    reservationModalOpen: false,
+    reservationData: {
+        fullName: 'Anonymous Customer', // Default value
+        email: '',
+        phone: 'Not provided', // Default value
+        size: 'M',
+        color: 'Default', // Default value
+        quantity: 1,
+        productId: null
+    },
 
     async init() {
         this.loading = true;
@@ -32,6 +48,14 @@ const shopLogic = () => ({
             this.loading = false;
         }
         window.addEventListener('cart-updated', () => this.initCart());
+        window.addEventListener('store-config-loaded', (e) => {
+            this.storeConfig = e.detail;
+        });
+
+        // Check if global storeConfig is already loaded
+        if (window.storeConfig) {
+            this.storeConfig = window.storeConfig;
+        }
     },
 
     async fetchProducts() {
@@ -268,7 +292,58 @@ const shopLogic = () => ({
     },
 
     incrementQty(product) { product.uiQuantity++; },
-    decrementQty(product) { if (product.uiQuantity > 1) product.uiQuantity--; }
+    decrementQty(product) { if (product.uiQuantity > 1) product.uiQuantity--; },
+
+    initReservation(product, size = "M") {
+        this.selectedProduct = product;
+        this.reservationData = {
+            fullName: this.senderName || '',
+            email: '',
+            phone: this.senderPhone || '',
+            size: size || product.uiSize || "M",
+            color: product.colors && product.colors.length > 0 ? product.colors[0] : '',
+            quantity: product.uiQuantity || 1
+        };
+        this.reservationModalOpen = true;
+    },
+
+    async submitReservation() {
+        if (!this.reservationData.fullName || !this.reservationData.email) {
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Please fill in your name and email.", type: "error" } }));
+            return;
+        }
+
+        this.loading = true;
+
+        const user = JSON.parse(localStorage.getItem('fof_user'));
+        const payload = {
+            ...this.reservationData,
+            productId: this.selectedProduct.id,
+            userId: user ? user.id : null
+        };
+
+        console.log("Submitting Reservation Payload:", payload);
+
+        try {
+            const response = await fetch('/api/reserve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Reservation confirmed! We'll contact you soon.", type: "success" } }));
+                this.reservationModalOpen = false;
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (err) {
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Failed to submit reservation. Please try again.", type: "error" } }));
+        } finally {
+            this.loading = false;
+        }
+    }
 });
 
 export default shopLogic;

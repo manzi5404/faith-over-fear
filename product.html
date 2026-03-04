@@ -7,6 +7,26 @@
     <link rel="stylesheet" href="/src/css/style.css">
     <style>
         [x-cloak] { display: none !important; }
+
+        /* Image Zoom Container */
+        .zoom-container {
+            position: relative;
+            overflow: hidden;
+            cursor: zoom-in;
+        }
+        .zoom-container img {
+            transition: transform 0.3s ease-out;
+            transform-origin: center center;
+        }
+        .zoom-container.zooming img {
+            transform: scale(1.5);
+        }
+        /* Mobile touch zoom toggle */
+        @media (max-width: 768px) {
+            .zoom-container.zooming img {
+                transform: scale(1.5) translateZ(0);
+            }
+        }
     </style>
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
@@ -15,22 +35,7 @@
       @scroll.window="scrolled = (window.pageYOffset > 50)"
       :class="{ 'scrolled': scrolled }">
 
-    <!-- Announcement Bar -->
-    <div x-data="{ announcements: [], current: 0, show: false }" 
-         @announcements-loaded.window="announcements = $event.detail; show = true"
-         x-show="show && announcements.length > 0" x-cloak
-         class="bg-fof-accent text-white py-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-center relative z-[1100]">
-        <div class="container mx-auto px-4">
-            <template x-for="(note, index) in announcements" :key="index">
-                <div x-show="current === index" 
-                     x-transition:enter="transition ease-out duration-500"
-                     x-transition:enter-start="opacity-0 transform translate-y-1"
-                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                     x-text="note.message"></div>
-            </template>
-        </div>
-        <div x-init="setInterval(() => { if(announcements.length > 1) current = (current + 1) % announcements.length }, 5000)"></div>
-    </div>
+
 
     <!-- Header -->
     <header class="site-header" :class="{ 'scrolled': scrolled }" role="banner" x-data="{ user: null, init() { this.user = JSON.parse(localStorage.getItem('fof_user')) } }">
@@ -57,6 +62,10 @@
                         <svg class="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div class="absolute right-0 mt-2 w-48 bg-zinc-900 border border-fof-gray opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+                        <a href="/reservations.html" 
+                                class="block w-full text-left px-4 py-3 text-[10px] uppercase tracking-widest font-bold border-b border-zinc-800 hover:bg-fof-accent hover:text-white transition-colors">
+                            My Reservations
+                        </a>
                         <button @click="localStorage.removeItem('fof_token'); localStorage.removeItem('fof_user'); window.location.reload()" 
                                 class="w-full text-left px-4 py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-fof-accent hover:text-white transition-colors">
                             Logout
@@ -81,15 +90,22 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24">
                 <!-- Image Gallery -->
-                <div class="space-y-6">
-                    <div class="aspect-[4/5] bg-fof-dark overflow-hidden group">
-                        <img :src="mainImage" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                <div class="space-y-6" x-data="{ zooming: false, mouseX: 50, mouseY: 50 }">
+                    <div class="zoom-container aspect-[4/5] bg-fof-dark"
+                         :class="{ 'zooming': zooming }"
+                         @mouseenter="zooming = true"
+                         @mouseleave="zooming = false; mouseX = 50; mouseY = 50"
+                         @mousemove="if(zooming) { const rect = $el.getBoundingClientRect(); mouseX = (($event.clientX - rect.left) / rect.width) * 100; mouseY = (($event.clientY - rect.top) / rect.height) * 100; }"
+                         @click="zooming = !zooming">
+                        <img :src="mainImage"
+                             class="w-full h-full object-cover transition-transform duration-300"
+                             :style="zooming ? `transform-origin: ${mouseX}% ${mouseY}%; transform: scale(1.5);` : ''">
                     </div>
                     <div class="grid grid-cols-4 gap-4">
                         <template x-for="(img, index) in product.images" :key="index">
                             <div class="aspect-[4/5] bg-fof-dark overflow-hidden cursor-pointer border-2 transition-all"
                                  :class="currentImage === index ? 'border-fof-accent' : 'border-transparent hover:border-zinc-700'"
-                                 @click="currentImage = index">
+                                 @click="currentImage = index; zooming = false;">
                                 <img :src="img" class="w-full h-full object-cover">
                             </div>
                         </template>
@@ -150,21 +166,62 @@
                         </template>
                         <template x-if="!product.isWaitlist">
                             <div class="flex flex-col space-y-4">
-                                <div class="flex items-center space-x-4 h-16">
-                                    <div class="flex items-center border border-zinc-800 h-full">
-                                        <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity > 1 ? quantity-- : null">-</button>
-                                        <span class="px-4 font-mono font-bold text-lg min-w-[3rem] text-center" x-text="quantity"></span>
-                                        <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity++">+</button>
+                                <!-- Reserve Mode -->
+                                <template x-if="storeConfig.store_mode === 'reserve'">
+                                    <div class="space-y-6">
+                                        <!-- How to Reserve Guide -->
+                                        <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-sm space-y-4">
+                                            <h4 class="text-[10px] uppercase font-bold tracking-[0.3em] text-fof-accent">How to Reserve Your Drop</h4>
+                                            <ol class="space-y-3 text-[11px] uppercase tracking-widest text-gray-400 font-bold">
+                                                <li class="flex items-start">
+                                                    <span class="text-fof-accent mr-3">01.</span>
+                                                    <span>Click the button below to secure your piece.</span>
+                                                </li>
+                                                <li class="flex items-start">
+                                                    <span class="text-fof-accent mr-3">02.</span>
+                                                    <span>Our team will contact you once production starts.</span>
+                                                </li>
+                                                <li class="flex items-start">
+                                                    <span class="text-fof-accent mr-3">03.</span>
+                                                    <span>Payment is only requested when the item is ready.</span>
+                                                </li>
+                                            </ol>
+                                            <div class="pt-2">
+                                                <label class="flex items-center space-x-3 cursor-pointer group">
+                                                    <input type="checkbox" x-model="viewedInstructions" class="form-checkbox bg-black border-zinc-800 text-fof-accent focus:ring-0 focus:ring-offset-0 w-4 h-4 rounded-none transition-all">
+                                                    <span class="text-[10px] uppercase font-bold tracking-widest text-zinc-500 group-hover:text-white transition-colors">I understand the reservation process</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6 disabled:opacity-30 disabled:cursor-not-allowed disabled:grayscale"
+                                                :disabled="!viewedInstructions"
+                                                @click="reserve()">
+                                            Reserve Now
+                                        </button>
                                     </div>
-                                    <button class="flex-1 bg-fof-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all h-full"
-                                            @click="addToCart()">
-                                        Add To Cart
-                                    </button>
-                                </div>
-                                <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6"
-                                        @click="payWithMoMo()">
-                                    Pay with MoMo
-                                </button>
+                                </template>
+
+                                <!-- Live Mode -->
+                                <template x-if="storeConfig.store_mode === 'live'">
+                                    <div class="flex flex-col space-y-4">
+                                        <div class="flex items-center space-x-4 h-16">
+                                            <div class="flex items-center border border-zinc-800 h-full">
+                                                <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity > 1 ? quantity-- : null">-</button>
+                                                <span class="px-4 font-mono font-bold text-lg min-w-[3rem] text-center" x-text="quantity"></span>
+                                                <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity++">+</button>
+                                            </div>
+                                            <button class="flex-1 bg-fof-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all h-full"
+                                                    @click="addToCart()">
+                                                Add To Cart
+                                            </button>
+                                        </div>
+                                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6"
+                                                @click="payWithMoMo()">
+                                            Pay with MoMo
+                                        </button>
+                                    </div>
+                                </template>
                             </div>
                         </template>
                     </div>
@@ -243,121 +300,146 @@
          x-cloak>
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" @click="paymentModalOpen = false"></div>
         
-        <div class="relative bg-zinc-900 border border-fof-gray w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] animate-fade-in-up">
-            <!-- Modal Header -->
-            <div class="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 z-10">
-                <h3 class="text-xl sm:text-2xl font-display font-bold uppercase tracking-tight">MoMo Checkout</h3>
-                <button @click="paymentModalOpen = false" class="text-gray-500 hover:text-white transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-
-            <div class="p-6 sm:p-8 space-y-8">
-                <!-- User Details Section -->
-                <div class="space-y-4">
-                    <h4 class="text-[10px] uppercase tracking-[0.2em] text-fof-accent font-bold">1. Your Information</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 font-bold">Full Name</label>
-                            <input type="text" x-model="senderName" placeholder="Enter name" class="w-full bg-black border border-zinc-800 p-3 text-sm focus:border-fof-accent outline-none transition-colors rounded-sm">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 font-bold">MoMo Number</label>
-                            <input type="text" x-model="senderPhone" placeholder="078..." class="w-full bg-black border border-zinc-800 p-3 text-sm focus:border-fof-accent outline-none transition-colors rounded-sm">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 font-bold">Amount (FRW)</label>
-                            <input type="text" 
-                                   :value="(selectedProduct ? (parseFloat(selectedProduct.price) * parseInt(modalQuantity)).toFixed(2) : grandTotal) + ' FRW'" 
-                                   readonly 
-                                   class="w-full bg-zinc-900 border border-zinc-800 p-3 text-sm text-white font-mono font-bold outline-none cursor-not-allowed rounded-sm">
-                            <p class="text-[10px] text-gray-500 mt-1.5">Amount is automatically calculated from your order</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Payment Details Section -->
-                <div class="space-y-4">
-                    <h4 class="text-[10px] uppercase tracking-[0.2em] text-fof-accent font-bold">2. Payment Details</h4>
-                    <div class="bg-black/40 border border-zinc-800 rounded-sm divide-y divide-zinc-800/50">
-                        <!-- Merchant Code -->
-                        <div class="p-4 flex items-center justify-between group">
-                            <div>
-                                <span class="block text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Merchant Code</span>
-                                <span class="font-mono text-white text-lg font-bold tracking-wider" x-text="momoCode"></span>
-                            </div>
-                            <button @click="copyToClipboard(momoCode, 'Code')" class="flex items-center space-x-2 px-3 py-2 bg-zinc-800/50 hover:bg-fof-accent hover:text-white transition-all rounded text-[10px] uppercase font-bold tracking-widest relative">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                                <span>Copy</span>
-                                <span x-show="copyFeedback === 'Code'" x-cloak class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-fof-accent text-white text-[10px] px-2 py-1 rounded">Copied!</span>
-                            </button>
-                        </div>
-                        <!-- Store Number -->
-                        <div class="p-4 flex items-center justify-between group">
-                            <div>
-                                <span class="block text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Store Number</span>
-                                <span class="font-mono text-white text-lg font-bold tracking-wider" x-text="momoPhone"></span>
-                            </div>
-                            <button @click="copyToClipboard(momoPhone, 'Number')" class="flex items-center space-x-2 px-3 py-2 bg-zinc-800/50 hover:bg-fof-accent hover:text-white transition-all rounded text-[10px] uppercase font-bold tracking-widest relative">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                                <span>Copy</span>
-                                <span x-show="copyFeedback === 'Number'" x-cloak class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-fof-accent text-white text-[10px] px-2 py-1 rounded">Copied!</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Summary Breakdown -->
-                <div class="space-y-4">
-                    <h4 class="text-[10px] uppercase tracking-[0.2em] text-fof-accent font-bold">3. Order Summary</h4>
-                    <div class="bg-black/20 p-4 border border-zinc-800 rounded-sm space-y-3">
-                        <template x-if="selectedProduct">
-                            <div class="flex justify-between items-start text-sm">
-                                <span class="text-gray-400 max-w-[70%]" x-text="selectedProduct.name + ' (' + modalSize + ') x' + modalQuantity"></span>
-                                <span class="font-mono font-bold" x-text="(Number(selectedProduct.price) * Number(modalQuantity)).toLocaleString() + ' FRW'"></span>
-                            </div>
-                        </template>
-                        <template x-if="!selectedProduct">
-                            <div class="space-y-2">
-                                <template x-for="item in cartItems">
-                                    <div class="flex justify-between items-start text-xs border-b border-zinc-800/30 pb-2 last:border-0 last:pb-0">
-                                        <span class="text-gray-400 max-w-[70%]" x-text="item.name + ' (x' + item.quantity + ')'"></span>
-                                        <span class="font-mono" x-text="item.totalPrice.toLocaleString() + ' FRW'"></span>
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                        
-                        <div class="flex justify-between items-center pt-3 mt-3 border-t border-zinc-700">
-                            <span class="text-xs uppercase font-bold tracking-widest text-white">Total Amount</span>
-                            <span class="text-xl font-display font-bold text-fof-accent" x-text="(selectedProduct ? totalPrice : grandTotal) + ' FRW'"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Button -->
-                <button @click="verifyPayment()" 
-                        :disabled="loading"
-                        class="w-full bg-green-600 hover:bg-green-500 text-white font-bold uppercase py-5 px-6 rounded-sm tracking-[0.2em] text-xs transition-all flex items-center justify-center space-x-3 group active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
-                    <template x-if="!loading">
-                        <div class="flex items-center space-x-3">
-                            <span>Verify on WhatsApp</span>
-                            <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-                        </div>
-                    </template>
-                    <template x-if="loading">
-                        <div class="flex items-center space-x-3">
-                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span>Processing...</span>
-                        </div>
-                    </template>
                 </button>
             </div>
         </div>
     </div>
+
+    <!-- Reservation Modal -->
+    <div x-show="reservationModalOpen" 
+         class="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         x-cloak>
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md" @click="reservationModalOpen = false"></div>
+        
+        <div class="relative bg-zinc-900 border border-fof-gray w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div class="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900 sticky top-0 z-10">
+                <h3 class="text-xl font-display font-bold uppercase tracking-tight">Reserve Your Drop</h3>
+                <button @click="reservationModalOpen = false" class="text-gray-500 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="p-8 space-y-6">
+                <!-- Product Preview -->
+                <template x-if="product">
+                    <div class="flex items-center space-x-4 bg-black/40 p-4 border border-zinc-800 rounded-sm">
+                        <img :src="mainImage" class="w-16 h-20 object-cover">
+                        <div>
+                            <p class="text-[10px] uppercase font-bold tracking-widest text-fof-accent" x-text="product.category"></p>
+                            <h4 class="text-sm font-bold uppercase" x-text="product.name"></h4>
+                            <p class="text-xs text-gray-400" x-text="'Size: ' + reservationData.size + ' | Qty: ' + reservationData.quantity"></p>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Form -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2 font-bold">Full Name</label>
+                        <input type="text" x-model="reservationData.fullName" placeholder="Enter your name" class="w-full bg-black border border-zinc-800 p-3 text-sm focus:border-fof-accent outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2 font-bold">Email Address</label>
+                        <input type="email" x-model="reservationData.email" placeholder="Enter your email" class="w-full bg-black border border-zinc-800 p-3 text-sm focus:border-fof-accent outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2 font-bold">Phone Number (Optional)</label>
+                        <input type="text" x-model="reservationData.phone" placeholder="Your phone number" class="w-full bg-black border border-zinc-800 p-3 text-sm focus:border-fof-accent outline-none">
+                    </div>
+
+                    <!-- Quantity Selector -->
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2 font-bold">Quantity</label>
+                        <div class="flex items-center border border-zinc-800">
+                            <button type="button"
+                                    @click="reservationData.quantity > 1 ? reservationData.quantity-- : null"
+                                    class="w-12 h-12 flex items-center justify-center text-xl font-bold hover:bg-zinc-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                    :disabled="reservationData.quantity <= 1">
+                                −
+                            </button>
+                            <input type="number"
+                                   x-model.number="reservationData.quantity"
+                                   @input="reservationData.quantity = Math.max(1, parseInt(reservationData.quantity) || 1)"
+                                   class="flex-1 bg-transparent text-center text-lg font-mono font-bold py-3 outline-none border-x border-zinc-800"
+                                   min="1">
+                            <button type="button"
+                                    @click="reservationData.quantity++"
+                                    class="w-12 h-12 flex items-center justify-center text-xl font-bold hover:bg-zinc-800 transition-colors">
+                                +
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-fof-accent/10 border border-fof-accent/20 p-4 rounded-sm">
+                    <p class="text-[10px] text-fof-accent font-bold uppercase tracking-widest leading-relaxed text-center">
+                        Secure your piece now. We'll notify you as soon as production begins and standard payment is open.
+                    </p>
+                </div>
+
+                <button @click="submitReservation()" 
+                        :disabled="loading"
+                        class="w-full bg-fof-accent text-white font-bold uppercase py-5 px-6 rounded-sm tracking-[0.2em] text-xs transition-all flex items-center justify-center space-x-3 disabled:opacity-50">
+                    <template x-if="!loading"><span>Confirm Reservation</span></template>
+                    <template x-if="loading"><span>Processing...</span></template>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- High-End Reservation Modal -->
+    <template x-if="reservationModalOpen">
+        <div class="fof-modal-backdrop" @click.self="reservationModalOpen = false">
+            <div class="fof-modal-content fof-modal-box">
+                <button @click="reservationModalOpen = false" class="fof-modal-close">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+
+                <div class="relative z-10">
+                    <span class="text-fof-accent text-[10px] font-bold uppercase tracking-[0.3em] mb-4 block">Limited Product</span>
+                    <h2 class="fof-modal-title">Reserve <span class="text-fof-accent">Now</span></h2>
+                    <div class="w-12 h-1 bg-fof-accent mb-6"></div>
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-8" x-text="'Item: ' + (product?.name || 'Loading...')"></p>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 mb-2">Email Address</label>
+                            <input type="email" x-model="reservationData.email" class="w-full bg-black border border-zinc-800 p-4 text-white text-sm focus:border-fof-accent outline-none transition-colors" placeholder="your@email.com">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 mb-2">Size</label>
+                                <select x-model="reservationData.size" class="w-full bg-black border border-zinc-800 p-4 text-white text-sm focus:border-fof-accent outline-none transition-colors uppercase">
+                                    <option value="S">Small (S)</option>
+                                    <option value="M">Medium (M)</option>
+                                    <option value="L">Large (L)</option>
+                                    <option value="XL">Extra Large (XL)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 mb-2">Quantity</label>
+                                <input type="number" x-model="reservationData.quantity" min="1" class="w-full bg-black border border-zinc-800 p-4 text-white text-sm focus:border-fof-accent outline-none transition-colors">
+                            </div>
+                        </div>
+
+                        <button @click="submitReservation()" :disabled="loading" class="btn-primary w-full py-5 flex items-center justify-center space-x-3">
+                            <span x-show="!loading">Confirm Reservation</span>
+                            <span x-show="loading">Processing...</span>
+                        </button>
+                        
+                        <p class="text-[9px] text-zinc-600 uppercase text-center tracking-widest leading-relaxed">By confirming, you express interest in this pre-production item. We will contact you once it's available for purchase.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
     
     <!-- Footer (Same as Index) -->
     <footer class="bg-fof-dark border-t border-fof-gray py-12">
@@ -433,6 +515,7 @@
             </div>
         </div>
 
+    <div id="announcement-root"></div>
     <script type="module" src="/src/js/main.js"></script>
 </body>
 </html>

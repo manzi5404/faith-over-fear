@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import shopLogic from './shop.js';
 import productLogic from './product.js';
 import { initHeroAnimation } from './animations.js';
+import './announcement-entry.jsx';
 
 window.Alpine = Alpine;
 window.gsap = gsap;
@@ -63,19 +64,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // Global State for Settings & Announcements
     const fetchGlobalData = async () => {
         try {
-            const [settingsRes, announcementsRes] = await Promise.all([
+            const [settingsRes, storeConfigRes] = await Promise.all([
                 fetch('/api/settings').then(r => r.json()).catch(() => ({ success: false })),
-                fetch('/api/announcements').then(r => r.json()).catch(() => ({ success: false }))
+                fetch('/api/store-config').then(r => r.json()).catch(() => ({ success: false }))
             ]);
 
             if (settingsRes.success) {
                 window.storeSettings = settingsRes.settings;
                 document.body.dispatchEvent(new CustomEvent('settings-loaded', { detail: settingsRes.settings }));
             }
-            if (announcementsRes.success && announcementsRes.announcements.length > 0) {
-                // Handle announcements (e.g., show a top bar)
-                window.announcements = announcementsRes.announcements;
-                document.body.dispatchEvent(new CustomEvent('announcements-loaded', { detail: announcementsRes.announcements }));
+            if (storeConfigRes.success) {
+                window.storeConfig = storeConfigRes.config;
+                document.body.dispatchEvent(new CustomEvent('store-config-loaded', { detail: storeConfigRes.config }));
             }
         } catch (err) {
             console.warn("Could not fetch global data, using defaults.");

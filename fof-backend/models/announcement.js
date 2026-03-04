@@ -1,23 +1,23 @@
 const pool = require('../db/connection');
 
-async function getActiveAnnouncements() {
+async function getLatestAnnouncement() {
+    // Return the specific announcement with ID 1 as requested, 
+    // or the latest enabled one if we want flexibility. 
+    // The prompt says "Returns the latest enabled announcement (ID: 1)".
     const [rows] = await pool.query(
-        'SELECT * FROM announcements WHERE is_active = 1 AND (expires_at IS NULL OR expires_at > NOW())'
+        'SELECT * FROM announcements WHERE is_enabled = 1 AND id = 1 LIMIT 1'
     );
-    return rows;
+    return rows[0] || null;
 }
 
-async function addAnnouncement(message, expiresAt = null) {
+async function updateAnnouncement(data) {
+    const { title, message, is_enabled } = data;
+    // Increment version number on every update
     const [result] = await pool.query(
-        'INSERT INTO announcements (message, expires_at) VALUES (?, ?)',
-        [message, expiresAt]
+        'UPDATE announcements SET title = ?, message = ?, is_enabled = ?, version = version + 1 WHERE id = 1',
+        [title, message, is_enabled]
     );
-    return result.insertId;
-}
-
-async function deleteAnnouncement(id) {
-    const [result] = await pool.query('DELETE FROM announcements WHERE id = ?', [id]);
     return result.affectedRows > 0;
 }
 
-module.exports = { getActiveAnnouncements, addAnnouncement, deleteAnnouncement };
+module.exports = { getLatestAnnouncement, updateAnnouncement };
