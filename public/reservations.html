@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Reservations | F>F</title>
+    <link rel="stylesheet" href="/src/css/style.css">
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        /* Progress Bar Styles */
+        .step-line {
+            height: 2px;
+            flex-grow: 1;
+            background-color: #27272a; /* zinc-800 */
+        }
+        .step-line.completed {
+            background-color: #2563eb; /* blue-600 or fof-accent */
+        }
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 9999px;
+            background-color: #27272a;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .step-dot.completed {
+            background-color: #2563eb;
+        }
+        .step-dot.active {
+            background-color: #2563eb;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.5);
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body class="bg-fof-black text-fof-white font-sans antialiased" 
+      x-data="resLogic()"
+      x-init="init()">
+
+    <!-- Header (Simplified Shortcut) -->
+    <header class="site-header scrolled">
+      <div class="container">
+        <a href="/index.html" class="logo">F<span class="logo-accent">&gt;</span>F</a>
+        <nav class="primary-nav">
+          <ul class="nav-list">
+            <li><a href="/shop.html">Shop</a></li>
+            <li class="cta"><span x-text="user?.name" class="text-fof-accent"></span></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="pt-32 pb-20 min-h-screen">
+        <div class="container mx-auto px-6">
+            <h1 class="text-4xl md:text-6xl font-display font-bold uppercase tracking-tight mb-4">My <span class="text-fof-accent">Reservations</span></h1>
+            <p class="text-gray-500 uppercase tracking-[0.3em] text-[10px] font-bold mb-12">Track your upcoming drops and production status</p>
+
+            <!-- Loading State -->
+            <div x-show="loading" class="py-20 flex flex-col items-center">
+                <div class="w-10 h-10 border-2 border-fof-accent border-t-transparent rounded-full animate-spin mb-4"></div>
+                <span class="text-[10px] uppercase font-bold tracking-widest text-zinc-600">Retrieving your history...</span>
+            </div>
+
+            <!-- Empty State -->
+            <div x-show="!loading && reservations.length === 0" class="py-20 text-center border border-dashed border-zinc-800 rounded-sm" x-cloak>
+                <p class="text-gray-400 mb-8 uppercase tracking-widest text-sm">You haven't reserved any items yet.</p>
+                <a href="/shop.html" class="inline-block px-8 py-4 bg-fof-accent text-white font-bold uppercase tracking-widest text-[10px]">Start Exploring</a>
+            </div>
+
+            <!-- Reservations List -->
+            <div class="space-y-8" x-show="!loading && reservations.length > 0" x-cloak>
+                <template x-for="res in reservations" :key="res.id">
+                    <div class="bg-zinc-900/30 border border-zinc-800 p-6 md:p-8 rounded-sm hover:border-zinc-700 transition-colors">
+                        <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
+                            
+                            <!-- Product Info -->
+                            <div class="flex items-center space-x-6 min-w-[300px]">
+                                <div class="w-20 h-24 bg-zinc-800 overflow-hidden flex-shrink-0">
+                                    <template x-if="res.productImageUrls && JSON.parse(res.productImageUrls).length > 0">
+                                        <img :src="JSON.parse(res.productImageUrls)[0]" class="w-full h-full object-cover">
+                                    </template>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold uppercase tracking-wide mb-1" x-text="res.productName"></h3>
+                                    <p class="text-[10px] uppercase text-zinc-500 font-bold tracking-widest" x-text="'Size: ' + res.size + ' | Qty: ' + res.quantity"></p>
+                                    <p class="text-[9px] uppercase text-zinc-600 font-bold tracking-tighter mt-2" x-text="'Reserved on ' + new Date(res.created_at).toLocaleDateString()"></p>
+                                </div>
+                            </div>
+
+                            <!-- Status Tracker (Desktop) -->
+                            <div class="hidden md:flex flex-1 items-center px-8 relative">
+                                <template x-for="(step, index) in res.statusSteps" :key="step.id">
+                                    <div class="flex items-center" :class="index === res.statusSteps.length - 1 ? '' : 'flex-1'">
+                                        <!-- Step Dot -->
+                                        <div class="flex flex-col items-center relative">
+                                            <div class="step-dot" :class="{ 'completed': step.completed, 'active': step.active }"></div>
+                                            <span class="absolute top-6 whitespace-nowrap text-[9px] uppercase font-bold tracking-widest"
+                                                  :class="step.active ? 'text-fof-accent' : 'text-zinc-600'"
+                                                  x-text="step.label"></span>
+                                        </div>
+                                        <!-- Step Line -->
+                                        <template x-if="index < res.statusSteps.length - 1">
+                                            <div class="step-line mx-2" :class="{ 'completed': res.statusSteps[index+1].completed }"></div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Mobile Status (Badge) -->
+                            <div class="md:hidden w-full pt-4 border-t border-zinc-800/50">
+                                <span class="text-[10px] uppercase font-bold text-zinc-500 tracking-widest mr-4">Current Status:</span>
+                                <span class="bg-fof-accent/10 border border-fof-accent/30 text-fof-accent px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest"
+                                      x-text="res.status"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="/src/js/reservations-entry.js"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</body>
+</html>

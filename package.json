@@ -7,9 +7,12 @@
   "scripts": {
     "start": "node server.js",
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run build:frontend && npm run build:admin",
+    "build:frontend": "vite build",
+    "build:admin": "vite build --config frontend/src/admin/drops/vite.config.js",
     "preview": "vite preview",
-    "backend": "nodemon server.js"
+    "backend": "nodemon server.js",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "@alpinejs/collapse": "^3.15.9",

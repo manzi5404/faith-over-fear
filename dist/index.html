@@ -4,84 +4,92 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>F>F | Faith over Fear</title>
-
+    <title>F>F | Faith over Fear</title>
+    <link rel="shortcut icon" href="./assets/Screenshot%202026-02-10%20112008-0pzf5JRS.png" type="image/x-icon">
     <style>
         [x-cloak] { display: none !important; }
     </style>
-    <script type="module" crossorigin src="./assets/index-nTymhNP7.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-D_B1-LWV.css">
+    <script type="module" crossorigin src="./assets/main-CjAv8l_t.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/main-OkD-pd6L.css">
   </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
-      x-data="{ 
-          mobileMenuOpen: false, 
-          cartOpen: false, 
-          ...shopLogic()
-      }"
-      x-init="init()">
+      x-data="shopLogic()"
+      x-init="init()"
+      @scroll.window="scrolled = (window.pageYOffset > 50)"
+      :class="{ 'scrolled': scrolled }">
+
+
     
     <!-- Header -->
-    <header class="fixed w-full top-0 z-50 bg-fof-black/90 backdrop-blur-md border-b border-fof-gray transition-all duration-300">
-        <div class="container mx-auto px-6 h-20 flex items-center justify-between">
-            <!-- Logo -->
-            <a href="/" class="text-3xl font-display font-bold tracking-tighter hover:text-fof-accent transition-colors">
-                F<span class="text-fof-accent">&gt;</span>F
-            </a>
+    <header class="site-header" :class="{ 'scrolled': scrolled }" role="banner">
+      <div class="container">
+        <a href="/index.html" class="logo" aria-label="Faith Over Fear home">F<span class="logo-accent">&gt;</span>F</a>
 
-            <!-- Desktop Nav -->
-            <nav class="hidden md:flex items-center space-x-8 uppercase text-sm font-medium tracking-wide">
-                <a href="/" class="text-fof-accent transition-colors">Home</a>
-                <a href="/shop.html" class="hover:text-fof-accent transition-colors">New Arrivals</a>
-                <a href="/lookbook.html" class="hover:text-fof-accent transition-colors">Lookbook</a>
-                <a href="/about.html" class="hover:text-fof-accent transition-colors">About</a>
-                <a href="/contact.html" class="hover:text-fof-accent transition-colors">Contact</a>
-            </nav>
+        <input type="checkbox" id="menu-toggle" class="menu-toggle" style="display: none;">
+        <label for="menu-toggle" class="hamburger" aria-hidden="true"><span></span></label>
 
-            <!-- Icons -->
-            <div class="flex items-center space-x-4 md:space-x-6">
-                <!-- Cart Icon -->
-                <button @click="cartOpen = !cartOpen" class="relative hover:text-fof-accent transition-colors p-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                    </svg>
-                    <!-- Cart Count Mockup -->
-                    <span class="absolute top-1 right-1 bg-fof-accent text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" x-text="cartItems.length"></span>
-                </button>
-
-                <!-- Mobile Menu Button -->
-                <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden hover:text-fof-accent focus:outline-none p-2 translate-x-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <!-- Mobile Menu Overlay -->
-        <div x-show="mobileMenuOpen" 
-             x-cloak
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 -translate-y-full"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 -translate-y-full"
-             class="fixed inset-0 top-0 pt-20 bg-fof-black z-40 md:hidden flex flex-col items-center justify-center space-y-8 text-2xl font-display uppercase tracking-widest border-t border-fof-gray">
-             
-            <!-- Close button for mobile menu -->
-            <button @click="mobileMenuOpen = false" class="absolute top-6 right-6 text-gray-400 hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-
-            <a href="/" @click="mobileMenuOpen = false" class="text-fof-accent">Home</a>
-            <a href="/shop.html" @click="mobileMenuOpen = false" class="hover:text-fof-accent">New Drops</a>
-            <a href="/lookbook.html" @click="mobileMenuOpen = false" class="hover:text-fof-accent">Lookbook</a>
-            <a href="/about.html" @click="mobileMenuOpen = false" class="hover:text-fof-accent">About</a>
-            <a href="/contact.html" @click="mobileMenuOpen = false" class="hover:text-fof-accent">Contact</a>
-        </div>
+        <nav id="primary-nav" class="primary-nav" role="navigation">
+          <ul class="nav-list">
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/shop.html">New Arrivals</a></li>
+            <li><a href="/lookbook.html">Recent Drops</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/contact.html">Contact</a></li>
+            <template x-if="!user">
+                <li><a href="/login.html" class="text-fof-accent">Login</a></li>
+            </template>
+            <template x-if="user">
+                <li class="relative group flex flex-col items-center">
+                    <button class="text-sm font-semibold text-fof-accent flex items-center space-x-2">
+                        <span x-text="user.name"></span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="absolute left-1/2 top-full w-48 h-2 -translate-x-1/2 bg-transparent pointer-events-auto"></div>
+                    <div class="absolute left-1/2 top-full mt-1 w-48 min-w-[160px] -translate-x-1/2 z-[999] bg-zinc-900 border border-zinc-800 shadow-xl flex flex-col overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto">
+                        <a href="/reservations.html"
+                                class="block w-full text-left px-4 py-3 text-sm font-medium text-white border-b border-zinc-800 hover:bg-zinc-800 transition-colors">
+                            My Reservations
+                        </a>
+                        <button @click="localStorage.removeItem('fof_token'); localStorage.removeItem('fof_user'); window.location.reload()"
+                                class="block w-full text-left px-4 py-3 text-sm font-medium text-white hover:bg-zinc-800 transition-colors">
+                            Logout
+                        </button>
+                    </div>
+                </li>
+            </template>
+            <li class="cta"><a href="/cart.html">Cart</a></li>
+          </ul>
+        </nav>
+      </div>
     </header>
+
+    <!-- Global Notifications -->
+    <div class="fixed bottom-6 right-6 z-[100] space-y-3 pointer-events-none" 
+         x-data="{ 
+            notifications: [], 
+            add(e) { 
+                const id = Date.now();
+                this.notifications.push({ id, message: e.detail.message, type: e.detail.type });
+                setTimeout(() => this.notifications = this.notifications.filter(n => n.id !== id), 3000);
+            } 
+         }" 
+         @notify.window="add($event)">
+        <template x-for="n in notifications" :key="n.id">
+            <div x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="translate-x-full opacity-0"
+                 x-transition:enter-end="translate-x-0 opacity-100"
+                 x-transition:leave="transition ease-in duration-300"
+                 x-transition:leave-start="translate-x-0 opacity-100"
+                 x-transition:leave-end="translate-x-full opacity-0"
+                 class="pointer-events-auto flex items-center p-4 bg-zinc-900 border border-fof-gray shadow-2xl min-w-[300px]">
+                <div class="w-1 h-10 mr-4" :class="n.type === 'success' ? 'bg-green-500' : 'bg-fof-accent'"></div>
+                <div class="flex-1">
+                    <p class="text-xs uppercase tracking-widest text-gray-500 font-bold mb-0.5" x-text="n.type"></p>
+                    <p class="text-sm font-medium" x-text="n.message"></p>
+                </div>
+            </div>
+        </template>
+    </div>
 
     <!-- Main Content -->
     <main class="min-h-screen pt-20">
@@ -108,11 +116,11 @@
                         Streetwear that speaks louder than words. Join the movement. Wear your conviction.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-                        <a href="#new-drops" class="px-8 py-4 bg-fof-white text-fof-black font-bold uppercase tracking-widest hover:bg-fof-accent hover:text-white transition-all transform hover:scale-105 clip-image">
-                            Shop The Drop
+                        <a href="/signup.html" class="px-8 py-4 bg-fof-white text-fof-black font-bold uppercase tracking-widest hover:bg-fof-accent hover:text-white transition-all transform hover:scale-105 clip-image">
+                            Join the <br> movement
                         </a>
-                        <a href="/lookbook.html" class="px-8 py-4 border border-fof-gray hover:border-fof-white transition-colors uppercase tracking-widest text-sm flex items-center justify-center">
-                            View Lookbook
+                        <a href="/login.html" class="px-8 py-4 border border-fof-gray hover:border-fof-white transition-colors uppercase tracking-widest text-sm flex items-center justify-center">
+                            Login
                         </a>
                     </div>
                 </div>
@@ -141,122 +149,155 @@
             </div>
         </section>
 
-        <!-- New Drops Section -->
-        <section id="new-drops" class="py-24 bg-fof-dark border-t border-fof-gray">
-             <div class="container mx-auto px-6">
-                 <div class="flex items-end justify-between mb-12">
-                    <h2 class="text-5xl font-display font-bold">New <span class="text-fof-accent">Drop</span></h2>
-                    <a href="/shop.html" class="text-sm font-bold uppercase tracking-widest hover:text-fof-accent transition-colors">View All</a>
-                 </div>
-                 
-                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                     <!-- Loop over New Drops -->
-                     <template x-for="product in newDrops" :key="product.id">
-                         <div class="group bg-fof-black border border-fof-gray p-4 flex flex-col relative" x-data="{ currentImage: product.images[0], hover: false }" @mouseenter="hover = true" @mouseleave="hover = false">
-                             
-                            <!-- Image Container -->
-                             <div class="relative aspect-[4/5] overflow-hidden mb-6 bg-fof-gray cursor-pointer" @click="openQuickView(product)">
-                                 <img :src="currentImage" :alt="product.name" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
-                                 
-                                 <!-- Image Toggle (on hover if multiple) -->
-                                 <div class="absolute inset-0 flex" x-show="product.images.length > 1">
-                                     <div class="w-1/2 h-full z-10" @mouseenter="currentImage = product.images[0]"></div>
-                                     <div class="w-1/2 h-full z-10" @mouseenter="currentImage = product.images[1] || product.images[0]"></div>
-                                 </div>
+    
 
-                                 <div class="absolute top-4 left-4 bg-fof-accent text-white text-xs font-bold px-2 py-1 uppercase tracking-widest">
-                                     New
-                                 </div>
-                             </div>
+        <!-- Our Movement Section (Brand Vision) -->
+        <section class="py-32 bg-fof-dark border-y border-zinc-900 relative overflow-hidden">
+            <!-- Background Elements -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-fof-accent/5 blur-[120px] rounded-full pointer-events-none"></div>
 
-                             <!-- Content -->
-                             <div class="flex-1 flex flex-col">
-                                 <div class="flex justify-between items-start mb-2">
-                                     <div>
-                                         <h3 class="text-2xl font-bold uppercase leading-none mb-1 group-hover:text-fof-accent transition-colors" x-text="product.name"></h3>
-                                         <p class="text-gray-400 text-xs uppercase tracking-widest" x-text="product.category"></p>
-                                     </div>
-                                     <span class="text-xl font-mono text-fof-white" x-text="product.price.toLocaleString() + ' FRW'"></span>
-                                 </div>
-
-                                 <!-- Inline Controls (Hover or Always Visible? Let's make them visible since requested "Large dynamic cards") -->
-                                 <div class="mt-4 space-y-4 pt-4 border-t border-zinc-800">
-                                     
-                                    <!-- Size Selector -->
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex space-x-2">
-                                            <template x-for="size in product.sizes">
-                                                <button class="w-8 h-8 flex items-center justify-center border text-xs font-bold transition-colors"
-                                                        :class="selectedSize === size && selectedProduct?.id === product.id ? 'bg-fof-white text-black border-fof-white' : 'border-zinc-700 text-gray-400 hover:border-fof-white'"
-                                                        @click="selectedProduct = product; selectedSize = size">
-                                                    <span x-text="size"></span>
-                                                </button>
-                                            </template>
-                                        </div>
-                                    </div>
-                                    
-                                     <div class="grid grid-cols-2 gap-2">
-                                         <button @click="selectedProduct = product; addToCart(product)" class="bg-fof-white text-black font-bold uppercase py-3 text-xs tracking-widest hover:bg-fof-accent hover:text-white transition-colors">
-                                             Add to Cart
-                                         </button>
-                                         <button @click="initPayment(product)" class="border border-fof-accent text-fof-accent font-bold uppercase py-3 text-xs tracking-widest hover:bg-fof-accent hover:text-white transition-colors">
-                                             Pay w/ MoMo
-                                         </button>
-                                     </div>
-                                 </div>
-                             </div>
-                         </div>
-                     </template>
-                 </div>
-             </div>
+            <div class="container mx-auto px-6 relative z-10 text-center max-w-4xl">
+                <div class="inline-block px-4 py-1 border border-zinc-800 rounded-full text-[10px] font-bold tracking-[0.4em] text-gray-500 uppercase mb-8">
+                    Since MMXXIV
+                </div>
+                <h2 class="text-4xl md:text-7xl font-display font-bold uppercase tracking-tighter leading-none mb-10">
+                    Faith Is The <br /> <span class="text-fof-accent">Only Weapon</span>
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 text-left items-start mt-20">
+                    <div class="space-y-6">
+                        <h4 class="text-xl font-display font-bold uppercase tracking-widest text-fof-accent">Our Conviction</h4>
+                        <p class="text-gray-400 font-light leading-relaxed">
+                            Faith Over Fear isn't just a label; it's a declaration. Born in the streets of Rwanda and designed for the global movement, we bridge the gap between spiritual conviction and streetwear culture.
+                        </p>
+                    </div>
+                    <div class="space-y-6">
+                        <h4 class="text-xl font-display font-bold uppercase tracking-widest text-fof-accent">The Quality</h4>
+                        <p class="text-gray-400 font-light leading-relaxed">
+                            Every piece is engineered for longevity and comfort. From our 400GSM heavyweight hoodies to our precision-cut essential tees, we prioritize the fabric that carries our message.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-20">
+                    <a href="/about.html" class="inline-flex items-center space-x-4 group">
+                        <span class="text-sm font-bold uppercase tracking-[0.3em] group-hover:text-fof-accent transition-colors">Discover The Full Story</span>
+                        <div class="w-12 h-[1px] bg-zinc-800 group-hover:bg-fof-accent transition-all group-hover:w-20"></div>
+                    </a>
+                </div>
+            </div>
         </section>
     </main>
     
     <!-- Payment Modal (Global) -->
     <div x-show="paymentModalOpen" 
-         class="fixed inset-0 z-[60] flex items-center justify-center px-4"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
          x-cloak>
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="paymentModalOpen = false"></div>
-        <div class="relative bg-zinc-900 border border-fof-gray p-8 max-w-md w-full shadow-2xl animate-fade-in-up">
-            <h3 class="text-2xl font-display font-bold mb-6 text-center">MoMo Down Payment</h3>
-            
-            <div class="space-y-4 mb-8 bg-black/50 p-6 rounded border border-zinc-800">
-                <div class="flex justify-between items-center text-sm py-2 border-b border-zinc-800/50">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Merchant Code</span>
-                        <span class="font-mono text-fof-accent text-lg font-bold" x-text="momoCode"></span>
-                    </div>
-                    <button @click="copyToClipboard(momoCode, 'Code')" class="p-2 hover:bg-zinc-800 rounded transition-colors relative" title="Copy Code">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                        <span x-show="copyFeedback === 'Code'" x-cloak class="absolute -top-8 left-1/2 -translate-x-1/2 bg-fof-accent text-black text-[10px] px-2 py-1 rounded font-bold">Copied!</span>
-                    </button>
-                </div>
-                <div class="flex justify-between items-center text-sm py-2 border-b border-zinc-800/50">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Phone Number</span>
-                        <span class="font-mono text-white" x-text="momoPhone"></span>
-                    </div>
-                    <button @click="copyToClipboard(momoPhone, 'Number')" class="p-2 hover:bg-zinc-800 rounded transition-colors relative" title="Copy Number">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                        <span x-show="copyFeedback === 'Number'" x-cloak class="absolute -top-8 left-1/2 -translate-x-1/2 bg-fof-accent text-black text-[10px] px-2 py-1 rounded font-bold">Copied!</span>
-                    </button>
-                </div>
-                <div class="flex justify-between items-center pt-4">
-                    <span class="text-xs text-gray-400 uppercase tracking-widest font-bold">Total Amount:</span>
-                    <span class="font-display font-bold text-xl text-white" x-text="(selectedProduct ? (selectedProduct.price * modalQuantity).toLocaleString() : cartTotal) + ' FRW'"></span>
-                </div>
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" @click="paymentModalOpen = false"></div>
+        
+        <div class="relative bg-zinc-900 border border-fof-gray w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] animate-fade-in-up">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 z-10">
+                <h3 class="text-xl sm:text-2xl font-display font-bold uppercase tracking-tight">MoMo Checkout</h3>
+                <button @click="paymentModalOpen = false" class="text-gray-500 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
             </div>
 
-            <button @click="verifyPayment()" class="w-full bg-green-600 text-white font-bold uppercase py-4 tracking-widest hover:bg-green-500 transition-colors flex items-center justify-center space-x-2">
-                <span>Verify on WhatsApp</span>
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-            </button>
-            
-            <button @click="paymentModalOpen = false" class="absolute top-4 right-4 text-gray-500 hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+            <div class="p-6 sm:p-8 space-y-8">
+                <!-- User Details Section -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] uppercase tracking-[0.2em] text-fof-accent font-bold">1. Your Information</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 font-bold">Full Name</label>
+                            <input type="text" x-model="senderName" placeholder="Enter name" class="w-full bg-black border border-zinc-800 p-3 text-sm focus:border-fof-accent outline-none transition-colors rounded-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 font-bold">MoMo Number</label>
+                            <input type="text" x-model="senderPhone" placeholder="078..." class="w-full bg-black border border-zinc-800 p-3 text-sm focus:border-fof-accent outline-none transition-colors rounded-sm">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 font-bold">Amount (FRW)</label>
+                            <input type="text" 
+                                   :value="(selectedProduct ? (parseFloat(selectedProduct.price) * parseInt(modalQuantity)).toFixed(2) : grandTotal) + ' FRW'" 
+                                   readonly 
+                                   class="w-full bg-zinc-900 border border-zinc-800 p-3 text-sm text-white font-mono font-bold outline-none cursor-not-allowed rounded-sm">
+                            <p class="text-[10px] text-gray-500 mt-1.5">Amount is automatically calculated from your order</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Details Section -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] uppercase tracking-[0.2em] text-fof-accent font-bold">2. Payment Details</h4>
+                    <div class="bg-black/40 border border-zinc-800 rounded-sm divide-y divide-zinc-800/50">
+                        <!-- Merchant Code -->
+                        <div class="p-4 flex items-center justify-between group">
+                            <div>
+                                <span class="block text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Merchant Code</span>
+                                <span class="font-mono text-white text-lg font-bold tracking-wider" x-text="momoCode"></span>
+                            </div>
+                            <button @click="copyToClipboard(momoCode, 'Code')" class="flex items-center space-x-2 px-3 py-2 bg-zinc-800/50 hover:bg-fof-accent hover:text-white transition-all rounded text-[10px] uppercase font-bold tracking-widest relative">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                                <span>Copy</span>
+                                <span x-show="copyFeedback === 'Code'" x-cloak class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-fof-accent text-white text-[10px] px-2 py-1 rounded">Copied!</span>
+                            </button>
+                        </div>
+                        <!-- Store Number -->
+                        <div class="p-4 flex items-center justify-between group">
+                            <div>
+                                <span class="block text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Store Number</span>
+                                <span class="font-mono text-white text-lg font-bold tracking-wider" x-text="momoPhone"></span>
+                            </div>
+                            <button @click="copyToClipboard(momoPhone, 'Number')" class="flex items-center space-x-2 px-3 py-2 bg-zinc-800/50 hover:bg-fof-accent hover:text-white transition-all rounded text-[10px] uppercase font-bold tracking-widest relative">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                                <span>Copy</span>
+                                <span x-show="copyFeedback === 'Number'" x-cloak class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-fof-accent text-white text-[10px] px-2 py-1 rounded">Copied!</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Breakdown -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] uppercase tracking-[0.2em] text-fof-accent font-bold">3. Order Summary</h4>
+                    <div class="bg-black/20 p-4 border border-zinc-800 rounded-sm space-y-3">
+                        <template x-if="selectedProduct">
+                            <div class="flex justify-between items-start text-sm">
+                                <span class="text-gray-400 max-w-[70%]" x-text="selectedProduct.name + ' (' + modalSize + ') x' + modalQuantity"></span>
+                                <span class="font-mono font-bold" x-text="(Number(selectedProduct.price) * Number(modalQuantity)).toLocaleString() + ' FRW'"></span>
+                            </div>
+                        </template>
+                        <template x-if="!selectedProduct">
+                            <div class="space-y-2">
+                                <template x-for="item in cartItems">
+                                    <div class="flex justify-between items-start text-xs border-b border-zinc-800/30 pb-2 last:border-0 last:pb-0">
+                                        <span class="text-gray-400 max-w-[70%]" x-text="item.name + ' (x' + item.quantity + ')'"></span>
+                                        <span class="font-mono" x-text="item.totalPrice.toLocaleString() + ' FRW'"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        
+                        <div class="flex justify-between items-center pt-3 mt-3 border-t border-zinc-700">
+                            <span class="text-xs uppercase font-bold tracking-widest text-white">Total Amount</span>
+                            <span class="text-xl font-display font-bold text-fof-accent" x-text="(selectedProduct ? totalPrice : grandTotal) + ' FRW'"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button @click="verifyPayment()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold uppercase py-5 px-6 rounded-sm tracking-[0.2em] text-xs transition-all flex items-center justify-center space-x-3 group active:scale-[0.98]">
+                    <span>Verify on WhatsApp</span>
+                    <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -286,21 +327,24 @@
                     </div>
                 </div>
 
-                <!-- Links 1 -->
+                <!-- Navigate Section -->
                 <div>
-                    <h3 class="text-white font-bold mb-4">Shop</h3>
+                    <h3 class="text-white font-bold mb-4">Navigate</h3>
                     <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-fof-accent transition-colors">New Arrivals</a></li>
+                        <li><a href="/" class="hover:text-fof-accent transition-colors">Home</a></li>
+                        <li><a href="/shop.html" class="hover:text-fof-accent transition-colors">New Arrivals</a></li>
+                        <li><a href="/lookbook.html" class="hover:text-fof-accent transition-colors">Recent Drops</a></li>
+                        <li><a href="/about.html" class="hover:text-fof-accent transition-colors">About</a></li>
+                        <li><a href="/contact.html" class="hover:text-fof-accent transition-colors">Contact</a></li>
                     </ul>
                 </div>
 
-                <!-- Links 2 -->
+                <!-- Support Section -->
                 <div>
                     <h3 class="text-white font-bold mb-4">Support</h3>
                     <ul class="space-y-2 text-sm text-gray-400">
                         <li><a href="/faq.html" class="hover:text-fof-accent transition-colors">FAQ</a></li>
-                        <li><a href="/shipping.html" class="hover:text-fof-accent transition-colors">Shipping & Returns</a></li>
-                        <li><a href="/contact.html" class="hover:text-fof-accent transition-colors">Contact Us</a></li>
+                        <li><a href="/shipping.html" class="hover:text-fof-accent transition-colors">Deliveries & Returns</a></li>
                         <li><a href="/terms.html" class="hover:text-fof-accent transition-colors">Terms</a></li>
                     </ul>
                 </div>
@@ -325,6 +369,27 @@
              <span x-text="message"></span>
         </div>
 
+        <!-- Auth Notification Modal -->
+        <div x-data="{ open: false }" 
+             @show-auth-modal.window="open = true"
+             x-show="open"
+             class="fixed inset-0 z-[110] flex items-center justify-center p-6"
+             x-cloak>
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-md" @click="open = false"></div>
+            <div class="relative bg-zinc-900 border border-fof-gray w-full max-w-sm p-8 text-center shadow-2xl"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100">
+                <h3 class="text-2xl font-display font-bold uppercase tracking-tight mb-4">Join the Movement</h3>
+                <p class="text-gray-400 text-sm mb-8 leading-relaxed">Unlock exclusive drops, track your orders, and join the Faith Over Fear community.</p>
+                <div class="space-y-4">
+                    <a href="/signup.html" class="block w-full bg-fof-white text-black font-bold uppercase py-4 text-xs tracking-widest hover:bg-fof-accent hover:text-white transition-all">Sign Up</a>
+                    <a href="/login.html" class="block w-full border border-zinc-800 text-white font-bold uppercase py-4 text-xs tracking-widest hover:bg-zinc-800 transition-all">Login</a>
+                </div>
+                <button @click="open = false" class="mt-6 text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 hover:text-white transition-colors">Maybe Later</button>
+            </div>
+        </div>
 
+    <div id="announcement-root"></div>
 </body>
 </html>
