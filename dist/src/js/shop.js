@@ -1,0 +1,438 @@
+const shopLogic = () => ({
+    products: [],
+    loading: false,
+    storeSettings: {
+        purchasingDisabled: false,
+        isRestocking: false
+    },
+    filters: { category: [], minPrice: 0, maxPrice: 300000 },
+    sortBy: "newest",
+    selectedProduct: null,
+    activeProduct: null,
+    scrolled: false,
+    user: null,
+    showMomoModal: false,
+    modalQuantity: 1,
+    modalSize: "M",
+    paymentModalOpen: false,
+    momoCode: "123-456",
+    momoPhone: "0780000000",
+    copyFeedback: "",
+    senderName: "",
+    senderEmail: "",
+    senderPhone: "",
+    cartItems: [],
+    storeConfig: {
+        store_mode: 'live',
+        announcement_message: '',
+        banner_enabled: false
+    },
+    showAnnouncement: false,
+    reservationModalOpen: false,
+    reservationData: {
+        fullName: 'Anonymous Customer', // Default value
+        email: '',
+        phone: 'Not provided', // Default value
+        size: 'M',
+        color: 'Default', // Default value
+        quantity: 1,
+        productId: null
+    },
+
+    async init() {
+        this.user = JSON.parse(localStorage.getItem('fof_user') || 'null');
+        if (!this.requireLoginForProductPages()) return;
+
+        this.loading = true;
+        try {
+            await Promise.all([
+                this.fetchProducts(),
+                this.fetchSettings(),
+                this.initCart()
+            ]);
+        } catch (error) {
+            console.error("Initialization failed:", error);
+        } finally {
+            this.loading = false;
+        }
+        window.addEventListener('cart-updated', () => this.initCart());
+        window.addEventListener('store-config-loaded', (e) => {
+            this.storeConfig = e.detail;
+        });
+
+        // Check if global storeConfig is already loaded
+        if (window.storeConfig) {
+            this.storeConfig = window.storeConfig;
+        }
+    },
+
+    ensureLoggedIn() {
+        const token = localStorage.getItem('fof_token');
+        if (!token) {
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: {
+                    message: 'Please login or sign up before reserving or buying.',
+                    type: 'error'
+                }
+            }));
+            window.location.href = '/login.html';
+            return false;
+        }
+        return true;
+    },
+
+    requireLoginForProductPages() {
+        const path = window.location.pathname.toLowerCase();
+        const protectedPaths = ['/', '/index.html', '/shop.html', '/product.html', '/lookbook.html'];
+        if (protectedPaths.some(p => path === p || path.startsWith(p))) {
+            const token = localStorage.getItem('fof_token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+        }
+        return true;
+    },
+
+    async fetchProducts() {
+        try {
+            const res = await fetch('/api/drops?includeProducts=true');
+            const data = await res.json();
+            if (data.success) {
+                // We have drops (collections). For the shop grid, we want to show all products if active.
+                let allProducts = [];
+                data.drops.forEach(drop => {
+                    if (drop.products && Array.isArray(drop.products)) {
+                        drop.products.forEach(p => {
+                            allProducts.push({
+                                ...p,
+                                dropName: drop.name,
+                                dropType: drop.type,
+                                showDetails: false,
+                                uiQuantity: 1,
+                                uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
+                                images: p.image_urls || [],
+                                // If the drop is inactive or some other logic, we might mark as waitlist
+                                isWaitlist: !drop.is_active || p.stock === 0 // Basic waitlist logic
+                            });
+                        });
+                    }
+                });
+                this.products = allProducts;
+            }
+        } catch (err) {
+            console.error("Failed to fetch products:", err);
+            // Set empty products on error - actual products come from API only
+            this.products = [];
+        }
+    },
+
+    async fetchSettings() {
+        try {
+            const res = await fetch('/api/settings'); // Assuming this endpoint exists or will be added
+            const data = await res.json();
+            if (data.success) {
+                this.storeSettings = data.settings;
+            }
+        } catch (err) {
+            console.warn("Using default store settings");
+        }
+    },
+
+    get filteredProducts() {
+        return this.products.filter(r => {
+            const t = this.filters.category.length === 0 || this.filters.category.includes(r.category);
+            const e = r.price >= this.filters.minPrice && r.price <= this.filters.maxPrice;
+            return t && e;
+        }).sort((r, t) => this.sortBy === "price-asc" ? r.price - t.price : this.sortBy === "price-desc" ? t.price - r.price : t.id > r.id ? 1 : -1);
+    },
+
+    get newDrops() { return this.products.filter(r => r.dropType === "new-drop"); },
+    get recentDrops() { return this.products.filter(r => r.dropType === "recent-drop"); },
+
+    get totalPrice() {
+        if (!this.selectedProduct) return "0.00";
+        return (parseFloat(this.selectedProduct.price) * parseInt(this.modalQuantity)).toFixed(2);
+    },
+
+    get momoQuickPayAmount() {
+        if (!this.activeProduct) return "0.00";
+        return (parseFloat(this.activeProduct.price) * parseInt(this.modalQuantity || 1)).toFixed(2);
+    },
+
+    toggleCategory(r) {
+        this.filters.category.includes(r)
+            ? this.filters.category = this.filters.category.filter(t => t !== r)
+            : this.filters.category.push(r);
+    },
+
+    initPayment(product, qty = 1, size = "M") {
+        console.log('MoMo Button Clicked', product ? product.id : 'cart');
+        if (!this.ensureLoggedIn()) return;
+        if (this.storeSettings.purchasingDisabled) {
+            window.dispatchEvent(new CustomEvent("notify", {
+                detail: { message: "Purchasing is currently disabled.", type: "error" }
+            }));
+            return;
+        }
+        this.selectedProduct = product;
+        this.modalQuantity = product ? (parseInt(qty) || 1) : 0;
+        this.modalSize = product ? (size || product.uiSize || "M") : "";
+        this.paymentModalOpen = true;
+    },
+
+    initCart() { this.cartItems = JSON.parse(localStorage.getItem("fof_cart")) || []; },
+
+    openMomoQuickPay(product, qty = 1, size = "M") {
+        if (!this.ensureLoggedIn()) return;
+        if (this.storeSettings.purchasingDisabled) {
+            window.dispatchEvent(new CustomEvent("notify", {
+                detail: { message: "Purchasing is currently disabled.", type: "error" }
+            }));
+            return;
+        }
+        this.activeProduct = product;
+        this.selectedProduct = product;
+        this.modalQuantity = product ? (parseInt(qty) || 1) : 1;
+        this.modalSize = product ? (size || product.uiSize || "M") : "M";
+        this.showMomoModal = true;
+    },
+
+    closeMomoQuickPay() {
+        this.showMomoModal = false;
+        this.activeProduct = null;
+    },
+
+    isValidMomoPhone(phone) {
+        const normalizedPhone = String(phone || "").replace(/\s+/g, "");
+        return /^07(?:2|3|8|9)\d{7}$/.test(normalizedPhone);
+    },
+
+    async processMomoPayment() {
+        return this.verifyPayment();
+    },
+
+    get cartTotal() { return this.grandTotal; },
+    get cartTotalRaw() {
+        return this.cartItems.reduce((acc, item) => acc + (parseFloat(item.price) * parseInt(item.quantity)), 0);
+    },
+    get grandTotal() { return this.cartTotalRaw.toFixed(2); },
+
+    persistCart() {
+        localStorage.setItem("fof_cart", JSON.stringify(this.cartItems));
+        window.dispatchEvent(new CustomEvent("cart-updated"));
+    },
+
+    updateQuantity(index, delta) {
+        if (this.cartItems[index]) {
+            const newQty = this.cartItems[index].quantity + delta;
+            if (newQty > 0) {
+                this.cartItems[index].quantity = newQty;
+                this.cartItems[index].totalPrice = this.cartItems[index].price * newQty;
+                this.persistCart();
+            } else if (newQty === 0) {
+                this.removeFromCart(index);
+            }
+        }
+    },
+
+    updateSize(index, newSize) {
+        if (this.cartItems[index]) {
+            this.cartItems[index].selectedSize = newSize;
+            this.persistCart();
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: `Size updated to ${newSize}`, type: "success" } }));
+        }
+    },
+
+    removeFromCart(index) {
+        if (this.cartItems[index]) {
+            this.cartItems.splice(index, 1);
+            this.persistCart();
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Item removed from cart", type: "success" } }));
+        }
+    },
+
+    async verifyPayment() {
+        if (!this.ensureLoggedIn()) return;
+        if (!this.senderName || !this.senderPhone) {
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Please fill in your name and phone.", type: "error" } }));
+            return;
+        }
+
+        if (!this.isValidMomoPhone(this.senderPhone)) {
+            window.dispatchEvent(new CustomEvent("notify", {
+                detail: { message: "Use a valid MoMo number with a supported 07 prefix.", type: "error" }
+            }));
+            return;
+        }
+
+        const checkoutProduct = this.activeProduct || this.selectedProduct;
+        const isCartCheckout = !checkoutProduct;
+        const total = isCartCheckout ? this.grandTotal : this.totalPrice;
+        const items = isCartCheckout
+            ? this.cartItems.map(i => ({ product_id: i.id, quantity: i.quantity, price: i.price, size: i.selectedSize }))
+            : [{ product_id: checkoutProduct.id, quantity: this.modalQuantity, price: checkoutProduct.price, size: this.modalSize }];
+
+        this.loading = true;
+
+        // Prepare WhatsApp message components
+        let itemsList = isCartCheckout
+            ? this.cartItems.map(item => `- ${item.name} (${item.selectedSize}) x${item.quantity} [${(item.price * item.quantity).toLocaleString()} FRW]`).join("\n")
+            : `- ${checkoutProduct.name} (${this.modalSize}) x${this.modalQuantity} [${(checkoutProduct.price * this.modalQuantity).toLocaleString()} FRW]`;
+
+        try {
+            const token = localStorage.getItem('fof_token');
+            const response = await fetch('/api/orders/order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify({
+                    customer_name: this.senderName,
+                    customer_email: this.senderEmail || null,
+                    phone: this.senderPhone,
+                    totalAmount: parseFloat(total),
+                    items: items
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${result.orderId}\nCustomer: ${this.senderName}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
+
+                // Open WhatsApp in a new tab for WhatsApp Web users
+                window.open(`https://wa.me/250780000000?text=${encodeURIComponent(message)}`, "_blank");
+
+                if (isCartCheckout) {
+                    this.cartItems = [];
+                    this.persistCart();
+                }
+                setTimeout(() => {
+                    this.paymentModalOpen = false;
+                    this.showMomoModal = false;
+                    this.activeProduct = null;
+                }, 500);
+                window.dispatchEvent(new CustomEvent("notify", { detail: { message: "WhatsApp Opened! Please verify your payment.", type: "success" } }));
+            } else {
+                throw new Error(result.message || "Failed to place order");
+            }
+        } catch (err) {
+            console.error("Order creation failed, using fallback:", err);
+
+            // Fallback: Open WhatsApp even if API fails
+            const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.`;
+
+            window.open(`https://wa.me/250780000000?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
+
+            window.dispatchEvent(new CustomEvent("notify", {
+                detail: {
+                    message: "Redirecting to WhatsApp for manual verification.",
+                    type: "success"
+                }
+            }));
+
+            if (isCartCheckout) {
+                this.cartItems = [];
+                this.persistCart();
+            }
+            setTimeout(() => {
+                this.paymentModalOpen = false;
+                this.showMomoModal = false;
+                this.activeProduct = null;
+            }, 500);
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    async copyToClipboard(text, type) {
+        try {
+            await navigator.clipboard.writeText(text);
+            this.copyFeedback = type;
+            setTimeout(() => this.copyFeedback = "", 2000);
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: `Copied ${type} to clipboard`, type: "success" } }));
+        } catch (err) {
+            console.error("Failed to copy: ", err);
+        }
+    },
+
+    addToCart(product, qty = 1, size = "M") {
+        if (this.storeSettings.purchasingDisabled) return;
+
+        const existingItemIndex = this.cartItems.findIndex(item => item.id === product.id && item.selectedSize === size);
+
+        if (existingItemIndex > -1) {
+            this.cartItems[existingItemIndex].quantity += parseInt(qty);
+            this.cartItems[existingItemIndex].totalPrice = this.cartItems[existingItemIndex].price * this.cartItems[existingItemIndex].quantity;
+        } else {
+            this.cartItems.push({
+                ...product,
+                selectedSize: size,
+                quantity: parseInt(qty),
+                totalPrice: product.price * parseInt(qty)
+            });
+        }
+
+        this.persistCart();
+        window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Added to Cart", type: "success" } }));
+    },
+
+    incrementQty(product) { product.uiQuantity++; },
+    decrementQty(product) { if (product.uiQuantity > 1) product.uiQuantity--; },
+
+    initReservation(product, size = "M") {
+        if (!this.ensureLoggedIn()) return;
+        this.selectedProduct = product;
+        this.reservationData = {
+            fullName: this.senderName || '',
+            email: '',
+            phone: this.senderPhone || '',
+            size: size || product.uiSize || "M",
+            color: product.colors && product.colors.length > 0 ? product.colors[0] : '',
+            quantity: product.uiQuantity || 1
+        };
+        this.reservationModalOpen = true;
+    },
+
+    async submitReservation() {
+        if (!this.ensureLoggedIn()) return;
+        if (!this.reservationData.fullName || !this.reservationData.email) {
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Please fill in your name and email.", type: "error" } }));
+            return;
+        }
+
+        this.loading = true;
+
+        const user = JSON.parse(localStorage.getItem('fof_user'));
+        const payload = {
+            ...this.reservationData,
+            productId: this.selectedProduct.id,
+            userId: user ? user.id : null
+        };
+
+        console.log("Submitting Reservation Payload:", payload);
+
+        try {
+            const response = await fetch('/api/reserve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Reservation confirmed! We'll contact you soon.", type: "success" } }));
+                this.reservationModalOpen = false;
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (err) {
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Failed to submit reservation. Please try again.", type: "error" } }));
+        } finally {
+            this.loading = false;
+        }
+    }
+});
+
+export default shopLogic;

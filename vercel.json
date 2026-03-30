@@ -1,21 +1,17 @@
 {
   "version": 2,
-  "buildCommand": "npm run build:frontend && npm run build:admin",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": null,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://YOUR-BACKEND-URL.railway.app/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://YOUR-BACKEND-URL.railway.app/api/:path*"
     },
     {
-      "src": "/admin/(.*)",
-      "dest": "/admin/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/((?!assets|images|admin|src|favicon).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -29,6 +25,19 @@
         {
           "key": "X-Frame-Options",
           "value": "DENY"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     },

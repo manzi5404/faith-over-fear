@@ -1,4 +1,4 @@
-# Faith Over Fear - Deployment Guide
+# Faith Over Fear - Deployment Guide (Fixed)
 
 This document provides step-by-step instructions for deploying the Faith Over Fear e-commerce platform.
 
@@ -18,12 +18,43 @@ faith-over-fear/
 
 ---
 
+## What Was Fixed
+
+### The MIME Type Error
+**Problem**: "Failed to load module script: Expected a JavaScript module but server responded with MIME type text/html"
+
+**Root Cause**: The original `vercel.json` used a catch-all route that rewrote ALL requests (including JS/CSS files) to `/index.html`:
+```json
+// WRONG - rewrites assets/* to index.html
+{ "src": "/(.*)", "dest": "/index.html" }
+```
+
+**Solution**: Use `rewrites` with negative lookahead to exclude static assets:
+```json
+// CORRECT - only rewrites non-asset routes to index.html
+{
+  "source": "/((?!assets|images|admin|src|favicon).*)",
+  "destination": "/index.html"
+}
+```
+
+---
+
+## Files Modified
+
+| File | Changes |
+|------|---------|
+| `vercel.json` | Fixed rewrites to not rewrite static assets |
+| `vite.config.js` | Copies src/ and images/ to dist/ for direct access |
+
+---
+
 ## Deployment Architecture
 
 ### Frontend (Vercel - Free)
 - **Public pages**: All root HTML files (index.html, shop.html, etc.)
 - **Admin portal**: Vue app built to `/admin` route
-- **Static assets**: CSS, JS, images
+- **Static assets**: `/assets/*`, `/src/*`, `/images/*` served directly
 
 ### Backend API (Separate Hosting Required)
 - **Recommended**: [Railway](https://railway.app) (Free tier: $5/month credit)
@@ -31,38 +62,17 @@ faith-over-fear/
 
 ---
 
-## Backend Deployment (Railway - Recommended)
+## Deployment Steps
 
-### Step 1: Prepare Backend for Deployment
+### Step 1: Deploy Backend to Railway
 
-1. Navigate to the backend directory:
-   ```bash
-   cd fof-backend
-   ```
-
-2. Update `package.json` with start script:
-   ```json
-   {
-     "scripts": {
-       "start": "node server.js",
-       "dev": "nodemon server.js"
-     }
-   }
-   ```
-
-### Step 2: Deploy to Railway
-
-1. **Create Railway Account**: Go to [railway.app](https://railway.app) and sign up
+1. **Create Railway Account**: Go to [railway.app](https://railway.app)
 
 2. **New Project**: Click "New Project" → "Deploy from GitHub"
 
-3. **Connect Repository**: Select your GitHub repository
+3. **Connect Repository**: Select your repository, set root to `fof-backend`
 
-4. **Configure Backend**:
-   - Set root directory to `fof-backend`
-   - Railway will auto-detect Node.js
-
-5. **Add Environment Variables** in Railway dashboard:
+4. **Add Environment Variables**:
    ```
    PORT=5000
    DB_HOST=your-mysql-host
@@ -75,263 +85,112 @@ faith-over-fear/
    CLOUDINARY_API_SECRET=your-api-secret
    ```
 
-6. **Add MySQL Database**:
-   - In Railway project, click "Add Plugin" → "MySQL"
-   - Note the connection details for environment variables
+5. **Add MySQL Database**: Add Plugin → MySQL
 
-7. **Deploy**: Railway will automatically deploy
+6. **Deploy**: Railway auto-deploys on push
 
-8. **Note your backend URL**: It will be something like `https://fof-backend.up.railway.app`
+7. **Copy your backend URL**: e.g., `https://fof-backend.up.railway.app`
 
----
+### Step 2: Update vercel.json with Your Backend URL
 
-## Frontend Deployment (Vercel - Free)
-
-### Step 1: Update API Configuration
-
-1. Edit `vercel.json` and replace `YOUR-BACKEND-URL.railway.app` with your actual backend URL:
+Edit `vercel.json` and replace `YOUR-BACKEND-URL.railway.app`:
 
 ```json
-{
-  "src": "/api/(.*)",
-  "dest": "https://fof-backend.up.railway.app/api/$1"
-}
+"destination": "https://fof-backend.up.railway.app/api/:path*"
 ```
 
-2. Update your HTML files to point to the correct API URL. Add this before closing `</head>` in each HTML file:
+### Step 3: Deploy Frontend to Vercel
 
-```html
-<script>
-  window.API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5000' 
-    : 'https://fof-backend.up.railway.app';
-</script>
-```
+1. **Connect to Vercel**: Go to [vercel.com](https://vercel.com)
 
-Or update the JavaScript files that make API calls to use environment-based URLs.
+2. **Import Project**: Add New → Project → Import from GitHub
 
-### Step 2: Deploy to Vercel
-
-1. **Create Vercel Account**: Go to [vercel.com](https://vercel.com) and sign up with GitHub
-
-2. **Import Project**: Click "Add New" → "Project" → Import from GitHub
-
-3. **Configure Project**:
-   - Framework Preset: "Other"
-   - Root Directory: `.` (leave as default)
+3. **Configure**:
+   - Framework Preset: Other
+   - Root Directory: `.`
    - Build Command: `npm run build`
    - Output Directory: `dist`
 
-4. **Environment Variables** (if needed):
-   ```
-   NODE_ENV=production
-   ```
+4. **Deploy**: Click Deploy
 
-5. **Deploy**: Click "Deploy"
+5. **Redeploy after vercel.json changes**: Push changes or trigger fresh deploy
 
 ---
 
-## Alternative: Using Vercel for Everything
+## Build Verification
 
-If you prefer to use Vercel serverless functions instead of Railway:
-
-### Option A: Vercel Serverless Functions
-
-Create API routes in `api/` directory:
-
+Run locally to verify:
 ```bash
-mkdir -p api
-```
-
-Move backend logic to serverless functions:
-
-```javascript
-// api/products.js
-module.exports = (req, res) => {
-  // Your product API logic here
-};
-```
-
-### Option B: Vercel Edge Functions
-
-For simpler APIs, use Edge Functions:
-
-```javascript
-// api/products.js
-export default async function handler(req, res) {
-  res.json({ message: 'API response' });
-}
-```
-
-**Note**: The current backend uses MySQL with connection pooling which requires a traditional Node.js server. For production, Railway is recommended.
-
----
-
-## Admin Portal Configuration
-
-The admin portal is located at `frontend/src/admin/drops/` and is built separately.
-
-### Build Configuration
-
-The `vite.config.js` in the admin folder builds to `dist/admin/`:
-
-```javascript
-// frontend/src/admin/drops/vite.config.js
-export default defineConfig({
-  root: __dirname,
-  plugins: [vue()],
-  base: './',
-  build: {
-    outDir: path.resolve(__dirname, '../../../dist/admin'),
-    emptyOutDir: true
-  }
-});
-```
-
-### Accessing Admin Portal
-
-After deployment:
-- **Production**: `https://your-domain.com/admin`
-- **Local**: `https://localhost:5173/admin` (after running dev server)
-
-### Admin API Configuration
-
-Update the admin portal to use your backend URL. Edit `frontend/src/admin/drops/DropService.js`:
-
-```javascript
-const API_BASE = window.location.hostname === 'localhost'
-  ? 'http://localhost:5000'
-  : 'https://fof-backend.up.railway.app';
-```
-
----
-
-## Local Development
-
-### Frontend Development
-
-```bash
-# Install dependencies
-npm install
-
-# Start dev server (frontend only)
-npm run dev
-
-# Build for production
 npm run build
 ```
 
-### Backend Development
-
-```bash
-# Navigate to backend
-cd fof-backend
-
-# Install dependencies
-npm install
-
-# Start backend server
-npm start
-
-# Or with auto-reload
-npm run dev
+Expected output:
 ```
-
-### Full Stack Development
-
-Terminal 1:
-```bash
-npm run dev
-```
-
-Terminal 2:
-```bash
-cd fof-backend && npm start
+dist/
+├── index.html, shop.html, ... (15 HTML files)
+├── assets/
+│   ├── main-xxxx.js
+│   └── main-xxxx.css
+├── images/
+├── src/
+│   ├── css/style.css
+│   └── js/*.js
+└── admin/
+    ├── index.html
+    ├── index.js
+    └── index.css
 ```
 
 ---
 
-## Environment Variables Reference
+## Routing Behavior (After Fix)
 
-### Backend (.env in fof-backend/)
-
-```env
-PORT=5000
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your-password
-DB_NAME=fof_database
-JWT_SECRET=your-secret-key-min-32-chars
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
-```
-
-### Frontend
-
-No environment variables needed for static deployment. API URLs are configured in JavaScript.
+| URL | Behavior |
+|-----|----------|
+| `/` | Serves `/index.html` |
+| `/shop` | Serves `/index.html` (SPA fallback) |
+| `/assets/*` | Serves files from `dist/assets/` |
+| `/src/*` | Serves files from `dist/src/` |
+| `/images/*` | Serves files from `dist/images/` |
+| `/admin` | Serves `dist/admin/index.html` |
+| `/admin/*` | Serves `dist/admin/*` |
+| `/api/*` | Proxies to backend API |
 
 ---
 
 ## Troubleshooting
 
-### CORS Issues
+### Still Getting MIME Type Error?
+1. Clear Vercel cache: Settings → Git → Fresh Deployment
+2. Verify `dist/` contains `assets/` folder
+3. Check browser Network tab - what URL is returning HTML?
 
-If you get CORS errors after deployment:
-1. Check that the backend CORS configuration allows your frontend domain
-2. Update `fof-backend/server.js`:
-   ```javascript
-   app.use(cors({
-     origin: ['https://your-frontend.vercel.app'],
-     credentials: true
-   }));
-   ```
-
-### 404 on Refresh (Vercel)
-
-The `vercel.json` includes a catch-all route to `index.html`. If pages still 404:
-1. Check that `dist/` contains all HTML files
-2. Verify the build completed successfully
+### 404 on Pages
+1. Verify `vercel.json` has the correct rewrite rule
+2. Ensure output directory is `dist`
+3. Check that HTML files exist in `dist/`
 
 ### Admin Portal Not Loading
-
-1. Ensure `dist/admin/` folder exists with `index.html`
-2. Check browser console for JavaScript errors
-3. Verify API_BASE_URL is set correctly
-
-### Build Failures
-
-1. Clear Vercel cache: Settings → Git → Fresh Deployment
-2. Check build logs for specific errors
-3. Run `npm run build` locally to debug
+1. Verify `dist/admin/` folder exists
+2. Check `vercel.json` has `/admin/(.*)` route
+3. Verify admin HTML has correct asset paths
 
 ---
 
-## Free Platform Options Comparison
+## Free Platform Options
 
 | Platform | Backend | Database | Free Tier |
 |----------|---------|----------|-----------|
 | Railway | ✅ Node.js | MySQL, Postgres | $5/month credit |
 | Render | ✅ Node.js | Postgres | 750 hours/month |
-| Fly.io | ✅ Node.js | Postgres (external) | 3 shared VMs |
-| Heroku | ✅ Node.js | Postgres (limited) | 550 hours/month |
-| Vercel | ⚠️ Serverless | ❌ External only | Unlimited static |
+| Fly.io | ✅ Node.js | Postgres (ext) | 3 shared VMs |
+| Heroku | ✅ Node.js | Postgres (lim) | 550 hours/month |
+| Vercel | ⚠️ Serverless | ❌ External | Unlimited static |
 
 ---
 
 ## Security Notes
 
-1. **Never commit `.env` files** - Add to `.gitignore`
-2. **Use HTTPS** - All deployments should use HTTPS
-3. **Validate Admin Access** - Ensure admin routes require authentication
-4. **Sanitize Inputs** - The existing code uses express-validator
-
----
-
-## Support
-
-For deployment issues, check:
-1. Platform-specific documentation (Vercel, Railway)
-2. Build logs in deployment dashboard
-3. Browser developer console for frontend issues
-4. Server logs for backend issues
+1. **Never commit `.env` files**
+2. **Use HTTPS** on all deployments
+3. **Validate Admin Access** - existing auth middleware protects routes
