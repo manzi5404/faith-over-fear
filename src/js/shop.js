@@ -35,6 +35,8 @@ const shopLogic = () => ({
     },
 
     async init() {
+        if (!this.requireLoginForProductPages()) return;
+
         this.loading = true;
         try {
             await Promise.all([
@@ -56,6 +58,34 @@ const shopLogic = () => ({
         if (window.storeConfig) {
             this.storeConfig = window.storeConfig;
         }
+    },
+
+    ensureLoggedIn() {
+        const token = localStorage.getItem('fof_token');
+        if (!token) {
+            window.dispatchEvent(new CustomEvent('notify', {
+                detail: {
+                    message: 'Please login or sign up before reserving or buying.',
+                    type: 'error'
+                }
+            }));
+            window.location.href = '/login.html';
+            return false;
+        }
+        return true;
+    },
+
+    requireLoginForProductPages() {
+        const path = window.location.pathname.toLowerCase();
+        const protectedPaths = ['/', '/index.html', '/shop.html', '/product.html', '/lookbook.html'];
+        if (protectedPaths.some(p => path === p || path.startsWith(p))) {
+            const token = localStorage.getItem('fof_token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+        }
+        return true;
     },
 
     async fetchProducts() {
@@ -86,11 +116,8 @@ const shopLogic = () => ({
             }
         } catch (err) {
             console.error("Failed to fetch products:", err);
-            // Fallback for demo/dev if API is not ready
-            this.products = [
-                { id: 1, name: "Urban Saint Tee", price: 60000, category: "Tops", dropType: "new-drop", images: ["https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=600"], sizes: ["S", "M", "L", "XL"], uiQuantity: 1, uiSize: "M", showDetails: false, isWaitlist: false },
-                { id: 2, name: "Fearless Hoodie", price: 110000, category: "Outerwear", dropType: "new-drop", images: ["https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600"], sizes: ["M", "L", "XL"], uiQuantity: 1, uiSize: "M", showDetails: false, isWaitlist: false }
-            ];
+            // Set empty products on error - actual products come from API only
+            this.products = [];
         }
     },
 
@@ -129,6 +156,7 @@ const shopLogic = () => ({
     },
 
     initPayment(product, qty = 1, size = "M") {
+        if (!this.ensureLoggedIn()) return;
         if (this.storeSettings.purchasingDisabled) {
             window.dispatchEvent(new CustomEvent("notify", {
                 detail: { message: "Purchasing is currently disabled.", type: "error" }
@@ -184,6 +212,7 @@ const shopLogic = () => ({
     },
 
     async verifyPayment() {
+        if (!this.ensureLoggedIn()) return;
         if (!this.senderName || !this.senderPhone) {
             window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Please fill in your name and phone.", type: "error" } }));
             return;
@@ -295,6 +324,7 @@ const shopLogic = () => ({
     decrementQty(product) { if (product.uiQuantity > 1) product.uiQuantity--; },
 
     initReservation(product, size = "M") {
+        if (!this.ensureLoggedIn()) return;
         this.selectedProduct = product;
         this.reservationData = {
             fullName: this.senderName || '',
@@ -308,6 +338,7 @@ const shopLogic = () => ({
     },
 
     async submitReservation() {
+        if (!this.ensureLoggedIn()) return;
         if (!this.reservationData.fullName || !this.reservationData.email) {
             window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Please fill in your name and email.", type: "error" } }));
             return;

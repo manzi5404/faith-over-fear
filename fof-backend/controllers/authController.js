@@ -30,7 +30,7 @@ const signup = async (req, res) => {
             maxAge: 2 * 60 * 60 * 1000 // 2 hours
         });
 
-        res.status(201).json({ success: true, userId, name, email });
+        res.status(201).json({ success: true, token, userId, name, email });
     } catch (error) {
         res.status(500).json({ message: 'Something went wrong', error: error.message });
     }
@@ -63,7 +63,7 @@ const login = async (req, res) => {
             maxAge: 2 * 60 * 60 * 1000 // 2 hours
         });
 
-        res.status(200).json({ success: true, userId: user.id, name: user.name, email: user.email });
+        res.status(200).json({ success: true, token, userId: user.id, name: user.name, email: user.email });
     } catch (error) {
         res.status(500).json({ message: 'Something went wrong', error: error.message });
     }
@@ -184,7 +184,7 @@ const googleLogin = async (req, res) => {
             maxAge: 2 * 60 * 60 * 1000 // 2 hours
         });
 
-        res.status(200).json({ success: true, userId: user.id, name: user.name, email: user.email });
+        res.status(200).json({ success: true, token: jwtToken, userId: user.id, name: user.name, email: user.email });
     } catch (error) {
         console.error('Google Login Error:', error);
         res.status(500).json({ message: 'Google authentication failed', error: error.message });

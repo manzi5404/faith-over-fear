@@ -1,11 +1,14 @@
 const pool = require('../db/connection');
+const notification = require('../models/notification');
 
 const createReservation = async (req, res) => {
     console.log("=== INCOMING RESERVATION REQUEST ===");
     console.log("Headers:", JSON.stringify(req.headers['content-type']));
     console.log("Body:", JSON.stringify(req.body, null, 2));
 
-    const { fullName, email, phone, productId, size, color, quantity, userId } = req.body;
+    const { fullName, email: bodyEmail, phone, productId, size, color, quantity } = req.body;
+    const userId = req.user ? req.user.id : null;
+    const email = req.user ? req.user.email : bodyEmail;
 
     // Basic validation check
     if (!email || !productId) {
@@ -29,10 +32,19 @@ const createReservation = async (req, res) => {
         const [result] = await pool.query(
             `INSERT INTO reservations (user_id, full_name, email, phone, product_id, size, color, quantity, status)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
-            [userId || null, fullName || 'Anonymous', email, phone || 'N/A', productId, size || 'M', color || 'Default', quantity || 1]
+            [userId, fullName || 'Anonymous', email, phone || 'N/A', productId, size || 'M', color || 'Default', quantity || 1]
         );
 
         console.log("✅ Reservation Insert Success ID:", result.insertId);
+
+        // Create notification for admin
+        await notification.createNotification(
+            'reservation',
+            result.insertId,
+            `New reservation from ${fullName || 'Anonymous'}`,
+            `Product ID: ${productId} | Size: ${size || 'M'} | Qty: ${quantity || 1}`
+        );
+
         res.status(201).json({
             success: true,
             message: 'Reservation recorded successfully',

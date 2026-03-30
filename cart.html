@@ -42,12 +42,12 @@
                         <span x-text="user.name"></span>
                         <svg class="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div class="absolute right-0 mt-2 w-48 bg-zinc-900 border border-fof-gray opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
-                        <a href="/reservations.html" 
+                    <div class="absolute right-0 mt-2 w-48 z-50 bg-zinc-900 border border-fof-gray opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+                        <a href="/reservations.html"
                                 class="block w-full text-left px-4 py-3 text-[10px] uppercase tracking-widest font-bold border-b border-zinc-800 hover:bg-fof-accent hover:text-white transition-colors">
                             My Reservations
                         </a>
-                        <button @click="localStorage.removeItem('fof_token'); localStorage.removeItem('fof_user'); window.location.reload()" 
+                        <button @click="localStorage.removeItem('fof_token'); localStorage.removeItem('fof_user'); window.location.reload()"
                                 class="w-full text-left px-4 py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-fof-accent hover:text-white transition-colors">
                             Logout
                         </button>
@@ -254,23 +254,12 @@
                 <div class="space-y-4">
                     <h4 class="text-[10px] uppercase tracking-[0.2em] text-fof-accent font-bold">2. Payment Details</h4>
                     <div class="bg-black/40 border border-zinc-800 rounded-sm divide-y divide-zinc-800/50">
-                        <!-- Merchant Code -->
-                        <div class="p-4 flex items-center justify-between group cursor-pointer" @click="copyToClipboard(momoCode, 'Code')">
-                            <div>
-                                <span class="block text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Merchant Code</span>
-                                <span class="font-mono text-white text-lg font-bold tracking-wider" x-text="momoCode"></span>
-                            </div>
-                            <div class="flex items-center space-x-2 px-3 py-2 bg-zinc-800/50 group-hover:bg-fof-accent group-hover:text-white transition-all rounded text-[10px] uppercase font-bold tracking-widest relative">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                                <span>Copy</span>
-                                <span x-show="copyFeedback === 'Code'" x-cloak class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-fof-accent text-white text-[10px] px-2 py-1 rounded whitespace-nowrap">Copied!</span>
-                            </div>
-                        </div>
+                        
                         <!-- Store Number -->
-                        <div class="p-4 flex items-center justify-between group cursor-pointer" @click="copyToClipboard(momoPhone, 'Number')">
+                        <div class="p-4 flex items-center justify-between group cursor-pointer" @click="copyToClipboard('*182*1*1*0791832523#', 'Number')">
                             <div>
                                 <span class="block text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Store Number</span>
-                                <span class="font-mono text-white text-lg font-bold tracking-wider" x-text="momoPhone"></span>
+                                <span class="font-mono text-white text-lg font-bold tracking-wider" x-text="'*182*1*1*0791832523#'"></span>
                             </div>
                             <div class="flex items-center space-x-2 px-3 py-2 bg-zinc-800/50 group-hover:bg-fof-accent group-hover:text-white transition-all rounded text-[10px] uppercase font-bold tracking-widest relative">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
@@ -348,7 +337,7 @@
                              <!-- Instagram Icon -->
                              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                         </a>
-                        <a href="mailto:contact@faithoverfear.brand" class="text-gray-400 hover:text-fof-accent transition-colors" title="Email Us">
+                        <a href="mailto:faithoverfearsupport@gmail.com" class="text-gray-400 hover:text-fof-accent transition-colors" title="Email Us">
                             <!-- Mail Icon -->
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                         </a>

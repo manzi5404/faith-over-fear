@@ -14,7 +14,10 @@ const orderRoutes = require('./routes/orderRoutes');
 const authRoutes = require('./routes/authRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
+const contactRoutes = require('./routes/contactRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const errorHandler = require('./middleware/errorHandler');
+const pool = require('./db/connection');
 const { protect, verifyAdmin } = require('./middleware/authMiddleware');
 const checkStoreMode = require('./middleware/storeModeMiddleware');
 
@@ -33,6 +36,14 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser);
+
+app.use((req, res, next) => {
+  if (req.path.includes('/messages') || req.path.includes('/contact')) {
+    console.log(`📩 INCOMING: ${req.method} ${req.path}`);
+    console.log('Headers:', req.headers['content-type']);
+  }
+  next();
+});
 app.use(checkStoreMode); // Global protection for /api/orders
 
 
@@ -42,8 +53,25 @@ app.use('/api/products', productRoutes);
 app.use('/api/drops', dropRoutes);
 app.get('/api/store-config', storeConfigController.getStoreConfig);
 app.get('/api/announcement', require('./controllers/announcementController').getLatestAnnouncement);
-app.post('/api/reserve', reservationController.createReservation);
+app.post('/api/reserve', protect, reservationController.createReservation);
 app.get('/api/reservations/me', protect, reservationController.getReservations);
+app.post('/api/contact', async (req, res) => {
+  console.log('Incoming Message:', req.body);
+  const { name, email, subject, message } = req.body;
+
+  try {
+    await pool.query(
+      'INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)',
+      [name, email, subject, message]
+    );
+
+    res.status(200).json({ success: true, message: 'Message received!' });
+    console.log('✅ Message saved to database successfully.');
+  } catch (error) {
+    console.error('❌ Database Error:', error);
+    res.status(500).json({ success: false, error: 'Database save failed' });
+  }
+});
 
 // Protected User Routes (Require valid login)
 app.use('/api/orders', protect, orderRoutes);
@@ -58,6 +86,8 @@ app.use('/api/admin/orders', verifyAdmin, orderRoutes);
 app.use('/api/admin/store-config', verifyAdmin, storeConfigController.updateStoreConfig);
 app.use('/api/admin/reservations', verifyAdmin, reservationController.getReservations);
 app.patch('/api/admin/reservations/:id/status', verifyAdmin, reservationController.updateReservationStatus);
+app.use('/api/admin/messages', verifyAdmin, contactRoutes);
+app.use('/api/admin/notifications', notificationRoutes);
 app.use('/api/admin/auth-verify', verifyAdmin, (req, res) => res.json({ success: true, user: req.user }));
 
 

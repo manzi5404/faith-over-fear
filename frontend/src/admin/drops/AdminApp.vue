@@ -58,17 +58,77 @@
               >
                 Reservations
               </button>
-              <button 
+              <button
                 @click="currentTab = 'settings'"
                 :class="['px-4 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'settings' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-500 hover:text-white hover:bg-slate-800']"
               >
                 Settings
               </button>
+              <button
+                @click="currentTab = 'messages'"
+                :class="['px-4 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'messages' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-500 hover:text-white hover:bg-slate-800']"
+              >
+                Messages
+                <span v-if="alertCount > 0" class="ml-1.5 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{{ alertCount > 9 ? '9+' : alertCount }}</span>
+              </button>
             </div>
           </div>
           
           <div class="flex items-center gap-4">
-            <button 
+            <!-- Notification Bell -->
+            <div class="relative">
+              <button
+                @click="showAlertPanel = !showAlertPanel"
+                class="relative p-2 text-slate-500 hover:text-white transition-colors"
+                title="Notifications"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span v-if="alertCount > 0" class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                  {{ alertCount > 9 ? '9+' : alertCount }}
+                </span>
+              </button>
+
+              <!-- Notifications Dropdown -->
+              <div
+                v-if="showAlertPanel"
+                class="absolute right-0 mt-2 w-80 bg-zinc-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden"
+              >
+                <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+                  <h4 class="text-sm font-bold text-white">While You Were Away</h4>
+                  <button
+                    v-if="alertCount > 0"
+                    @click="markAllSeen"
+                    class="text-[10px] uppercase tracking-widest text-blue-400 hover:text-blue-300 font-bold"
+                  >
+                    Mark all read
+                  </button>
+                </div>
+                <div class="max-h-64 overflow-y-auto">
+                  <div v-if="adminAlerts.length === 0" class="px-4 py-8 text-center text-slate-500 text-sm">
+                    No new notifications
+                  </div>
+                  <div
+                    v-for="note in adminAlerts"
+                    :key="note.id"
+                    :class="['px-4 py-3 hover:bg-slate-800/50 cursor-pointer border-b border-slate-800/50', !note.is_seen ? 'bg-blue-500/5' : '']"
+                    @click="handleNotificationClick(note)"
+                  >
+                    <div class="flex items-start gap-3">
+                      <div :class="['w-2 h-2 rounded-full mt-1.5 flex-shrink-0', note.type === 'reservation' ? 'bg-blue-500' : note.type === 'message' ? 'bg-emerald-500' : 'bg-amber-500']"></div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-white truncate">{{ note.title }}</p>
+                        <p v-if="note.description" class="text-xs text-slate-500 mt-0.5 line-clamp-2">{{ note.description }}</p>
+                        <p class="text-[10px] text-slate-600 mt-1">{{ formatNoteDate(note.created_at) }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
               @click="showForm = true; editingDrop = null" 
               class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center gap-2"
             >
@@ -124,6 +184,11 @@
         <section v-if="currentTab === 'settings'">
           <AdminSettings @updated="msg => notify(msg.message, msg.type)" />
         </section>
+
+        <!-- Messages -->
+        <section v-if="currentTab === 'messages'">
+          <AdminMessages @updated="msg => notify(msg.message, msg.type)" />
+        </section>
       </main>
     </div>
 
@@ -150,6 +215,7 @@ import AdminDropList from './AdminDropList.vue';
 import AdminDropForm from './AdminDropForm.vue';
 import AdminSettings from './AdminSettings.vue';
 import AdminReservations from './AdminReservations.vue';
+import AdminMessages from './AdminMessages.vue';
 import DropService from './DropService';
 
 const currentTab = ref('drops');
@@ -163,6 +229,9 @@ const isLoggingIn = ref(false);
 const user = ref(null);
 const loginEmail = ref('');
 const loginPassword = ref('');
+const adminAlerts = ref([]);
+const alertCount = ref(0);
+const showAlertPanel = ref(false);
 
 const checkAuth = async () => {
     try {
@@ -171,6 +240,7 @@ const checkAuth = async () => {
             isAuthenticated.value = true;
             user.value = data.user;
             await fetchDrops();
+            await fetchNotifications();
         }
     } catch (error) {
         isAuthenticated.value = false;
@@ -187,6 +257,7 @@ const handleLogin = async () => {
             user.value = { email: data.email, name: data.name };
             notify('Welcome back, Admin.', 'success');
             await fetchDrops();
+            await fetchNotifications();
         }
     } catch (error) {
         const msg = error.response?.data?.message || 'Login failed.';
@@ -288,6 +359,66 @@ const notify = (message, type = 'success') => {
   setTimeout(() => {
     notifications.value = notifications.value.filter(n => n.id !== id);
   }, 4000);
+};
+
+const fetchNotifications = async () => {
+  try {
+    const [notesData, countData] = await Promise.all([
+      DropService.getNotifications(true),
+      DropService.getNotificationCount()
+    ]);
+    adminAlerts.value = notesData;
+    alertCount.value = countData;
+  } catch (error) {
+    console.error('Error fetching admin notifications:', error);
+    adminAlerts.value = [];
+    alertCount.value = 0;
+  }
+};
+
+const markAllSeen = async () => {
+  try {
+    await DropService.markAllNotificationsSeen();
+    adminAlerts.value = adminAlerts.value.map(n => ({ ...n, is_seen: true }));
+    alertCount.value = 0;
+    notify('All notifications marked as read', 'success');
+  } catch (error) {
+    console.error('Failed to mark all seen:', error);
+  }
+};
+
+const handleNotificationClick = async (note) => {
+  try {
+    await DropService.markNotificationSeen(note.id);
+    note.is_seen = true;
+    alertCount.value = Math.max(0, alertCount.value - 1);
+    showAlertPanel.value = false;
+
+    // Navigate to relevant tab
+    if (note.type === 'message') {
+      currentTab.value = 'messages';
+    } else if (note.type === 'reservation') {
+      currentTab.value = 'reservations';
+    }
+  } catch (error) {
+    console.error('Failed to mark notification:', error);
+  }
+};
+
+const formatNoteDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now - date;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString();
 };
 
 onMounted(checkAuth);

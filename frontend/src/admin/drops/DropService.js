@@ -189,6 +189,78 @@ const DropService = {
             console.error('Error updating announcement:', error);
             throw error;
         }
+    },
+
+    // Contact Messages APIs
+    getMessages: async (status = '') => {
+        try {
+            const response = await axios.get('/api/admin/messages', { params: { status } });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+            throw error;
+        }
+    },
+
+    getMessageById: async (id) => {
+        try {
+            const response = await axios.get(`/api/admin/messages/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching message:', error);
+            throw error;
+        }
+    },
+
+    updateMessageStatus: async (id, status) => {
+        try {
+            const response = await axios.patch(`/api/admin/messages/${id}`, { status });
+            return response.data;
+        } catch (error) {
+            console.error('Error updating message status:', error);
+            throw error;
+        }
+    },
+
+    // Notification APIs
+    getNotifications: async (unseenOnly = false) => {
+        try {
+            const response = await axios.get('/api/admin/notifications', { params: { unseen: unseenOnly } });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+            throw error;
+        }
+    },
+
+    getNotificationCount: async () => {
+        try {
+            const response = await axios.get('/api/admin/notifications/count');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching notification count:', error);
+            throw error;
+        }
+    },
+
+    markNotificationSeen: async (id) => {
+        try {
+            const response = await axios.patch(`/api/admin/notifications/${id}/seen`);
+            return response.data;
+        } catch (error) {
+            console.error('Error marking notification:', error);
+            throw error;
+        }
+    },
+
+    markAllNotificationsSeen: async () => {
+        try {
+            const response = await axios.post('/api/admin/notifications/seen-all');
+            return response.data;
+        } catch (error) {
+            console.error('Error marking all notifications:', error);
+            throw error;
+        }
     }
 };
 
