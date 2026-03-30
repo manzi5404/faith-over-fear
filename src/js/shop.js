@@ -8,6 +8,10 @@ const shopLogic = () => ({
     filters: { category: [], minPrice: 0, maxPrice: 300000 },
     sortBy: "newest",
     selectedProduct: null,
+    activeProduct: null,
+    scrolled: false,
+    user: null,
+    showMomoModal: false,
     modalQuantity: 1,
     modalSize: "M",
     paymentModalOpen: false,
@@ -15,6 +19,7 @@ const shopLogic = () => ({
     momoPhone: "0780000000",
     copyFeedback: "",
     senderName: "",
+    senderEmail: "",
     senderPhone: "",
     cartItems: [],
     storeConfig: {
@@ -35,6 +40,7 @@ const shopLogic = () => ({
     },
 
     async init() {
+        this.user = JSON.parse(localStorage.getItem('fof_user') || 'null');
         if (!this.requireLoginForProductPages()) return;
 
         this.loading = true;
@@ -149,6 +155,11 @@ const shopLogic = () => ({
         return (parseFloat(this.selectedProduct.price) * parseInt(this.modalQuantity)).toFixed(2);
     },
 
+    get momoQuickPayAmount() {
+        if (!this.activeProduct) return "0.00";
+        return (parseFloat(this.activeProduct.price) * parseInt(this.modalQuantity || 1)).toFixed(2);
+    },
+
     toggleCategory(r) {
         this.filters.category.includes(r)
             ? this.filters.category = this.filters.category.filter(t => t !== r)
@@ -156,6 +167,7 @@ const shopLogic = () => ({
     },
 
     initPayment(product, qty = 1, size = "M") {
+        console.log('MoMo Button Clicked', product ? product.id : 'cart');
         if (!this.ensureLoggedIn()) return;
         if (this.storeSettings.purchasingDisabled) {
             window.dispatchEvent(new CustomEvent("notify", {
@@ -170,6 +182,35 @@ const shopLogic = () => ({
     },
 
     initCart() { this.cartItems = JSON.parse(localStorage.getItem("fof_cart")) || []; },
+
+    openMomoQuickPay(product, qty = 1, size = "M") {
+        if (!this.ensureLoggedIn()) return;
+        if (this.storeSettings.purchasingDisabled) {
+            window.dispatchEvent(new CustomEvent("notify", {
+                detail: { message: "Purchasing is currently disabled.", type: "error" }
+            }));
+            return;
+        }
+        this.activeProduct = product;
+        this.selectedProduct = product;
+        this.modalQuantity = product ? (parseInt(qty) || 1) : 1;
+        this.modalSize = product ? (size || product.uiSize || "M") : "M";
+        this.showMomoModal = true;
+    },
+
+    closeMomoQuickPay() {
+        this.showMomoModal = false;
+        this.activeProduct = null;
+    },
+
+    isValidMomoPhone(phone) {
+        const normalizedPhone = String(phone || "").replace(/\s+/g, "");
+        return /^07(?:2|3|8|9)\d{7}$/.test(normalizedPhone);
+    },
+
+    async processMomoPayment() {
+        return this.verifyPayment();
+    },
 
     get cartTotal() { return this.grandTotal; },
     get cartTotalRaw() {
@@ -218,18 +259,26 @@ const shopLogic = () => ({
             return;
         }
 
-        const isCartCheckout = !this.selectedProduct;
+        if (!this.isValidMomoPhone(this.senderPhone)) {
+            window.dispatchEvent(new CustomEvent("notify", {
+                detail: { message: "Use a valid MoMo number with a supported 07 prefix.", type: "error" }
+            }));
+            return;
+        }
+
+        const checkoutProduct = this.activeProduct || this.selectedProduct;
+        const isCartCheckout = !checkoutProduct;
         const total = isCartCheckout ? this.grandTotal : this.totalPrice;
         const items = isCartCheckout
             ? this.cartItems.map(i => ({ product_id: i.id, quantity: i.quantity, price: i.price, size: i.selectedSize }))
-            : [{ product_id: this.selectedProduct.id, quantity: this.modalQuantity, price: this.selectedProduct.price, size: this.modalSize }];
+            : [{ product_id: checkoutProduct.id, quantity: this.modalQuantity, price: checkoutProduct.price, size: this.modalSize }];
 
         this.loading = true;
 
         // Prepare WhatsApp message components
         let itemsList = isCartCheckout
             ? this.cartItems.map(item => `- ${item.name} (${item.selectedSize}) x${item.quantity} [${(item.price * item.quantity).toLocaleString()} FRW]`).join("\n")
-            : `- ${this.selectedProduct.name} (${this.modalSize}) x${this.modalQuantity} [${(this.selectedProduct.price * this.modalQuantity).toLocaleString()} FRW]`;
+            : `- ${checkoutProduct.name} (${this.modalSize}) x${this.modalQuantity} [${(checkoutProduct.price * this.modalQuantity).toLocaleString()} FRW]`;
 
         try {
             const token = localStorage.getItem('fof_token');
@@ -241,6 +290,7 @@ const shopLogic = () => ({
                 },
                 body: JSON.stringify({
                     customer_name: this.senderName,
+                    customer_email: this.senderEmail || null,
                     phone: this.senderPhone,
                     totalAmount: parseFloat(total),
                     items: items
@@ -258,7 +308,11 @@ const shopLogic = () => ({
                     this.cartItems = [];
                     this.persistCart();
                 }
-                setTimeout(() => { this.paymentModalOpen = false; }, 500);
+                setTimeout(() => {
+                    this.paymentModalOpen = false;
+                    this.showMomoModal = false;
+                    this.activeProduct = null;
+                }, 500);
                 window.dispatchEvent(new CustomEvent("notify", { detail: { message: "WhatsApp Opened! Please verify your payment.", type: "success" } }));
             } else {
                 throw new Error(result.message || "Failed to place order");
@@ -282,7 +336,11 @@ const shopLogic = () => ({
                 this.cartItems = [];
                 this.persistCart();
             }
-            setTimeout(() => { this.paymentModalOpen = false; }, 500);
+            setTimeout(() => {
+                this.paymentModalOpen = false;
+                this.showMomoModal = false;
+                this.activeProduct = null;
+            }, 500);
         } finally {
             this.loading = false;
         }

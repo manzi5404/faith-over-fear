@@ -1,4 +1,5 @@
 import Alpine from 'alpinejs';
+import collapse from '@alpinejs/collapse';
 import gsap from 'gsap';
 import shopLogic from './shop.js';
 import productLogic from './product.js';
@@ -7,6 +8,7 @@ import './announcement-entry.jsx';
 
 window.Alpine = Alpine;
 window.gsap = gsap;
+Alpine.plugin(collapse);
 
 document.addEventListener("alpine:init", () => {
     Alpine.data("shopLogic", shopLogic);

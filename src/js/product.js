@@ -1,7 +1,18 @@
 import shopLogic from './shop.js';
 
 const productLogic = () => ({
-    product: null,
+    product: {
+        id: null,
+        name: '',
+        category: '',
+        description: '',
+        images: [],
+        colors: [],
+        sizes: [],
+        price: 0,
+        dropType: '',
+        isWaitlist: false
+    },
     quantity: 1,
     selectedSize: "",
     selectedColor: "",
@@ -87,10 +98,10 @@ const productLogic = () => ({
     payWithMoMo() {
         if (!this.product) return;
         const shop = Alpine.$data(document.body);
-        if (shop && typeof shop.initPayment === 'function') {
-            shop.initPayment(this.product, this.quantity, this.selectedSize);
+        if (shop && typeof shop.openMomoQuickPay === 'function') {
+            shop.openMomoQuickPay(this.product, this.quantity, this.selectedSize);
         } else {
-            console.error("shopLogic.initPayment not found");
+            console.error("shopLogic.openMomoQuickPay not found");
         }
     },
 
