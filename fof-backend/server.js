@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('path'); 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
@@ -90,15 +90,15 @@ app.use('/api/admin/messages', verifyAdmin, contactRoutes);
 app.use('/api/admin/notifications', notificationRoutes);
 app.use('/api/admin/auth-verify', verifyAdmin, (req, res) => res.json({ success: true, user: req.user }));
 
-
 app.use(errorHandler);
 
-const PORT = 5000;
+// Use PORT from environment (Railway, Heroku, etc.)
+const PORT = process.env.PORT || 5000;
 
 console.log("ENV CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME ?? "(missing)");
 console.log("ENV CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY ? "Loaded" : "Missing");
 console.log("ENV CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "Loaded" : "Missing");
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ API listening on http://127.0.0.1:${PORT}`);
+  console.log(`✅ API listening on port ${PORT}`);
 });
