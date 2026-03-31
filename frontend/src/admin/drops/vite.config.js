@@ -16,7 +16,7 @@ if (!fs.existsSync(outDir)) {
 export default defineConfig({
   root: __dirname,
   plugins: [vue()],
-  base: './',
+  base: '/admin/',
   build: {
     outDir: outDir,
     emptyOutDir: true,
