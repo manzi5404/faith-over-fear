@@ -2,7 +2,8 @@
   "version": 2,
   "name": "faithoverfearrw",
   "builds": [
-    { "src": "dist/**", "use": "@vercel/static" }
+    { "src": "dist/index.html", "use": "@vercel/static" },
+    { "src": "dist/admin/index.html", "use": "@vercel/static" }
   ],
   "routes": [
     {
