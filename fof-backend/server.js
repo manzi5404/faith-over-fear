@@ -90,6 +90,11 @@ app.use('/api/admin/messages', verifyAdmin, contactRoutes);
 app.use('/api/admin/notifications', notificationRoutes);
 app.use('/api/admin/auth-verify', verifyAdmin, (req, res) => res.json({ success: true, user: req.user }));
 
+// 404 handler - returns JSON instead of HTML
+app.use((req, res) => {
+  res.status(404).json({ success: false, error: 'Not Found', path: req.path });
+});
+
 app.use(errorHandler);
 
 // Use PORT from environment (Railway, Heroku, etc.)
