@@ -86,9 +86,10 @@ async function removeDrop(req, res) {
   try {
     const removed = await deleteDrop(req.params.id);
     res.json({ success: removed });
-  } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
-  }
+ } catch (err) {
+  console.error("CREATE DROP ERROR:", err); // 👈 THIS IS THE LINE YOU ADD
+  res.status(400).json({ success: false, message: err.message });
+}
 }
 
 module.exports = { createDrop, listDrops, updateDrop, removeDrop };
