@@ -112,8 +112,8 @@ const shopLogic = () => ({
                                 uiQuantity: 1,
                                 uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
                                 images: p.image_urls || [],
-                                // If the drop is inactive or some other logic, we might mark as waitlist
-                                isWaitlist: !drop.is_active || p.stock === 0 // Basic waitlist logic
+                                // If the drop is inactive, mark as reservation-only
+                                isWaitlist: !drop.is_active || p.stock === 0
                             });
                         });
                     }
@@ -269,54 +269,87 @@ const shopLogic = () => ({
         const checkoutProduct = this.activeProduct || this.selectedProduct;
         const isCartCheckout = !checkoutProduct;
         const total = isCartCheckout ? this.grandTotal : this.totalPrice;
-        const items = isCartCheckout
-            ? this.cartItems.map(i => ({ product_id: i.id, quantity: i.quantity, price: i.price, size: i.selectedSize }))
-            : [{ product_id: checkoutProduct.id, quantity: this.modalQuantity, price: checkoutProduct.price, size: this.modalSize }];
 
         this.loading = true;
+
+        const token = localStorage.getItem('fof_token');
 
         // Prepare WhatsApp message components
         let itemsList = isCartCheckout
             ? this.cartItems.map(item => `- ${item.name} (${item.selectedSize}) x${item.quantity} [${(item.price * item.quantity).toLocaleString()} FRW]`).join("\n")
             : `- ${checkoutProduct.name} (${this.modalSize}) x${this.modalQuantity} [${(checkoutProduct.price * this.modalQuantity).toLocaleString()} FRW]`;
 
+        let createdOrderIds = [];
+
         try {
-            const token = localStorage.getItem('fof_token');
-            const response = await fetch('/api/orders/order', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : ''
-                },
-                body: JSON.stringify({
-                    customer_name: this.senderName,
-                    customer_email: this.senderEmail || null,
-                    phone: this.senderPhone,
-                    totalAmount: parseFloat(total),
-                    items: items
-                })
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${result.orderId}\nCustomer: ${this.senderName}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
-
-                // Open WhatsApp in a new tab for WhatsApp Web users
-                window.open(`https://wa.me/250780000000?text=${encodeURIComponent(message)}`, "_blank");
-
-                if (isCartCheckout) {
-                    this.cartItems = [];
-                    this.persistCart();
+            if (isCartCheckout) {
+                // Create one order per cart item
+                for (const item of this.cartItems) {
+                    const response = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': token ? `Bearer ${token}` : ''
+                        },
+                        body: JSON.stringify({
+                            product_id: item.id,
+                            product_name: item.name,
+                            size: item.selectedSize,
+                            quantity: item.quantity,
+                            total_price: parseFloat(item.price) * parseInt(item.quantity),
+                            payment_method: 'momo',
+                            customer_name: this.senderName,
+                            customer_email: this.senderEmail || null,
+                            customer_phone: this.senderPhone
+                        })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        createdOrderIds.push(result.orderId);
+                    }
                 }
-                setTimeout(() => {
-                    this.paymentModalOpen = false;
-                    this.showMomoModal = false;
-                    this.activeProduct = null;
-                }, 500);
-                window.dispatchEvent(new CustomEvent("notify", { detail: { message: "WhatsApp Opened! Please verify your payment.", type: "success" } }));
             } else {
-                throw new Error(result.message || "Failed to place order");
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    },
+                    body: JSON.stringify({
+                        product_id: checkoutProduct.id,
+                        product_name: checkoutProduct.name,
+                        size: this.modalSize,
+                        quantity: this.modalQuantity,
+                        total_price: parseFloat(checkoutProduct.price) * parseInt(this.modalQuantity),
+                        payment_method: 'momo',
+                        customer_name: this.senderName,
+                        customer_email: this.senderEmail || null,
+                        customer_phone: this.senderPhone
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    createdOrderIds.push(result.orderId);
+                } else {
+                    throw new Error(result.message || "Failed to create order");
+                }
             }
+
+            const orderIdStr = createdOrderIds.length > 0 ? createdOrderIds.join(', ') : 'N/A';
+            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
+
+            window.open(`https://wa.me/250780000000?text=${encodeURIComponent(message)}`, "_blank");
+
+            if (isCartCheckout) {
+                this.cartItems = [];
+                this.persistCart();
+            }
+            setTimeout(() => {
+                this.paymentModalOpen = false;
+                this.showMomoModal = false;
+                this.activeProduct = null;
+            }, 500);
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Order placed! Please verify your payment on WhatsApp.", type: "success" } }));
         } catch (err) {
             console.error("Order creation failed, using fallback:", err);
 
@@ -405,6 +438,7 @@ const shopLogic = () => ({
         this.loading = true;
 
         const user = JSON.parse(localStorage.getItem('fof_user'));
+        const token = localStorage.getItem('fof_token');
         const payload = {
             ...this.reservationData,
             productId: this.selectedProduct.id,
@@ -414,6 +448,7 @@ const shopLogic = () => ({
         console.log("Submitting Reservation Payload:", payload);
 
         try {
+            // Call the legacy reserve endpoint for backward compatibility
             const response = await fetch('/api/reserve', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -421,6 +456,28 @@ const shopLogic = () => ({
             });
 
             const result = await response.json();
+
+            // Also create an order via the new orders API
+            await fetch('/api/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify({
+                    product_id: this.selectedProduct.id,
+                    product_name: this.selectedProduct.name,
+                    size: this.reservationData.size,
+                    color: this.reservationData.color,
+                    quantity: this.reservationData.quantity,
+                    total_price: parseFloat(this.selectedProduct.price) * parseInt(this.reservationData.quantity),
+                    payment_method: 'reservation',
+                    customer_name: this.reservationData.fullName,
+                    customer_email: this.reservationData.email,
+                    customer_phone: this.reservationData.phone
+                })
+            });
+
             if (result.success) {
                 window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Reservation confirmed! We'll contact you soon.", type: "success" } }));
                 this.reservationModalOpen = false;

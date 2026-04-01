@@ -161,8 +161,8 @@
                     <div class="flex flex-col space-y-4">
                         <template x-if="product.isWaitlist">
                             <button class="w-full bg-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all py-6"
-                                    @click="window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Joined waitlist for ' + product.name + '!', type: 'success' } }))">
-                                Join Waitlist
+                                    @click="window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Reservation confirmed for ' + product.name + '!', type: 'success' } }))">
+                                Reserve Now
                             </button>
                         </template>
                         <template x-if="!product.isWaitlist">

@@ -20,6 +20,7 @@ const errorHandler = require('./middleware/errorHandler');
 const pool = require('./db/connection');
 const { protect, verifyAdmin } = require('./middleware/authMiddleware');
 const checkStoreMode = require('./middleware/storeModeMiddleware');
+const orderController = require('./controllers/orderController');
 
 const storeConfigController = require('./controllers/storeConfigController');
 const reservationController = require('./controllers/reservationController');
@@ -44,7 +45,7 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use(checkStoreMode); // Global protection for /api/orders
+app.use(checkStoreMode);
 
 
 // Public Routes (No auth required)
@@ -82,7 +83,8 @@ app.use('/api/admin/drops', verifyAdmin, dropRoutes);
 app.use('/api/admin/products', verifyAdmin, productRoutes);
 app.use('/api/admin/settings', verifyAdmin, settingsRoutes);
 app.use('/api/admin/announcement', verifyAdmin, announcementRoutes);
-app.use('/api/admin/orders', verifyAdmin, orderRoutes);
+app.get('/api/admin/orders', verifyAdmin, orderController.getAllOrders);
+app.put('/api/admin/orders/:id/status', verifyAdmin, orderController.updateStatus);
 app.use('/api/admin/store-config', verifyAdmin, storeConfigController.updateStoreConfig);
 app.use('/api/admin/reservations', verifyAdmin, reservationController.getReservations);
 app.patch('/api/admin/reservations/:id/status', verifyAdmin, reservationController.updateReservationStatus);

@@ -620,6 +620,201 @@ const SettingsSection = ({ onToast }) => {
   );
 };
 
+const OrdersSection = ({ onToast }) => {
+  const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/orders"), []);
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [expandedId, setExpandedId] = useState(null);
+
+  const orders = data?.orders || [];
+
+  const filteredOrders = filterStatus === "all"
+    ? orders
+    : orders.filter((o) => o.status === filterStatus);
+
+  const statusColors = {
+    pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
+    contacted: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+    delivered: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+    cancelled: "bg-rose-500/10 text-rose-400 border-rose-500/30",
+  };
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await api.put(`/api/admin/orders/${orderId}/status`, { status: newStatus });
+      onToast(`Order #${orderId} updated to ${newStatus}`);
+      reload();
+    } catch (err) {
+      onToast(err.response?.data?.message || "Failed to update status");
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const statusCounts = {
+    all: orders.length,
+    pending: orders.filter((o) => o.status === "pending").length,
+    contacted: orders.filter((o) => o.status === "contacted").length,
+    delivered: orders.filter((o) => o.status === "delivered").length,
+    cancelled: orders.filter((o) => o.status === "cancelled").length,
+  };
+
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Orders / Reservations</h3>
+        <button onClick={reload} className="rounded bg-slate-800 px-3 py-1 text-xs uppercase text-slate-300 hover:bg-slate-700">
+          Refresh
+        </button>
+      </div>
+
+      {/* Status Filter Tabs */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        {["all", "pending", "contacted", "delivered", "cancelled"].map((status) => (
+          <button
+            key={status}
+            onClick={() => setFilterStatus(status)}
+            className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
+              filterStatus === status
+                ? "bg-white text-slate-900"
+                : "bg-slate-800 text-slate-400 hover:text-white"
+            }`}
+          >
+            {status} ({statusCounts[status]})
+          </button>
+        ))}
+      </div>
+
+      {loading && <p className="text-sm text-slate-400">Loading orders...</p>}
+      {error && <p className="text-sm text-rose-400">{error}</p>}
+
+      {/* Orders Table */}
+      {!loading && filteredOrders.length === 0 && (
+        <p className="py-8 text-center text-sm text-slate-500">No orders found.</p>
+      )}
+      {!loading && filteredOrders.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-700 text-xs uppercase tracking-wide text-slate-400">
+                <th className="py-2 pr-4">ID</th>
+                <th className="py-2 pr-4">Customer</th>
+                <th className="py-2 pr-4">Product</th>
+                <th className="py-2 pr-4">Size/Qty</th>
+                <th className="py-2 pr-4">Total</th>
+                <th className="py-2 pr-4">Payment</th>
+                <th className="py-2 pr-4">Status</th>
+                <th className="py-2 pr-4">Date</th>
+                <th className="py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredOrders.map((order) => (
+                <React.Fragment key={order.id}>
+                  <tr className="border-b border-slate-800 hover:bg-slate-800/50">
+                    <td className="py-3 pr-4 font-mono text-xs">#{order.id}</td>
+                    <td className="py-3 pr-4">
+                      <div>
+                        <p className="font-medium">{order.customer_name || order.user_display_name || "Guest"}</p>
+                        <p className="text-xs text-slate-500">{order.customer_email || order.user_display_email || ""}</p>
+                        {order.customer_phone && (
+                          <p className="text-xs text-slate-500">{order.customer_phone}</p>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4">{order.product_name || `Product #${order.product_id}`}</td>
+                    <td className="py-3 pr-4 text-xs text-slate-400">
+                      {(order.size || "N/A")} / {order.quantity || 1}
+                    </td>
+                    <td className="py-3 pr-4 font-mono font-semibold">{parseFloat(order.total_price).toLocaleString()} FRW</td>
+                    <td className="py-3 pr-4">
+                      <span className="rounded bg-slate-800 px-2 py-0.5 text-xs capitalize">{order.payment_method || "reservation"}</span>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className={`rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${statusColors[order.status] || "bg-slate-800 text-slate-400"}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4 text-xs text-slate-500">{formatDate(order.created_at)}</td>
+                    <td className="py-3">
+                      <div className="flex items-center gap-1">
+                        <select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                          className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-300"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <button
+                          onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
+                          className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-400 hover:text-white"
+                        >
+                          {expandedId === order.id ? "Hide" : "Details"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {expandedId === order.id && (
+                    <tr className="border-b border-slate-800 bg-slate-950/50">
+                      <td colSpan="9" className="px-4 py-4">
+                        <div className="grid grid-cols-2 gap-4 text-xs md:grid-cols-4">
+                          <div>
+                            <p className="text-slate-500 uppercase tracking-wide">Order ID</p>
+                            <p className="font-mono">#{order.id}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 uppercase tracking-wide">Product ID</p>
+                            <p className="font-mono">#{order.product_id}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 uppercase tracking-wide">Color</p>
+                            <p>{order.color || "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 uppercase tracking-wide">Drop ID</p>
+                            <p className="font-mono">{order.drop_id ? `#${order.drop_id}` : "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 uppercase tracking-wide">Created</p>
+                            <p>{formatDate(order.created_at)}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 uppercase tracking-wide">Updated</p>
+                            <p>{formatDate(order.updated_at)}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 uppercase tracking-wide">User ID</p>
+                            <p className="font-mono">{order.user_id ? `#${order.user_id}` : "Guest"}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 uppercase tracking-wide">Payment Method</p>
+                            <p className="capitalize">{order.payment_method || "reservation"}</p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+};
+
 const Dashboard = () => {
   const [toast, setToast] = useState("");
 
@@ -636,6 +831,7 @@ const Dashboard = () => {
         </div>
       )}
       <div className="grid gap-6">
+        <OrdersSection onToast={notify} />
         <ProductsSection onToast={notify} />
         <CollectionsSection onToast={notify} />
         <AnnouncementSection onToast={notify} />
