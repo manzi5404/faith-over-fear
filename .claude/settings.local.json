@@ -7,7 +7,8 @@
       "Bash(curl -s -w \"\\\\nHTTP Status: %{http_code}\" https://faithoverfear-backend.railway.app/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"test@test.com\"\",\"\"password\"\":\"\"test\"\"}')",
       "Bash(curl -s -w \"\\\\nHTTP Status: %{http_code}\" https://faithoverfear-backend.railway.app/)",
       "Bash(curl -s -w \"\\\\nHTTP Status: %{http_code}\" https://faithoverfear-backend.railway.app/api/store-config)",
-      "Bash(curl -s -w \"\\\\nHTTP Status: %{http_code}\" https://faithoverfear-backend.railway.app/api/announcement)"
+      "Bash(curl -s -w \"\\\\nHTTP Status: %{http_code}\" https://faithoverfear-backend.railway.app/api/announcement)",
+      "Bash(find C:/Users/manzi/Documents/Projects/FOF/faith-over-fear -type d -not -path */node_modules/* -not -path */.git/*)"
     ]
   }
 }
