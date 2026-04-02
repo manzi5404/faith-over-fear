@@ -451,7 +451,11 @@ const shopLogic = () => ({
             // Call the legacy reserve endpoint for backward compatibility
             const response = await fetch('/api/reserve', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                credentials: 'include',
                 body: JSON.stringify(payload)
             });
 

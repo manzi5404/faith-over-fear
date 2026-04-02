@@ -6,6 +6,10 @@ const cookieParser = require('./middleware/cookieParser');
 
 const app = express();
 
+// Body Parsing Middleware (Always before routes)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 const cloudinary = require("./config/cloudinary");
 const uploadRoutes = require('./routes/upload');
 const dropRoutes = require('./routes/dropRoutes');
@@ -33,9 +37,8 @@ app.use(cors({
   credentials: true
 }));
 
-// Body Parsing Middleware (Always before routes)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parsed earlier
+
 app.use(cookieParser);
 
 app.use((req, res, next) => {

@@ -92,7 +92,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24">
                 <!-- Image Gallery -->
                 <div class="space-y-6" x-data="{ zooming: false, mouseX: 50, mouseY: 50 }">
-                    <div class="zoom-container aspect-[4/5] bg-fof-dark"
+                    <div class="zoom-container aspect-[4/5] bg-fof-dark overflow-hidden"
                          :class="{ 'zooming': zooming }"
                          @mouseenter="zooming = true"
                          @mouseleave="zooming = false; mouseX = 50; mouseY = 50"
@@ -161,7 +161,7 @@
                     <div class="flex flex-col space-y-4">
                         <template x-if="product.isWaitlist">
                             <button class="w-full bg-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all py-6"
-                                    @click="window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Reservation confirmed for ' + product.name + '!', type: 'success' } }))">
+                                    @click="reserve()">
                                 Reserve Now
                             </button>
                         </template>

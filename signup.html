@@ -134,6 +134,7 @@
                 try {
                     google.accounts.id.initialize({
                         client_id: '982475376311-2oc1ao5h0va41pu525fniu7vma6uksf8.apps.googleusercontent.com',
+                        use_fedcm_for_prompt: false,
                         callback: async (response) => {
                             this.loading = true;
                             try {

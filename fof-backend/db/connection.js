@@ -43,6 +43,30 @@ const pool = mysql.createPool({
             )`
         );
 
+        await connection.query(
+            `CREATE TABLE IF NOT EXISTS orders (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT DEFAULT NULL,
+                product_id INT NOT NULL,
+                drop_id INT DEFAULT NULL,
+                product_name VARCHAR(255) DEFAULT NULL,
+                size VARCHAR(20) DEFAULT NULL,
+                color VARCHAR(50) DEFAULT NULL,
+                quantity INT NOT NULL DEFAULT 1,
+                total_price DECIMAL(15, 2) NOT NULL,
+                status ENUM('pending', 'contacted', 'delivered', 'cancelled') DEFAULT 'pending',
+                payment_method VARCHAR(50) DEFAULT 'reservation',
+                customer_name VARCHAR(255) DEFAULT NULL,
+                customer_email VARCHAR(255) DEFAULT NULL,
+                customer_phone VARCHAR(50) DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_user_id (user_id),
+                INDEX idx_status (status),
+                INDEX idx_created_at (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
+        );
+
         console.log('✅ Database tables are present or were created successfully.');
         connection.release(); // Always release the connection back to the pool
     } catch (error) {
