@@ -98,75 +98,82 @@
     </div>
 
     <script type="module">
-        import Alpine from 'alpinejs';
-        
-        window.authLogic = () => ({
-            name: '',
-            email: '',
-            password: '',
-            loading: false,
+    import Alpine from 'alpinejs';
+    
+    window.authLogic = () => ({
+        name: '',
+        email: '',
+        password: '',
+        loading: false,
 
-            async signup() {
-                this.loading = true;
-                try {
-                    const response = await fetch('/api/auth/signup', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: this.name, email: this.email, password: this.password })
-                    });
-                    
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.message || 'Signup failed');
-
-                    localStorage.setItem('fof_token', data.token);
-                    localStorage.setItem('fof_user', JSON.stringify({ name: data.name, id: data.userId }));
-                    
-                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Signed up successfully', type: 'success' } }));
-                    setTimeout(() => window.location.href = '/index.html', 1500);
-                } catch (error) {
-                    window.dispatchEvent(new CustomEvent('notify', { detail: { message: error.message, type: 'error' } }));
-                } finally {
-                    this.loading = false;
-                }
-            },
-
-            async loginWithGoogle() {
-                try {
-                    google.accounts.id.initialize({
-                        client_id: '982475376311-2oc1ao5h0va41pu525fniu7vma6uksf8.apps.googleusercontent.com',
-                        use_fedcm_for_prompt: false,
-                        callback: async (response) => {
-                            this.loading = true;
-                            try {
-                                const backendRes = await fetch('/api/auth/google', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ token: response.credential })
-                                });
-                                const data = await backendRes.json();
-                                if (!backendRes.ok) throw new Error(data.message || 'Google login failed');
-
-                                localStorage.setItem('fof_token', data.token);
-                                localStorage.setItem('fof_user', JSON.stringify({ name: data.name, id: data.userId }));
-                                
-                                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Signed up with Google', type: 'success' } }));
-                                setTimeout(() => window.location.href = '/index.html', 1500);
-                            } catch (error) {
-                                window.dispatchEvent(new CustomEvent('notify', { detail: { message: error.message, type: 'error' } }));
-                            } finally {
-                                this.loading = false;
-                            }
-                        }
-                    });
-                    google.accounts.id.prompt();
-                } catch (error) {
-                    console.error('Google Auth Error:', error);
-                }
+        async signup() {
+            this.loading = true;
+            try {
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: this.name, email: this.email, password: this.password })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Signup failed');
+                localStorage.setItem('fof_token', data.token);
+                localStorage.setItem('fof_user', JSON.stringify({ name: data.name, id: data.userId }));
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Signed up successfully', type: 'success' } }));
+                setTimeout(() => window.location.href = '/index.html', 1500);
+            } catch (error) {
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: error.message, type: 'error' } }));
+            } finally {
+                this.loading = false;
             }
-        });
+        },  // <-- THIS COMMA IS CRITICAL
 
-        window.Alpine = Alpine;
-        Alpine.start();
-    </script>
+        async loginWithGoogle() {
+            try {
+                // Wait for Google script to load
+                if (typeof google === 'undefined') {
+                    await new Promise((resolve) => {
+                        const checkInterval = setInterval(() => {
+                            if (typeof google !== 'undefined') {
+                                clearInterval(checkInterval);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                }
+                google.accounts.id.initialize({
+                    client_id: '982475376311-2oc1ao5h0va41pu525fniu7vma6uksf8.apps.googleusercontent.com',
+                    use_fedcm_for_prompt: false,
+                    callback: async (response) => {
+                        this.loading = true;
+                        try {
+                            const backendRes = await fetch('/api/auth/google', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ token: response.credential })
+                            });
+                            const data = await backendRes.json();
+                            if (!backendRes.ok) throw new Error(data.message || 'Google login failed');
+                            localStorage.setItem('fof_token', data.token);
+                            localStorage.setItem('fof_user', JSON.stringify({ name: data.name, id: data.userId }));
+                            window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Signed up with Google', type: 'success' } }));
+                            setTimeout(() => window.location.href = '/index.html', 1500);
+                        } catch (error) {
+                            window.dispatchEvent(new CustomEvent('notify', { detail: { message: error.message, type: 'error' } }));
+                        } finally {
+                            this.loading = false;
+                        }
+                    }
+                });
+                google.accounts.id.prompt();
+            } catch (error) {
+                console.error('Google Auth Error:', error);
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Google login not ready, try again', type: 'error' } }));
+            }
+        }
+    });
+
+    window.Alpine = Alpine;
+    Alpine.start();
+</script>
 </body>
 </html>
