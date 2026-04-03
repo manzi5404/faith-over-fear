@@ -113,7 +113,7 @@ const shopLogic = () => ({
                                 uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
                                 images: p.image_urls || [],
                                 // If the drop is inactive, mark as reservation-only
-                                isWaitlist: !drop.is_active || p.stock === 0
+                                status: drop.status || "live"
                             });
                         });
                     }
@@ -338,7 +338,7 @@ const shopLogic = () => ({
             const orderIdStr = createdOrderIds.length > 0 ? createdOrderIds.join(', ') : 'N/A';
             const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
 
-            window.open(`https://wa.me/250780000000?text=${encodeURIComponent(message)}`, "_blank");
+            window.open(`https://wa.me/250791832523?text=${encodeURIComponent(message)}`, "_blank");
 
             if (isCartCheckout) {
                 this.cartItems = [];
@@ -356,7 +356,7 @@ const shopLogic = () => ({
             // Fallback: Open WhatsApp even if API fails
             const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.`;
 
-            window.open(`https://wa.me/250780000000?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
+            window.open(`https://wa.me/250791832523?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
 
             window.dispatchEvent(new CustomEvent("notify", {
                 detail: {
@@ -448,21 +448,8 @@ const shopLogic = () => ({
         console.log("Submitting Reservation Payload:", payload);
 
         try {
-            // Call the legacy reserve endpoint for backward compatibility
-            const response = await fetch('/api/reserve', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : ''
-                },
-                credentials: 'include',
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-
-            // Also create an order via the new orders API
-            await fetch('/api/orders', {
+            // Create an order via the unified orders API with 'reservation' payment method
+            const response = await fetch('/api/orders', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -481,6 +468,8 @@ const shopLogic = () => ({
                     customer_phone: this.reservationData.phone
                 })
             });
+
+            const result = await response.json();
 
             if (result.success) {
                 window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Reservation confirmed! We'll contact you soon.", type: "success" } }));

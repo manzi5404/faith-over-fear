@@ -32,7 +32,8 @@ async function createDrop(req, res) {
 
 async function listDrops(req, res) {
   try {
-    const drops = await getDrops(req.query.active === 'true');
+    const statusFilter = req.query.status || req.query.active; // support old and new
+    const drops = await getDrops(statusFilter);
     const includeProducts = req.query.includeProducts === 'true';
 
     for (const drop of drops) {
@@ -55,7 +56,23 @@ async function updateDrop(req, res) {
   try {
     const { products, ...dropData } = req.body;
     const dropId = req.params.id;
+    
+    // Check old status to see if it just flipped to live
+    const oldDrops = await getDrops(null);
+    const oldDrop = oldDrops.find(d => d.id == dropId);
+    const wasLive = oldDrop && oldDrop.status === 'live';
+    const isNowLive = dropData.status === 'live' || (dropData.status === undefined && dropData.is_active);
+
     const updated = await editDrop(dropId, dropData);
+
+    // If status changed to live, send notification
+    if (!wasLive && isNowLive) {
+      userModel.getAllUserEmails().then(emails => {
+        if (emails.length > 0) {
+          emailUtils.notifyLiveDrop(emails, { ...oldDrop, ...dropData });
+        }
+      }).catch(err => console.error('Failed to fetch user emails for live notification:', err));
+    }
 
     if (products && Array.isArray(products)) {
       const currentProducts = await productService.getProductsByDropId(dropId);

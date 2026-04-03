@@ -63,7 +63,40 @@ async function notifyNewDrop(userEmails, dropDetails) {
     }
 }
 
+async function notifyLiveDrop(userEmails, dropDetails) {
+    const { title, name, price, images } = dropDetails;
+    const dropName = title || name || 'Collection';
+    const dropPrice = price ? `${price.toLocaleString()} FRW` : '';
+    const dropImage = (images && images.length > 0) ? images[0] : 'https://placehold.co/400x400?text=F%3EF+Drop';
+
+    const subject = `🔥 ${dropName} IS LIVE NOW!`;
+    const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 40px; text-align: center;">
+            <h1 style="letter-spacing: -2px; font-size: 48px; margin-bottom: 0;">F&gt;F</h1>
+            <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: #888; margin-top: 5px;">Faith Over Fear</p>
+            
+            <div style="margin: 40px 0;">
+                <img src="${dropImage}" alt="${dropName}" style="width: 100%; max-width: 400px; border: 1px solid #333;">
+            </div>
+            
+            <h2 style="text-transform: uppercase; font-size: 24px; margin-bottom: 10px; color: #ff3333;">IT'S LIVE. NO MORE WAITING.</h2>
+            <p style="font-size: 18px; color: #ddd; margin-bottom: 30px;">${dropName} is available to purchase now for ${dropPrice}. Act fast.</p>
+            
+            <a href="https://yourwebsite.com/shop.html" style="background: #fff; color: #000; text-decoration: none; padding: 15px 40px; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 2px;">Buy Now</a>
+            
+            <div style="margin-top: 60px; padding-top: 20px; border-t: 1px solid #222; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px;">
+                &copy; 2026 Faith Over Fear. All Rights Reserved.
+            </div>
+        </div>
+    `;
+
+    for (const email of userEmails) {
+        await sendEmail({ email, subject, html });
+    }
+}
+
 module.exports = {
     sendEmail,
-    notifyNewDrop
+    notifyNewDrop,
+    notifyLiveDrop
 };

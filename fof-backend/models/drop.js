@@ -1,31 +1,43 @@
 const pool = require('../db/connection');
 
 async function addDrop(drop) {
-  // Use title instead of name, and include new columns
-  const { title, type, price, sizes, images, is_active, colors, category, collection } = drop;
+  const { title, description, type, price, sizes, images, status, colors, category, collection } = drop;
+  // map legacy is_active -> status if needed
+  let finalStatus = status || (drop.is_active ? 'live' : 'upcoming');
   const [result] = await pool.query(
-    `INSERT INTO drops (title, type, price, sizes, images, is_active, colors, category, collection)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO drops (title, description, type, price, sizes, images, status, colors, category, collection, is_active)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       title,
+      description || null,
       type || 'new-drop',
       price || null,
       JSON.stringify(sizes || []),
       JSON.stringify(images || []),
-      is_active ? 1 : 0,
-      JSON.stringify(colors || []),   // colors is a JSON array
+      finalStatus,
+      JSON.stringify(colors || []),
       category || null,
-      collection || null
+      collection || null,
+      finalStatus === 'live' ? 1 : 0
     ]
   );
   return result.insertId;
 }
 
-async function getDrops(activeOnly = false) {
-  const sql = activeOnly
-    ? 'SELECT * FROM drops WHERE is_active = 1'
-    : 'SELECT * FROM drops';
-  const [rows] = await pool.query(sql);
+async function getDrops(statusFilter = null) {
+  let sql = 'SELECT * FROM drops';
+  let params = [];
+  if (statusFilter) {
+    if (statusFilter === 'active' || statusFilter === 'true') {
+      // Legacy compat
+      sql += ' WHERE is_active = 1 OR status = "live"';
+    } else {
+      sql += ' WHERE status = ?';
+      params.push(statusFilter);
+    }
+  }
+  
+  const [rows] = await pool.query(sql, params);
   return rows.map(row => ({
     ...row,
     images: typeof row.images === 'string' ? JSON.parse(row.images) : (row.images || []),
@@ -35,21 +47,24 @@ async function getDrops(activeOnly = false) {
 }
 
 async function editDrop(id, drop) {
-  // Use title instead of name, and include new columns
-  const { title, type, price, sizes, images, is_active, colors, category, collection } = drop;
+  const { title, description, type, price, sizes, images, status, colors, category, collection } = drop;
+  let finalStatus = status || (drop.is_active !== undefined ? (drop.is_active ? 'live' : 'upcoming') : 'upcoming');
+  
   const [rows] = await pool.query(
-    `UPDATE drops SET title = ?, type = ?, price = ?, sizes = ?, images = ?, is_active = ?, colors = ?, category = ?, collection = ?
+    `UPDATE drops SET title = ?, description = ?, type = ?, price = ?, sizes = ?, images = ?, status = ?, colors = ?, category = ?, collection = ?, is_active = ?
      WHERE id = ?`,
     [
       title,
+      description || null,
       type,
       price || null,
       JSON.stringify(sizes || []),
       JSON.stringify(images || []),
-      is_active ? 1 : 0,
+      finalStatus,
       JSON.stringify(colors || []),
       category || null,
       collection || null,
+      finalStatus === 'live' ? 1 : 0,
       id
     ]
   );

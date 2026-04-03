@@ -1,6 +1,6 @@
 const { useEffect, useMemo, useState } = React;
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://localhost:5000";
 
 const tokenStore = {
   get() {
@@ -155,10 +155,10 @@ const ProductsSection = ({ onToast }) => {
     };
     try {
       if (editingId) {
-        await api.patch(`/api/products/${editingId}`, payload);
+        await api.put(`/api/admin/products/${editingId}`, payload);
         onToast("Product updated");
       } else {
-        await api.post("/api/products", payload);
+        await api.post("/api/admin/products", payload);
         onToast("Product created");
       }
       resetForm();
@@ -191,7 +191,7 @@ const ProductsSection = ({ onToast }) => {
 
   const toggleActive = async (product) => {
     try {
-      await api.patch(`/api/products/${product._id || product.id}`, { isActive: !product.isActive });
+      await api.put(`/api/admin/products/${product._id || product.id}`, { isActive: !product.isActive });
       reload();
     } catch (err) {
       onToast("Toggle failed");
@@ -272,12 +272,12 @@ const ProductsSection = ({ onToast }) => {
 };
 
 const CollectionsSection = ({ onToast }) => {
-  const { data, loading, error, reload } = useFetch(() => api.get("/api/collections"), []);
-  const [form, setForm] = useState({ name: "", description: "", isActive: true });
+  const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/drops"), []);
+  const [form, setForm] = useState({ name: "", description: "", status: "upcoming" });
   const [editingId, setEditingId] = useState(null);
 
   const resetForm = () => {
-    setForm({ name: "", description: "", isActive: true });
+    setForm({ name: "", description: "", status: "upcoming" });
     setEditingId(null);
   };
 
@@ -286,20 +286,20 @@ const CollectionsSection = ({ onToast }) => {
     const payload = {
       name: form.name,
       description: form.description,
-      isActive: !!form.isActive
+      status: form.status
     };
     try {
       if (editingId) {
-        await api.patch(`/api/collections/${editingId}`, payload);
-        onToast("Collection updated");
+        await api.patch(`/api/admin/drops/${editingId}`, payload);
+        onToast("Drop updated");
       } else {
-        await api.post("/api/collections", payload);
-        onToast("Collection created");
+        await api.post("/api/admin/drops", payload);
+        onToast("Drop created");
       }
       resetForm();
       reload();
     } catch (err) {
-      onToast(err.response?.data?.message || "Failed to save collection");
+      onToast(err.response?.data?.message || "Failed to save drop");
     }
   };
 
@@ -308,33 +308,34 @@ const CollectionsSection = ({ onToast }) => {
     setForm({
       name: item.name || "",
       description: item.description || "",
-      isActive: item.isActive !== false
+      status: item.status || "upcoming"
     });
   };
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/api/collections/${id}`);
-      onToast("Collection deleted");
+      await api.delete(`/api/admin/drops/${id}`);
+      onToast("Drop deleted");
       reload();
     } catch (err) {
       onToast(err.response?.data?.message || "Delete failed");
     }
   };
 
-  const toggleActive = async (item) => {
+  const updateStatus = async (item, newStatus) => {
     try {
-      await api.patch(`/api/collections/${item._id || item.id}`, { isActive: !item.isActive });
+      await api.patch(`/api/admin/drops/${item._id || item.id}`, { status: newStatus });
+      onToast(`Status updated to ${newStatus}`);
       reload();
     } catch (err) {
-      onToast("Toggle failed");
+      onToast("Status update failed");
     }
   };
 
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Collections / Drops</h3>
+        <h3 className="text-lg font-semibold">Drops / Collections Flow</h3>
         <button onClick={resetForm} className="text-xs uppercase text-slate-300">Clear</button>
       </div>
       <form onSubmit={handleSubmit} className="grid gap-3 md:grid-cols-2">
@@ -344,22 +345,24 @@ const CollectionsSection = ({ onToast }) => {
           value={form.name}
           onChange={(event) => setForm({ ...form, name: event.target.value })}
         />
-        <input
+        <select
           className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          value={form.status}
+          onChange={(event) => setForm({ ...form, status: event.target.value })}
+        >
+          <option value="upcoming">Upcoming (Disabled)</option>
+          <option value="reservation">Reservation (Reserve Now)</option>
+          <option value="live">Live (MoMo Enabled)</option>
+        </select>
+        <textarea
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm md:col-span-2"
           placeholder="Description"
+          rows="2"
           value={form.description}
           onChange={(event) => setForm({ ...form, description: event.target.value })}
         />
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input
-            type="checkbox"
-            checked={form.isActive}
-            onChange={(event) => setForm({ ...form, isActive: event.target.checked })}
-          />
-          Active
-        </label>
-        <button className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-900">
-          {editingId ? "Update Collection" : "Add Collection"}
+        <button className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-900 md:col-span-2">
+          {editingId ? "Update Drop" : "Add Drop"}
         </button>
       </form>
       {loading && <p className="mt-4 text-sm text-slate-400">Loading...</p>}
@@ -370,16 +373,33 @@ const CollectionsSection = ({ onToast }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold">{item.name}</p>
-                <p className="text-xs text-slate-400">{item.description}</p>
+                <p className="text-xs text-slate-400 line-clamp-1">{item.description}</p>
               </div>
-              <span className={`text-xs ${item.isActive ? "text-emerald-400" : "text-rose-400"}`}>
-                {item.isActive ? "Active" : "Inactive"}
+              <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wider ${
+                item.status === 'live' ? 'bg-emerald-500/10 text-emerald-400' :
+                item.status === 'reservation' ? 'bg-blue-500/10 text-blue-400' :
+                'bg-zinc-500/10 text-zinc-400'
+              }`}>
+                {item.status || 'upcoming'}
               </span>
             </div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               <button onClick={() => handleEdit(item)} className="rounded bg-slate-800 px-2 py-1">Edit</button>
-              <button onClick={() => toggleActive(item)} className="rounded bg-slate-800 px-2 py-1">Toggle</button>
-              <button onClick={() => handleDelete(item._id || item.id)} className="rounded bg-rose-600 px-2 py-1">
+              <div className="flex gap-1 border-l border-slate-800 pl-2 ml-1">
+                <button 
+                  onClick={() => updateStatus(item, 'upcoming')} 
+                  className={`rounded px-2 py-1 ${item.status === 'upcoming' ? 'bg-zinc-700 text-white' : 'bg-slate-900 text-slate-500'}`}
+                >Upc</button>
+                <button 
+                  onClick={() => updateStatus(item, 'reservation')} 
+                  className={`rounded px-2 py-1 ${item.status === 'reservation' ? 'bg-zinc-700 text-white' : 'bg-slate-900 text-slate-500'}`}
+                >Res</button>
+                <button 
+                  onClick={() => updateStatus(item, 'live')} 
+                  className={`rounded px-2 py-1 ${item.status === 'live' ? 'bg-zinc-700 text-white' : 'bg-slate-900 text-slate-500'}`}
+                >Live</button>
+              </div>
+              <button onClick={() => handleDelete(item._id || item.id)} className="ml-auto rounded bg-rose-600/20 text-rose-400 px-2 py-1 hover:bg-rose-600 hover:text-white transition-colors">
                 Delete
               </button>
             </div>
@@ -391,164 +411,77 @@ const CollectionsSection = ({ onToast }) => {
 };
 
 const AnnouncementSection = ({ onToast }) => {
-  const { data: announcements, loading, error, reload } = useFetch(() => api.get("/api/announcements"), []);
-  const { data: products } = useFetch(() => api.get("/api/products"), []);
-  const { data: collections } = useFetch(() => api.get("/api/collections"), []);
+  const { data: announcement, loading, error, reload } = useFetch(() => api.get("/api/admin/announcement"), []);
   const [form, setForm] = useState({
-    type: "global",
+    title: "Movement Update",
     message: "",
-    isActive: true,
-    dismissible: true,
-    drop: "",
-    product: ""
+    isActive: true
   });
-  const [editingId, setEditingId] = useState(null);
 
-  const resetForm = () => {
-    setForm({ type: "global", message: "", isActive: true, dismissible: true, drop: "", product: "" });
-    setEditingId(null);
-  };
+  useEffect(() => {
+    if (announcement?.announcement) {
+      setForm({
+        title: announcement.announcement.title || "Movement Update",
+        message: announcement.announcement.message || "",
+        isActive: !!announcement.announcement.is_enabled
+      });
+    }
+  }, [announcement]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const payload = {
-      type: form.type,
+      title: form.title,
       message: form.message,
-      isActive: !!form.isActive,
-      dismissible: !!form.dismissible,
-      drop: form.type === "drop" ? form.drop : undefined,
-      product: form.type === "product" ? form.product : undefined
+      is_enabled: !!form.isActive
     };
     try {
-      if (editingId) {
-        await api.put(`/api/announcements/${editingId}`, payload);
-        onToast("Announcement updated");
-      } else {
-        await api.post("/api/announcements", payload);
-        onToast("Announcement created");
-      }
-      resetForm();
+      await api.put("/api/admin/announcement", payload);
+      onToast("Announcement updated");
       reload();
     } catch (err) {
       onToast(err.response?.data?.message || "Failed to save announcement");
     }
   };
 
-  const handleEdit = (item) => {
-    setEditingId(item._id || item.id);
-    setForm({
-      type: item.type || "global",
-      message: item.message || "",
-      isActive: item.isActive !== false,
-      dismissible: item.dismissible !== false,
-      drop: item.drop || "",
-      product: item.product || ""
-    });
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/api/announcements/${id}`);
-      onToast("Announcement deleted");
-      reload();
-    } catch (err) {
-      onToast(err.response?.data?.message || "Delete failed");
-    }
-  };
-
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Announcements</h3>
-        <button onClick={resetForm} className="text-xs uppercase text-slate-300">Clear</button>
+        <h3 className="text-lg font-semibold">Live Announcement Bar</h3>
+        <button onClick={reload} className="text-xs uppercase text-slate-300">Refresh</button>
       </div>
-      <form onSubmit={handleSubmit} className="grid gap-3 md:grid-cols-2">
-        <select
-          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-          value={form.type}
-          onChange={(event) => setForm({ ...form, type: event.target.value, drop: "", product: "" })}
-        >
-          <option value="global">Global</option>
-          <option value="drop">Drop</option>
-          <option value="product">Product</option>
-        </select>
-        <input
-          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-          placeholder="Message"
-          value={form.message}
-          onChange={(event) => setForm({ ...form, message: event.target.value })}
-        />
-        {form.type === "drop" && (
-          <select
-            className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-            value={form.drop}
-            onChange={(event) => setForm({ ...form, drop: event.target.value })}
-          >
-            <option value="">Select collection</option>
-            {(collections || []).map((item) => (
-              <option key={item._id || item.id} value={item._id || item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-        )}
-        {form.type === "product" && (
-          <select
-            className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-            value={form.product}
-            onChange={(event) => setForm({ ...form, product: event.target.value })}
-          >
-            <option value="">Select product</option>
-            {(products || []).map((item) => (
-              <option key={item._id || item.id} value={item._id || item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-        )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs uppercase text-slate-500 font-bold mb-1">Display Title</label>
+          <input
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+            placeholder="e.g. New Drop Coming"
+            value={form.title}
+            onChange={(event) => setForm({ ...form, title: event.target.value })}
+          />
+        </div>
+        <div>
+          <label className="block text-xs uppercase text-slate-500 font-bold mb-1">Message Content</label>
+          <textarea
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+            placeholder="Message visible to all users"
+            rows="3"
+            value={form.message}
+            onChange={(event) => setForm({ ...form, message: event.target.value })}
+          />
+        </div>
         <label className="flex items-center gap-2 text-sm text-slate-300">
           <input
             type="checkbox"
             checked={form.isActive}
             onChange={(event) => setForm({ ...form, isActive: event.target.checked })}
           />
-          Active
+          Show Announcement Bar
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input
-            type="checkbox"
-            checked={form.dismissible}
-            onChange={(event) => setForm({ ...form, dismissible: event.target.checked })}
-          />
-          Dismissible
-        </label>
-        <button className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-900">
-          {editingId ? "Update Announcement" : "Add Announcement"}
+        <button className="w-full rounded-lg bg-fof-accent text-white px-3 py-3 text-sm font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+          Update Live Message
         </button>
       </form>
-      {loading && <p className="mt-4 text-sm text-slate-400">Loading...</p>}
-      {error && <p className="mt-4 text-sm text-rose-400">{error}</p>}
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {(announcements || []).map((item) => (
-          <div key={item._id || item.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold">{item.message}</p>
-                <p className="text-xs text-slate-400">{item.type}</p>
-              </div>
-              <span className={`text-xs ${item.isActive ? "text-emerald-400" : "text-rose-400"}`}>
-                {item.isActive ? "Active" : "Inactive"}
-              </span>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <button onClick={() => handleEdit(item)} className="rounded bg-slate-800 px-2 py-1">Edit</button>
-              <button onClick={() => handleDelete(item._id || item.id)} className="rounded bg-rose-600 px-2 py-1">
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
     </section>
   );
 };
@@ -574,7 +507,7 @@ const SettingsSection = ({ onToast }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      await api.put("/api/settings", form);
+      await api.put("/api/admin/settings", form);
       onToast("Settings updated");
       reload();
     } catch (err) {
@@ -622,14 +555,16 @@ const SettingsSection = ({ onToast }) => {
 
 const OrdersSection = ({ onToast }) => {
   const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/orders"), []);
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterMethod, setFilterMethod] = useState("all");
   const [expandedId, setExpandedId] = useState(null);
 
   const orders = data?.orders || [];
 
-  const filteredOrders = filterStatus === "all"
-    ? orders
-    : orders.filter((o) => o.status === filterStatus);
+  const filteredOrders = orders.filter((o) => {
+    const statusMatch = filterStatus === "all" || o.status === filterStatus;
+    const methodMatch = filterMethod === "all" || (o.payment_method || "reservation") === filterMethod;
+    return statusMatch && methodMatch;
+  });
 
   const statusColors = {
     pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
@@ -676,21 +611,41 @@ const OrdersSection = ({ onToast }) => {
         </button>
       </div>
 
-      {/* Status Filter Tabs */}
-      <div className="mb-4 flex flex-wrap gap-2">
-        {["all", "pending", "contacted", "delivered", "cancelled"].map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilterStatus(status)}
-            className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
-              filterStatus === status
-                ? "bg-white text-slate-900"
-                : "bg-slate-800 text-slate-400 hover:text-white"
-            }`}
-          >
-            {status} ({statusCounts[status]})
-          </button>
-        ))}
+      {/* Filters Overlay */}
+      <div className="mb-4 flex flex-wrap gap-6 items-center border-b border-slate-800 pb-4">
+        {/* Status Filter Tabs */}
+        <div className="flex flex-wrap gap-2">
+          {["all", "pending", "contacted", "delivered", "cancelled"].map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
+                filterStatus === status
+                  ? "bg-white text-slate-900"
+                  : "bg-slate-800 text-slate-400 hover:text-white"
+              }`}
+            >
+              {status} ({orders.filter(o => status === 'all' || o.status === status).length})
+            </button>
+          ))}
+        </div>
+        
+        {/* Method Filter */}
+        <div className="flex gap-2 border-l border-slate-800 pl-4">
+           {["all", "momo", "reservation"].map((method) => (
+            <button
+              key={method}
+              onClick={() => setFilterMethod(method)}
+              className={`rounded px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                filterMethod === method
+                  ? "bg-fof-accent text-white"
+                  : "bg-slate-800 text-slate-500 hover:text-white"
+              }`}
+            >
+              {method}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading && <p className="text-sm text-slate-400">Loading orders...</p>}
