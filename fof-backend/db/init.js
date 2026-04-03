@@ -151,19 +151,29 @@ async function initializeDatabase() {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 title VARCHAR(255),
                 message TEXT,
+                image_url VARCHAR(255),
+                button_text VARCHAR(50) DEFAULT 'SHOP THE DROP',
+                is_enabled TINYINT(1) DEFAULT 1,
+                version INT DEFAULT 1,
+                status VARCHAR(50) DEFAULT 'live',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
 
-        // Migration: Ensure 'title' column exists (CREATE TABLE IF NOT EXISTS doesn't update columns)
+        // Migration: Ensure all columns exist 
         try {
-            const [columns] = await connection.query('SHOW COLUMNS FROM announcements LIKE "title"');
-            if (columns.length === 0) {
-                await connection.query('ALTER TABLE announcements ADD COLUMN title VARCHAR(255) AFTER id');
-                console.log('✅ Added missing "title" column to announcements table.');
-            }
+            const [columns] = await connection.query('SHOW COLUMNS FROM announcements');
+            const colNames = columns.map(c => c.Field);
+            
+            if (!colNames.includes('image_url')) await connection.query('ALTER TABLE announcements ADD COLUMN image_url VARCHAR(255) AFTER message');
+            if (!colNames.includes('button_text')) await connection.query('ALTER TABLE announcements ADD COLUMN button_text VARCHAR(50) DEFAULT "SHOP THE DROP" AFTER image_url');
+            if (!colNames.includes('is_enabled')) await connection.query('ALTER TABLE announcements ADD COLUMN is_enabled TINYINT(1) DEFAULT 1 AFTER button_text');
+            if (!colNames.includes('version')) await connection.query('ALTER TABLE announcements ADD COLUMN version INT DEFAULT 1 AFTER is_enabled');
+            if (!colNames.includes('status')) await connection.query('ALTER TABLE announcements ADD COLUMN status VARCHAR(50) DEFAULT "live" AFTER version');
+            
+            console.log('✅ Announcements table schema verified (all columns present).');
         } catch (migErr) {
-            console.warn('⚠️  Could not verify/add title column to announcements:', migErr.message);
+            console.warn('⚠️  Announcements table migration warning:', migErr.message);
         }
 
         // 8. Notifications Table

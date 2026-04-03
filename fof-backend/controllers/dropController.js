@@ -2,6 +2,8 @@ const { addDrop, getDrops, editDrop, deleteDrop } = require('../models/drop');
 const productService = require('../models/product');
 const userModel = require('../models/user');
 const emailUtils = require('../utils/email');
+const announcementModel = require('../models/announcement');
+const appEmitter = require('../utils/events');
 
 
 
@@ -29,6 +31,22 @@ async function createDrop(req, res) {
         console.error('❌ [DROP_NOTIFICATION] Email worker failed:', notifyErr.message);
       }
     })();
+    
+    // UI BROADCAST: Automatically update the live announcement banner for this new drop
+    try {
+        const announcementData = {
+          title: `NEW DROP: ${dropData.name}`,
+          message: dropData.description || `The ${dropData.name} collection is now available.`,
+          image_url: dropData.image_url || (products && products[0]?.image_urls[0]),
+          status: 'live',
+          is_enabled: 1
+        };
+        const updatedAnn = await announcementModel.updateAnnouncement(announcementData);
+        appEmitter.emit('announcement_update', updatedAnn);
+        console.log(`✅ [AUTO_ANNOUNCEMENT] Broadcasted new drop: ${dropData.name}`);
+    } catch (annError) {
+        console.warn('⚠️  [AUTO_ANNOUNCEMENT] Failed to auto-update banner:', annError.message);
+    }
 
     res.json({ success: true, dropId });
   } catch (err) {
@@ -85,6 +103,22 @@ async function updateDrop(req, res) {
           console.error('❌ [LIVE_NOTIFICATION] Email worker failed:', notifyErr.message);
         }
       })();
+      
+      // UI BROADCAST: Automatically update the live announcement banner if this drop went live
+      try {
+          const announcementData = {
+            title: `LIVE NOW: ${dropData.title || oldDrop.title}`,
+            message: dropData.description || oldDrop.description,
+            image_url: dropData.image_url || oldDrop.image_url,
+            status: 'live',
+            is_enabled: 1
+          };
+          const updatedAnn = await announcementModel.updateAnnouncement(announcementData);
+          appEmitter.emit('announcement_update', updatedAnn);
+          console.log(`✅ [AUTO_ANNOUNCEMENT] Broadcasted live update: ${dropData.title || oldDrop.title}`);
+      } catch (annError) {
+          console.warn('⚠️  [AUTO_ANNOUNCEMENT] Failed to auto-update banner on live shift:', annError.message);
+      }
     }
 
     if (products && Array.isArray(products)) {
