@@ -115,6 +115,17 @@ async function initializeDatabase() {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
 
+        // Migration: Ensure 'title' column exists (CREATE TABLE IF NOT EXISTS doesn't update columns)
+        try {
+            const [columns] = await connection.query('SHOW COLUMNS FROM announcements LIKE "title"');
+            if (columns.length === 0) {
+                await connection.query('ALTER TABLE announcements ADD COLUMN title VARCHAR(255) AFTER id');
+                console.log('✅ Added missing "title" column to announcements table.');
+            }
+        } catch (migErr) {
+            console.warn('⚠️  Could not verify/add title column to announcements:', migErr.message);
+        }
+
         // 8. Notifications Table
         await connection.query(`
             CREATE TABLE IF NOT EXISTS notifications (
