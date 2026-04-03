@@ -6,7 +6,7 @@ const getStoreConfig = async (req, res) => {
         
         if (rows.length === 0) {
             // Auto-initialize if missing
-            await pool.query('INSERT INTO store_config (id, store_mode, announcement) VALUES (1, "upcoming", "Welcome to Faith Over Fear")');
+            await pool.query('INSERT INTO store_config (id, store_mode, announcement) VALUES (1, "closed", "Welcome to Faith Over Fear")');
             [rows] = await pool.query('SELECT * FROM store_config WHERE id = 1');
         }
         
@@ -25,15 +25,15 @@ const updateStoreConfig = async (req, res) => {
 
         const { store_mode, announcement } = req.body;
         
-        // Validate store_mode
-        const validModes = ['upcoming', 'reservation', 'live'];
+        // Validate store_mode against user-defined strategy
+        const validModes = ['live', 'reserve', 'closed'];
         if (store_mode && !validModes.includes(store_mode)) {
-            return res.status(400).json({ success: false, message: 'Invalid store mode' });
+            return res.status(400).json({ success: false, message: `Invalid store mode. Allowed: ${validModes.join(', ')}` });
         }
 
         await pool.query(
             'UPDATE store_config SET store_mode = ?, announcement = ? WHERE id = 1',
-            [store_mode || 'upcoming', announcement || '']
+            [store_mode || 'closed', announcement || '']
         );
         res.json({ success: true, message: 'Store configuration updated successfully' });
     } catch (error) {

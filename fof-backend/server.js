@@ -22,6 +22,15 @@ const contactRoutes = require('./routes/contactRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const pool = require('./db/connection');
+const { initializeDatabase } = require('./db/init');
+
+// Initialize database tables before the app logic starts
+initializeDatabase()
+  .then(() => console.log('🚀 Database ready.'))
+  .catch(err => {
+    console.error('💥 Database initialization failed. Some features may be broken:', err.message);
+  });
+
 const { protect, verifyAdmin } = require('./middleware/authMiddleware');
 const checkStoreMode = require('./middleware/storeModeMiddleware');
 const orderController = require('./controllers/orderController');
@@ -81,19 +90,9 @@ app.post('/api/contact', async (req, res) => {
 app.use('/api/orders', protect, orderRoutes);
 app.use('/api/upload', protect, uploadRoutes);
 
-// Admin Only Routes (Require valid login + admin email)
-app.use('/api/admin/drops', verifyAdmin, dropRoutes);
-app.use('/api/admin/products', verifyAdmin, productRoutes);
-app.use('/api/admin/settings', verifyAdmin, settingsRoutes);
-app.use('/api/admin/announcement', verifyAdmin, announcementRoutes);
-app.get('/api/admin/orders', verifyAdmin, orderController.getAllOrders);
-app.put('/api/admin/orders/:id/status', verifyAdmin, orderController.updateStatus);
-app.use('/api/admin/store-config', verifyAdmin, storeConfigController.updateStoreConfig);
-app.use('/api/admin/reservations', verifyAdmin, reservationController.getReservations);
-app.patch('/api/admin/reservations/:id/status', verifyAdmin, reservationController.updateReservationStatus);
-app.use('/api/admin/messages', verifyAdmin, contactRoutes);
-app.use('/api/admin/notifications', notificationRoutes);
-app.use('/api/admin/auth-verify', verifyAdmin, (req, res) => res.json({ success: true, user: req.user }));
+// Admin Routes (Isolated with verifyAdmin internally)
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api/admin', adminRoutes);
 
 // 404 handler - returns JSON instead of HTML
 app.use((req, res) => {

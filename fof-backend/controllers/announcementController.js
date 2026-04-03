@@ -26,8 +26,12 @@ async function updateAnnouncement(req, res) {
     try {
         const { title, message } = req.body;
 
-        if (!title || !message) {
-            return res.status(400).json({ success: false, message: 'Missing title or message' });
+        // Validation for the actual payload required for the announcement
+        if (!title || title.trim().length === 0) {
+            return res.status(400).json({ success: false, message: 'A valid title is required for the announcement' });
+        }
+        if (!message || message.trim().length === 0) {
+            return res.status(400).json({ success: false, message: 'A valid message content is required' });
         }
 
         const success = await announcementModel.updateAnnouncement({ title, message });
@@ -35,11 +39,18 @@ async function updateAnnouncement(req, res) {
         if (success) {
             res.json({ success: true, message: 'Announcement updated successfully' });
         } else {
-            res.status(404).json({ success: false, message: 'Failed to update announcement' });
+            // Not found? Let's check why
+            res.status(404).json({ success: false, message: 'Announcement record with ID: 1 not found for update' });
         }
     } catch (err) {
-        console.error('Error updating announcement:', err);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
+        console.error('❌ ANNOUNCEMENT_UPDATE_ERROR:', err);
+        // Senior Refinement: return the actual SQL error message for easier Railway debugging
+        res.status(500).json({ 
+            success: false, 
+            message: 'Database update failed',
+            error: err.message,
+            sqlState: err.sqlState
+        });
     }
 }
 

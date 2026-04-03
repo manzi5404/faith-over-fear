@@ -11,12 +11,22 @@ const checkStoreMode = async (req, res, next) => {
             const [rows] = await pool.query('SELECT store_mode FROM store_config WHERE id = 1');
             const config = rows[0];
 
-            if (config && config.store_mode === 'reserve') {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Restricted Status: The store is currently in Reserve Mode. Standard checkouts are disabled.',
-                    mode: 'reserve'
-                });
+            if (config) {
+                if (config.store_mode === 'closed') {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Store status: CLOSED. New transactions are currently disabled.',
+                        mode: 'closed'
+                    });
+                }
+
+                if (config.store_mode === 'reserve' && isRestrictedPath) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Store status: RESERVATION ONLY. Standard checkouts are disabled.',
+                        mode: 'reserve'
+                    });
+                }
             }
         } catch (error) {
             console.error('Store Mode Middleware Error:', error);

@@ -68,6 +68,8 @@ const getReservations = async (req, res) => {
     const email = req.user ? req.user.email : req.query.email;
 
     try {
+        console.log(`[RESERVATION_FETCH] Request by ${email || 'Admin'}`);
+        
         let query = `
             SELECT 
                 r.*, 
@@ -91,9 +93,24 @@ const getReservations = async (req, res) => {
         const [rows] = await pool.query(query, params);
         res.json({ success: true, reservations: rows || [] });
     } catch (error) {
-        console.error('CRITICAL RESERVATION FETCH ERROR:', error);
-        // User requested to return [] if no data/failure to maintain stability
-        res.json({ success: true, reservations: [], message: 'Reservations unavailable at this time' });
+        // High-level structured logging for Railway/Production monitoring
+        console.error('❌ RESERVATION_FETCH_ERROR:', {
+            message: error.message,
+            code: error.code,
+            sqlState: error.sqlState,
+            requestedBy: email || 'Admin'
+        });
+
+        // Fail-safe: Return empty array to prevent Frontend crashes (500 errors)
+        // Especially useful if the table was manually deleted or migration is pending
+        const isTableMissing = error.code === 'ER_NO_SUCH_TABLE';
+        
+        res.json({ 
+            success: true, 
+            reservations: [], 
+            message: isTableMissing ? 'Reservations system initializing...' : 'Reservations temporarily unavailable',
+            debug: process.env.NODE_ENV !== 'production' ? error.message : undefined
+        });
     }
 };
 
