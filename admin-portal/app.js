@@ -273,24 +273,29 @@ const ProductsSection = ({ onToast }) => {
 
 const CollectionsSection = ({ onToast }) => {
   const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/drops"), []);
-  const [form, setForm] = useState({ name: "", description: "", status: "upcoming" });
+  const [form, setForm] = useState({ title: "", description: "", image_url: "", status: "upcoming" });
   const [editingId, setEditingId] = useState(null);
 
+  useEffect(() => {
+    if (data?.drops) console.log("📦 [ADMIN] Fetched drops:", data.drops);
+  }, [data]);
+
   const resetForm = () => {
-    setForm({ name: "", description: "", status: "upcoming" });
+    setForm({ title: "", description: "", image_url: "", status: "upcoming" });
     setEditingId(null);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const payload = {
-      name: form.name,
+      title: form.title,
       description: form.description,
+      image_url: form.image_url,
       status: form.status
     };
     try {
       if (editingId) {
-        await api.patch(`/api/admin/drops/${editingId}`, payload);
+        await api.put(`/api/admin/drops/${editingId}`, payload);
         onToast("Drop updated");
       } else {
         await api.post("/api/admin/drops", payload);
@@ -304,10 +309,11 @@ const CollectionsSection = ({ onToast }) => {
   };
 
   const handleEdit = (item) => {
-    setEditingId(item._id || item.id);
+    setEditingId(item.id);
     setForm({
-      name: item.name || "",
+      title: item.title || "",
       description: item.description || "",
+      image_url: item.image_url || "",
       status: item.status || "upcoming"
     });
   };
@@ -324,7 +330,7 @@ const CollectionsSection = ({ onToast }) => {
 
   const updateStatus = async (item, newStatus) => {
     try {
-      await api.patch(`/api/admin/drops/${item._id || item.id}`, { status: newStatus });
+      await api.put(`/api/admin/drops/${item.id}`, { status: newStatus });
       onToast(`Status updated to ${newStatus}`);
       reload();
     } catch (err) {
@@ -341,9 +347,15 @@ const CollectionsSection = ({ onToast }) => {
       <form onSubmit={handleSubmit} className="grid gap-3 md:grid-cols-2">
         <input
           className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-          placeholder="Name"
-          value={form.name}
-          onChange={(event) => setForm({ ...form, name: event.target.value })}
+          placeholder="Title"
+          value={form.title}
+          onChange={(event) => setForm({ ...form, title: event.target.value })}
+        />
+        <input
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          placeholder="Cover Image URL"
+          value={form.image_url}
+          onChange={(event) => setForm({ ...form, image_url: event.target.value })}
         />
         <select
           className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
@@ -368,20 +380,26 @@ const CollectionsSection = ({ onToast }) => {
       {loading && <p className="mt-4 text-sm text-slate-400">Loading...</p>}
       {error && <p className="mt-4 text-sm text-rose-400">{error}</p>}
       <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {(data || []).map((item) => (
-          <div key={item._id || item.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold">{item.name}</p>
-                <p className="text-xs text-slate-400 line-clamp-1">{item.description}</p>
+        {(data?.drops || []).map((item) => (
+          <div key={item.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+            <div className="flex items-start gap-4">
+              {item.image_url && (
+                <img src={item.image_url} alt={item.title} className="h-12 w-12 rounded object-cover border border-slate-800" />
+              )}
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold">{item.title}</p>
+                  <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                    item.status === 'live' ? 'bg-emerald-500/10 text-emerald-400' :
+                    item.status === 'reserve' ? 'bg-blue-500/10 text-blue-400' :
+                    'bg-zinc-500/10 text-zinc-400'
+                  }`}>
+                    {item.status || 'closed'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 line-clamp-1 mt-0.5">{item.description}</p>
+                <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-tight">Created: {new Date(item.created_at).toLocaleDateString()}</p>
               </div>
-              <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wider ${
-                item.status === 'live' ? 'bg-emerald-500/10 text-emerald-400' :
-                item.status === 'reserve' ? 'bg-blue-500/10 text-blue-400' :
-                'bg-zinc-500/10 text-zinc-400'
-              }`}>
-                {item.status || 'closed'}
-              </span>
             </div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               <button onClick={() => handleEdit(item)} className="rounded bg-slate-800 px-2 py-1">Edit</button>

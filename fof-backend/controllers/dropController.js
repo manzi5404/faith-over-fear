@@ -81,6 +81,7 @@ async function listDrops(req, res) {
     }
 
     res.json({ success: true, drops });
+    console.log(`📦 [ADMIN] Fetched ${drops.length} drops`);
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -154,6 +155,7 @@ async function updateDrop(req, res) {
     }
 
     res.json({ success: updated });
+    console.log(`🔄 [ADMIN] Updated drop ID: ${dropId}`);
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -163,6 +165,7 @@ async function removeDrop(req, res) {
   try {
     const removed = await deleteDrop(req.params.id);
     res.json({ success: removed });
+    console.log(`🗑️ [ADMIN] Deleted drop ID: ${req.params.id}`);
  } catch (err) {
   console.error("CREATE DROP ERROR:", err); // 👈 THIS IS THE LINE YOU ADD
   res.status(400).json({ success: false, message: err.message });

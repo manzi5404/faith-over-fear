@@ -29,6 +29,8 @@ async function getDrops(statusFilter = null) {
     }
   }
   
+  sql += ' ORDER BY created_at DESC';
+  
   const [rows] = await pool.query(sql, params);
   return rows;
 }
