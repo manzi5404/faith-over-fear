@@ -447,24 +447,22 @@ const shopLogic = () => ({
         console.log("Submitting Reservation Payload:", payload);
 
         try {
-            // Create an order via the unified orders API with 'reservation' payment method
-            const response = await fetch('/api/orders', {
+            // Submit to the DEDICATED reservations API
+            const response = await fetch('/api/reservations', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': token ? `Bearer ${token}` : ''
                 },
                 body: JSON.stringify({
-                    product_id: this.selectedProduct.id,
-                    product_name: this.selectedProduct.name,
+                    productId: this.selectedProduct.id,
+                    fullName: this.reservationData.fullName,
+                    email: this.reservationData.email,
+                    phone: this.reservationData.phone,
                     size: this.reservationData.size,
                     color: this.reservationData.color,
                     quantity: this.reservationData.quantity,
-                    total_price: parseFloat(this.selectedProduct.price) * parseInt(this.reservationData.quantity),
-                    payment_method: 'reservation',
-                    customer_name: this.reservationData.fullName,
-                    customer_email: this.reservationData.email,
-                    phone_number: this.reservationData.phone
+                    storeMode: this.storeConfig.store_mode || 'live'
                 })
             });
 

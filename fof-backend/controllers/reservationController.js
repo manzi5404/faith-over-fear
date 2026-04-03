@@ -1,12 +1,14 @@
 const pool = require('../db/connection');
 const notification = require('../models/notification');
+const emailUtils = require('../utils/email');
+const productService = require('../models/product');
 
 const createReservation = async (req, res) => {
     console.log("=== INCOMING RESERVATION REQUEST ===");
     console.log("Headers:", JSON.stringify(req.headers['content-type']));
     console.log("Body:", JSON.stringify(req.body, null, 2));
 
-    const { fullName, email: bodyEmail, phone, productId, size, color, quantity } = req.body;
+    const { fullName, email: bodyEmail, phone, productId, size, color, quantity, storeMode } = req.body;
     const userId = req.user ? req.user.id : null;
     const email = req.user ? req.user.email : bodyEmail;
 
@@ -18,32 +20,55 @@ const createReservation = async (req, res) => {
 
     try {
         console.log("Executing DB Insert for Reservation...");
-        console.log("Insert values:", {
-            userId: userId || null,
-            fullName: fullName || 'Anonymous',
+        const reservationData = {
+            userId,
+            fullName: fullName || 'Anonymous Guest',
             email,
             phone: phone || 'N/A',
             productId,
             size: size || 'M',
             color: color || 'Default',
-            quantity: quantity || 1
-        });
+            quantity: quantity || 1,
+            storeMode: storeMode || 'live'
+        };
 
         const [result] = await pool.query(
-            `INSERT INTO reservations (user_id, full_name, email, phone, product_id, size, color, quantity, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
-            [userId, fullName || 'Anonymous', email, phone || 'N/A', productId, size || 'M', color || 'Default', quantity || 1]
+            `INSERT INTO reservations (user_id, full_name, email, phone, product_id, size, color, quantity, store_mode, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+            [
+                reservationData.userId, 
+                reservationData.fullName, 
+                reservationData.email, 
+                reservationData.phone, 
+                reservationData.productId, 
+                reservationData.size, 
+                reservationData.color, 
+                reservationData.quantity,
+                reservationData.storeMode
+            ]
         );
 
         console.log("✅ Reservation Insert Success ID:", result.insertId);
 
-        // Create notification for admin
+        // Fetch product info for notification
+        const product = await productService.getProductById(productId);
+
+        // Create in-app notification for admin
         await notification.createNotification(
             'reservation',
             result.insertId,
-            `New reservation from ${fullName || 'Anonymous'}`,
-            `Product ID: ${productId} | Size: ${size || 'M'} | Qty: ${quantity || 1}`
+            `Reservation: ${reservationData.fullName}`,
+            `Product: ${product?.name || productId} | Mode: ${reservationData.storeMode}`
         );
+
+        // Trigger email notification (fire and forget)
+        (async () => {
+            try {
+                await emailUtils.notifyReservation(email, reservationData, product);
+            } catch (err) {
+                console.error("❌ [EMAIL_ERROR] Failed to send reservation email:", err.message);
+            }
+        })();
 
         res.status(201).json({
             success: true,
@@ -130,6 +155,7 @@ const getReservations = async (req, res) => {
             quantity: r.quantity,
             size: r.size,
             color: r.color,
+            store_mode: r.store_mode,
             status: r.status,
             created_at: r.created_at,
             updated_at: r.updated_at

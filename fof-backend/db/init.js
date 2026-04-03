@@ -110,21 +110,37 @@ async function initializeDatabase() {
                 size VARCHAR(20),
                 color VARCHAR(50),
                 quantity INT DEFAULT 1,
+                store_mode VARCHAR(50) DEFAULT 'live',
                 status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
 
-        // Migration: Ensure reservations table has updated_at and correct ENUM statuses
+        // Migration: Ensure reservations table has updated_at, store_mode, and correct ENUM statuses
         try {
             await connection.query("UPDATE reservations SET status = 'completed' WHERE status = 'fulfilled'");
             await connection.query("ALTER TABLE reservations MODIFY COLUMN status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending'");
+            
+            // Check and Rename phone_number to phone if exists
+            const [phoneCols] = await connection.query('SHOW COLUMNS FROM reservations LIKE "phone_number"');
+            if (phoneCols.length > 0) {
+                await connection.query('ALTER TABLE reservations CHANGE COLUMN phone_number phone VARCHAR(50)');
+                console.log('✅ Reservations column phone_number -> phone renamed');
+            }
+
+            // Check and Add store_mode if missing
+            const [modeCols] = await connection.query('SHOW COLUMNS FROM reservations LIKE "store_mode"');
+            if (modeCols.length === 0) {
+                await connection.query('ALTER TABLE reservations ADD COLUMN store_mode VARCHAR(50) DEFAULT "live" AFTER quantity');
+                console.log('✅ Reservations column store_mode added');
+            }
+
             const [cols] = await connection.query('SHOW COLUMNS FROM reservations LIKE "updated_at"');
             if (cols.length === 0) {
                 await connection.query('ALTER TABLE reservations ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at');
             }
-            console.log('✅ Reservations schema verified (status ENUM & updated_at ensured)');
+            console.log('✅ Reservations schema verified (status, store_mode & updated_at ensured)');
         } catch (migErr) {
             console.warn('⚠️  Reservations migration warning:', migErr.message);
         }

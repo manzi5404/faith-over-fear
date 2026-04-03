@@ -958,11 +958,19 @@ const ReservationsSection = ({ onToast }) => {
               <div className="mb-2 flex items-start justify-between">
                 <div>
                   <h4 className="font-semibold text-white line-clamp-1">{res.product.name}</h4>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-widest">{res.size} / QTY: {res.quantity}</p>
+                  <div className="flex gap-1.5 mt-0.5">
+                    <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest bg-slate-900 border border-slate-800 px-1 rounded">{res.size}</span>
+                    <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest bg-slate-900 border border-slate-800 px-1 rounded">QTY: {res.quantity}</span>
+                  </div>
                 </div>
-                <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${statusColors[res.status]}`}>
-                  {res.status}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                    <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${statusColors[res.status]}`}>
+                        {res.status}
+                    </span>
+                    <span className={`text-[8px] px-1.5 py-0.5 rounded uppercase font-black tracking-tighter ${res.store_mode === 'reserve' ? 'bg-blue-500 text-white' : 'bg-fof-accent text-white'}`}>
+                        {res.store_mode || 'live'}
+                    </span>
+                </div>
               </div>
               
               <div className="mt-2 space-y-1">
