@@ -15,6 +15,7 @@ const contactController = require('../controllers/contactController');
 const notificationRoutes = require('./notificationRoutes');
 const dropRoutes = require('./dropRoutes');
 const productRoutes = require('./productRoutes');
+const adminReservationRoutes = require('./adminReservationRoutes');
 
 // Apply verifyAdmin to ALL routes in this router
 router.use(verifyAdmin);
@@ -28,8 +29,8 @@ router.use('/notifications', notificationRoutes);
 router.get('/orders', orderController.getAllOrders);
 router.put('/orders/:id/status', orderController.updateStatus);
 
-// Reservations moved to dedicated /api/reservations router
-// (GET, PATCH, DELETE now handled in reservationRoutes.js)
+// Reservations
+router.use('/reservations', adminReservationRoutes);
 
 // Store Config & Settings
 router.get('/store-config', storeConfigController.getStoreConfig);
