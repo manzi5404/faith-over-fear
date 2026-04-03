@@ -64,53 +64,46 @@ const createReservation = async (req, res) => {
 };
 
 const getReservations = async (req, res) => {
-    const userId = req.user ? req.user.id : req.query.userId;
-    const email = req.user ? req.user.email : req.query.email;
-
     try {
-        console.log(`[RESERVATION_FETCH] Request by ${email || 'Admin'}`);
-        
-        let query = `
+        const query = `
             SELECT 
                 r.*, 
                 p.name as productName, 
-                p.image_urls as productImageUrls
+                p.image_urls as productImageUrls,
+                u.name as userName,
+                u.email as userEmail
             FROM reservations r 
             LEFT JOIN products p ON r.product_id = p.id 
+            LEFT JOIN users u ON r.user_id = u.id
+            ORDER BY r.created_at DESC
         `;
-        const params = [];
 
-        if (userId) {
-            query += ` WHERE r.user_id = ? `;
-            params.push(userId);
-        } else if (email) {
-            query += ` WHERE r.email = ? `;
-            params.push(email);
-        }
-
-        query += ` ORDER BY r.created_at DESC `;
-
-        const [rows] = await pool.query(query, params);
-        res.json({ success: true, reservations: rows || [] });
-    } catch (error) {
-        // High-level structured logging for Railway/Production monitoring
-        console.error('❌ RESERVATION_FETCH_ERROR:', {
-            message: error.message,
-            code: error.code,
-            sqlState: error.sqlState,
-            requestedBy: email || 'Admin'
-        });
-
-        // Fail-safe: Return empty array to prevent Frontend crashes (500 errors)
-        // Especially useful if the table was manually deleted or migration is pending
-        const isTableMissing = error.code === 'ER_NO_SUCH_TABLE';
+        const [rows] = await pool.query(query);
         
-        res.json({ 
-            success: true, 
-            reservations: [], 
-            message: isTableMissing ? 'Reservations system initializing...' : 'Reservations temporarily unavailable',
-            debug: process.env.NODE_ENV !== 'production' ? error.message : undefined
-        });
+        // Transform into structured JSON as requested
+        const structuredReservations = rows.map(r => ({
+            id: r.id,
+            user: {
+                name: r.full_name || r.userName || "Guest",
+                email: r.email || r.userEmail || "N/A",
+                phone: r.phone || "N/A"
+            },
+            product: {
+                name: r.productName || `Product #${r.product_id}`,
+                image_urls: typeof r.productImageUrls === 'string' ? JSON.parse(r.productImageUrls) : (r.productImageUrls || [])
+            },
+            quantity: r.quantity,
+            size: r.size,
+            color: r.color,
+            status: r.status,
+            created_at: r.created_at,
+            updated_at: r.updated_at
+        }));
+
+        res.json({ success: true, reservations: structuredReservations });
+    } catch (error) {
+        console.error('❌ RESERVATION_FETCH_ERROR:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch reservations', error: error.message });
     }
 };
 
@@ -118,15 +111,40 @@ const updateReservationStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     try {
-        await pool.query('UPDATE reservations SET status = ? WHERE id = ?', [status, id]);
-        res.json({ success: true, message: 'Reservation status updated' });
+        // Enforce valid status ENUM values
+        const validStatuses = ['pending', 'confirmed', 'fulfilled', 'cancelled'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid reservation status' });
+        }
+
+        const [result] = await pool.query('UPDATE reservations SET status = ? WHERE id = ?', [status, id]);
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Reservation not found' });
+        }
+
+        res.json({ success: true, message: `Reservation marked as ${status}` });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to update status', error: error.message });
+    }
+};
+
+const deleteReservation = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await pool.query('DELETE FROM reservations WHERE id = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Reservation not found' });
+        }
+        res.json({ success: true, message: 'Reservation deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Failed to delete reservation', error: error.message });
     }
 };
 
 module.exports = {
     createReservation,
     getReservations,
-    updateReservationStatus
+    updateReservationStatus,
+    deleteReservation
 };

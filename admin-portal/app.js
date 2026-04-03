@@ -574,6 +574,7 @@ const StoreConfigSection = ({ onToast }) => {
 
 const OrdersSection = ({ onToast }) => {
   const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/orders"), []);
+  const [filterStatus, setFilterStatus] = useState("all");
   const [filterMethod, setFilterMethod] = useState("all");
   const [expandedId, setExpandedId] = useState(null);
 
@@ -789,6 +790,134 @@ const OrdersSection = ({ onToast }) => {
   );
 };
 
+const ReservationsSection = ({ onToast }) => {
+  const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/reservations"), []);
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  const reservations = data?.reservations || [];
+  const filteredReservations = reservations.filter(r => filterStatus === "all" || r.status === filterStatus);
+
+  const statusColors = {
+    pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
+    confirmed: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+    fulfilled: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+    cancelled: "bg-rose-500/10 text-rose-400 border-rose-500/30",
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await api.patch(`/api/admin/reservations/${id}/status`, { status: newStatus });
+      onToast(`Reservation marked as ${newStatus}`);
+      reload();
+    } catch (err) {
+      onToast(err.response?.data?.message || "Failed to update status");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this reservation?")) return;
+    try {
+      await api.delete(`/api/admin/reservations/${id}`);
+      onToast("Reservation deleted");
+      reload();
+    } catch (err) {
+      onToast(err.response?.data?.message || "Failed to delete reservation");
+    }
+  };
+
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Active Reservations</h3>
+        <button onClick={reload} className="rounded bg-slate-800 px-3 py-1 text-xs uppercase text-slate-300 hover:bg-slate-700">
+          Refresh
+        </button>
+      </div>
+
+      <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-800 pb-4">
+        {["all", "pending", "confirmed", "fulfilled", "cancelled"].map((status) => (
+          <button
+            key={status}
+            onClick={() => setFilterStatus(status)}
+            className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
+              filterStatus === status ? "bg-white text-slate-900" : "bg-slate-800 text-slate-400 hover:text-white"
+            }`}
+          >
+            {status} ({reservations.filter(r => status === 'all' || r.status === status).length})
+          </button>
+        ))}
+      </div>
+
+      {loading && <p className="text-sm text-slate-400">Loading reservations...</p>}
+      {error && <p className="text-sm text-rose-400">{error}</p>}
+
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        {filteredReservations.map((res) => (
+          <div key={res.id} className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950 transition-all hover:border-slate-700">
+            {/* Product Image */}
+            <div className="aspect-square w-full bg-slate-900 overflow-hidden">
+                <img 
+                    src={res.product.image_urls[0] || "https://placehold.co/400x400?text=F%3EF"} 
+                    alt={res.product.name}
+                    className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                />
+            </div>
+            
+            {/* Content */}
+            <div className="flex flex-1 flex-col p-4">
+              <div className="mb-2 flex items-start justify-between">
+                <div>
+                  <h4 className="font-semibold text-white line-clamp-1">{res.product.name}</h4>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest">{res.size} / QTY: {res.quantity}</p>
+                </div>
+                <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${statusColors[res.status]}`}>
+                  {res.status}
+                </span>
+              </div>
+              
+              <div className="mt-2 space-y-1">
+                <p className="text-xs font-medium text-slate-300">{res.user.name}</p>
+                <p className="text-[10px] text-slate-500">{res.user.email}</p>
+                <p className="text-[10px] text-slate-500">{res.user.phone}</p>
+              </div>
+
+              <div className="mt-auto pt-4 flex gap-2">
+                <select
+                  value={res.status}
+                  onChange={(e) => handleStatusChange(res.id, e.target.value)}
+                  className="flex-1 rounded border border-slate-700 bg-slate-900 px-2 py-1.5 text-[10px] text-slate-300 focus:border-white transition-colors"
+                >
+                  <option value="pending">Mark Pending</option>
+                  <option value="confirmed">Confirm</option>
+                  <option value="fulfilled">Fulfilled</option>
+                  <option value="cancelled">Cancel</option>
+                </select>
+                <button 
+                  onClick={() => handleDelete(res.id)}
+                  className="rounded bg-rose-600/10 p-2 text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                  title="Delete"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <p className="text-[8px] bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-white font-mono">#{res.id}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {!loading && filteredReservations.length === 0 && (
+        <div className="py-12 text-center text-slate-500 border border-dashed border-slate-800 rounded-xl">
+            <p className="text-sm">No reservations found for this filter.</p>
+        </div>
+      )}
+    </section>
+  );
+};
+
 const Dashboard = () => {
   const [toast, setToast] = useState("");
 
@@ -805,6 +934,7 @@ const Dashboard = () => {
         </div>
       )}
       <div className="grid gap-6">
+        <ReservationsSection onToast={notify} />
         <OrdersSection onToast={notify} />
         <ProductsSection onToast={notify} />
         <CollectionsSection onToast={notify} />

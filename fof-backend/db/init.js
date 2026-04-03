@@ -100,10 +100,23 @@ async function initializeDatabase() {
                 size VARCHAR(20),
                 color VARCHAR(50),
                 quantity INT DEFAULT 1,
-                status ENUM('pending', 'contacted', 'cancelled') DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                status ENUM('pending', 'confirmed', 'fulfilled', 'cancelled') DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
+
+        // Migration: Ensure reservations table has updated_at and correct ENUM statuses
+        try {
+            await connection.query("ALTER TABLE reservations MODIFY COLUMN status ENUM('pending', 'confirmed', 'fulfilled', 'cancelled') DEFAULT 'pending'");
+            const [cols] = await connection.query('SHOW COLUMNS FROM reservations LIKE "updated_at"');
+            if (cols.length === 0) {
+                await connection.query('ALTER TABLE reservations ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at');
+            }
+            console.log('✅ Reservations schema verified (status ENUM & updated_at ensured)');
+        } catch (migErr) {
+            console.warn('⚠️  Reservations migration warning:', migErr.message);
+        }
 
         // 7. Announcements Table
         await connection.query(`
