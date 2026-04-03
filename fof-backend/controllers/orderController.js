@@ -6,7 +6,7 @@ const createOrder = async (req, res) => {
     const {
         product_id, drop_id, product_name, size, color,
         quantity, total_price, payment_method,
-        customer_name, customer_email, customer_phone
+        customer_name, customer_email, phone_number
     } = req.body;
 
     if (!product_id) {
@@ -29,7 +29,7 @@ const createOrder = async (req, res) => {
             payment_method: payment_method || 'reservation',
             customer_name: customer_name || (req.user ? req.user.name : null),
             customer_email: customer_email || (req.user ? req.user.email : null),
-            customer_phone: customer_phone || null
+            phone_number: phone_number || null
         });
 
         await notification.createNotification(

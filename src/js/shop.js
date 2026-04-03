@@ -464,7 +464,7 @@ const shopLogic = () => ({
                     payment_method: 'reservation',
                     customer_name: this.reservationData.fullName,
                     customer_email: this.reservationData.email,
-                    customer_phone: this.reservationData.phone
+                    phone_number: this.reservationData.phone
                 })
             });
 

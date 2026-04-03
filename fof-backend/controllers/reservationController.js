@@ -47,8 +47,17 @@ const createReservation = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'Reservation recorded successfully',
-            reservationId: result.insertId
+            message: 'Reservation created successfully',
+            data: {
+                id: result.insertId,
+                fullName: fullName || 'Anonymous',
+                email,
+                phone: phone || 'N/A',
+                productId,
+                size: size || 'M',
+                color: color || 'Default',
+                quantity: quantity || 1
+            }
         });
     } catch (error) {
         console.error("❌ DB Reservation Error:", error);

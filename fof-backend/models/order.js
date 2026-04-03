@@ -4,11 +4,11 @@ async function createOrder(orderData) {
     const {
         user_id, product_id, drop_id, product_name, size, color,
         quantity, total_price, payment_method, customer_name,
-        customer_email, customer_phone
+        customer_email, phone_number
     } = orderData;
 
     const [result] = await pool.query(
-        `INSERT INTO orders (user_id, product_id, drop_id, product_name, size, color, quantity, total_price, status, payment_method, customer_name, customer_email, customer_phone)
+        `INSERT INTO orders (user_id, product_id, drop_id, product_name, size, color, quantity, total_price, status, payment_method, customer_name, customer_email, phone_number)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
         [
             user_id || null,
@@ -22,7 +22,7 @@ async function createOrder(orderData) {
             payment_method || 'reservation',
             customer_name || null,
             customer_email || null,
-            customer_phone || null
+            phone_number || null
         ]
     );
     return result.insertId;
