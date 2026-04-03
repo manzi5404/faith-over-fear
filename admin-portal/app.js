@@ -573,24 +573,36 @@ const StoreConfigSection = ({ onToast }) => {
 };
 
 const OrdersSection = ({ onToast }) => {
-  const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/orders"), []);
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterMethod, setFilterMethod] = useState("all");
+  const [filterProduct, setFilterProduct] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [expandedId, setExpandedId] = useState(null);
 
-  const orders = data?.orders || [];
+  const { data, loading, error, reload } = useFetch(
+    () => api.get("/api/admin/orders", {
+      params: { 
+        status: filterStatus, 
+        productId: filterProduct,
+        startDate,
+        endDate
+      }
+    }), 
+    [filterStatus, filterProduct, startDate, endDate]
+  );
 
-  const filteredOrders = orders.filter((o) => {
-    const statusMatch = filterStatus === "all" || o.status === filterStatus;
-    const methodMatch = filterMethod === "all" || (o.payment_method || "reservation") === filterMethod;
-    return statusMatch && methodMatch;
-  });
+  const { data: productsData } = useFetch(() => api.get("/api/admin/products"), []);
+  const products = productsData?.products || [];
+  const orders = data?.orders || [];
 
   const statusColors = {
     pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
+    confirmed: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+    completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+    cancelled: "bg-rose-500/10 text-rose-400 border-rose-500/30",
+    // Compatibility
     contacted: "bg-blue-500/10 text-blue-400 border-blue-500/30",
     delivered: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-    cancelled: "bg-rose-500/10 text-rose-400 border-rose-500/30",
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
@@ -631,40 +643,59 @@ const OrdersSection = ({ onToast }) => {
         </button>
       </div>
 
-      {/* Filters Overlay */}
-      <div className="mb-4 flex flex-wrap gap-6 items-center border-b border-slate-800 pb-4">
-        {/* Status Filter Tabs */}
-        <div className="flex flex-wrap gap-2">
-          {["all", "pending", "contacted", "delivered", "cancelled"].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
-                filterStatus === status
-                  ? "bg-white text-slate-900"
-                  : "bg-slate-800 text-slate-400 hover:text-white"
-              }`}
-            >
-              {status} ({orders.filter(o => status === 'all' || o.status === status).length})
-            </button>
-          ))}
+      {/* Advanced Filters */}
+      <div className="mb-6 grid grid-cols-1 gap-4 border-b border-slate-800 pb-6 md:grid-cols-4">
+        {/* Status Dropdown */}
+        <div>
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Status</label>
+          <select 
+            value={filterStatus} 
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+          >
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
         </div>
-        
-        {/* Method Filter */}
-        <div className="flex gap-2 border-l border-slate-800 pl-4">
-           {["all", "momo", "reservation"].map((method) => (
-            <button
-              key={method}
-              onClick={() => setFilterMethod(method)}
-              className={`rounded px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                filterMethod === method
-                  ? "bg-fof-accent text-white"
-                  : "bg-slate-800 text-slate-500 hover:text-white"
-              }`}
-            >
-              {method}
-            </button>
-          ))}
+
+        {/* Product Dropdown */}
+        <div>
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Product</label>
+          <select 
+            value={filterProduct} 
+            onChange={(e) => setFilterProduct(e.target.value)}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+          >
+            <option value="all">All Products</option>
+            {products.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Start Date */}
+        <div>
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">From Date</label>
+          <input 
+            type="date" 
+            value={startDate} 
+            onChange={(e) => setStartDate(e.target.value)}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+          />
+        </div>
+
+        {/* End Date */}
+        <div>
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">To Date</label>
+          <input 
+            type="date" 
+            value={endDate} 
+            onChange={(e) => setEndDate(e.target.value)}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+          />
         </div>
       </div>
 
@@ -727,8 +758,8 @@ const OrdersSection = ({ onToast }) => {
                           className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-300"
                         >
                           <option value="pending">Pending</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="delivered">Delivered</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="completed">Completed</option>
                           <option value="cancelled">Cancelled</option>
                         </select>
                         <button
@@ -791,17 +822,34 @@ const OrdersSection = ({ onToast }) => {
 };
 
 const ReservationsSection = ({ onToast }) => {
-  const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/reservations"), []);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterProduct, setFilterProduct] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
+  const { data, loading, error, reload } = useFetch(
+    () => api.get("/api/admin/reservations", {
+      params: { 
+        status: filterStatus,
+        productId: filterProduct,
+        startDate,
+        endDate
+      }
+    }), 
+    [filterStatus, filterProduct, startDate, endDate]
+  );
+  
+  const { data: productsData } = useFetch(() => api.get("/api/admin/products"), []);
+  const products = productsData?.products || [];
   const reservations = data?.reservations || [];
-  const filteredReservations = reservations.filter(r => filterStatus === "all" || r.status === filterStatus);
 
   const statusColors = {
     pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
     confirmed: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-    fulfilled: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+    completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
     cancelled: "bg-rose-500/10 text-rose-400 border-rose-500/30",
+    // Compatibility
+    fulfilled: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
   };
 
   const handleStatusChange = async (id, newStatus) => {
@@ -834,25 +882,67 @@ const ReservationsSection = ({ onToast }) => {
         </button>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-800 pb-4">
-        {["all", "pending", "confirmed", "fulfilled", "cancelled"].map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilterStatus(status)}
-            className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
-              filterStatus === status ? "bg-white text-slate-900" : "bg-slate-800 text-slate-400 hover:text-white"
-            }`}
+      {/* Advanced Filters */}
+      <div className="mb-6 grid grid-cols-1 gap-4 border-b border-slate-800 pb-6 md:grid-cols-4">
+        {/* Status Dropdown */}
+        <div>
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Status</label>
+          <select 
+            value={filterStatus} 
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
           >
-            {status} ({reservations.filter(r => status === 'all' || r.status === status).length})
-          </button>
-        ))}
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        {/* Product Dropdown */}
+        <div>
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">Product</label>
+          <select 
+            value={filterProduct} 
+            onChange={(e) => setFilterProduct(e.target.value)}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+          >
+            <option value="all">All Products</option>
+            {products.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Start Date */}
+        <div>
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">From Date</label>
+          <input 
+            type="date" 
+            value={startDate} 
+            onChange={(e) => setStartDate(e.target.value)}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+          />
+        </div>
+
+        {/* End Date */}
+        <div>
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500">To Date</label>
+          <input 
+            type="date" 
+            value={endDate} 
+            onChange={(e) => setEndDate(e.target.value)}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+          />
+        </div>
       </div>
 
       {loading && <p className="text-sm text-slate-400">Loading reservations...</p>}
       {error && <p className="text-sm text-rose-400">{error}</p>}
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-        {filteredReservations.map((res) => (
+        {reservations.map((res) => (
           <div key={res.id} className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950 transition-all hover:border-slate-700">
             {/* Product Image */}
             <div className="aspect-square w-full bg-slate-900 overflow-hidden">
@@ -887,10 +977,10 @@ const ReservationsSection = ({ onToast }) => {
                   onChange={(e) => handleStatusChange(res.id, e.target.value)}
                   className="flex-1 rounded border border-slate-700 bg-slate-900 px-2 py-1.5 text-[10px] text-slate-300 focus:border-white transition-colors"
                 >
-                  <option value="pending">Mark Pending</option>
-                  <option value="confirmed">Confirm</option>
-                  <option value="fulfilled">Fulfilled</option>
-                  <option value="cancelled">Cancel</option>
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
                 <button 
                   onClick={() => handleDelete(res.id)}

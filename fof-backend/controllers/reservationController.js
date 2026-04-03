@@ -74,7 +74,8 @@ const createReservation = async (req, res) => {
 
 const getReservations = async (req, res) => {
     try {
-        const query = `
+        const { status, productId, startDate, endDate } = req.query;
+        let query = `
             SELECT 
                 r.*, 
                 p.name as productName, 
@@ -84,10 +85,35 @@ const getReservations = async (req, res) => {
             FROM reservations r 
             LEFT JOIN products p ON r.product_id = p.id 
             LEFT JOIN users u ON r.user_id = u.id
-            ORDER BY r.created_at DESC
         `;
+        
+        const whereClauses = [];
+        const params = [];
 
-        const [rows] = await pool.query(query);
+        if (status && status !== 'all') {
+            whereClauses.push('r.status = ?');
+            params.push(status);
+        }
+        if (productId && productId !== 'all') {
+            whereClauses.push('r.product_id = ?');
+            params.push(productId);
+        }
+        if (startDate) {
+            whereClauses.push('r.created_at >= ?');
+            params.push(`${startDate} 00:00:00`);
+        }
+        if (endDate) {
+            whereClauses.push('r.created_at <= ?');
+            params.push(`${endDate} 23:59:59`);
+        }
+
+        if (whereClauses.length > 0) {
+            query += ` WHERE ${whereClauses.join(' AND ')}`;
+        }
+
+        query += ` ORDER BY r.created_at DESC`;
+
+        const [rows] = await pool.query(query, params);
         
         // Transform into structured JSON as requested
         const structuredReservations = rows.map(r => ({
@@ -121,7 +147,7 @@ const updateReservationStatus = async (req, res) => {
     const { status } = req.body;
     try {
         // Enforce valid status ENUM values
-        const validStatuses = ['pending', 'confirmed', 'fulfilled', 'cancelled'];
+        const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid reservation status' });
         }

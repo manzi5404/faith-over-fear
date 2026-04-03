@@ -81,12 +81,22 @@ async function initializeDatabase() {
                 customer_email VARCHAR(255),
                 phone_number VARCHAR(50),
                 total_price DECIMAL(15, 2),
-                status ENUM('pending', 'contacted', 'delivered', 'cancelled') DEFAULT 'pending',
+                status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
                 payment_method VARCHAR(50) DEFAULT 'reservation',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
+
+        // Migration: Unified Status ENUM for Orders
+        try {
+            await connection.query("UPDATE orders SET status = 'confirmed' WHERE status = 'contacted'");
+            await connection.query("UPDATE orders SET status = 'completed' WHERE status = 'delivered'");
+            await connection.query("ALTER TABLE orders MODIFY COLUMN status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending'");
+            console.log('✅ Orders status ENUM unified & migrated');
+        } catch (migErr) {
+            console.warn('⚠️  Orders status migration warning:', migErr.message);
+        }
 
         // 6. Reservations Table (Critical for stability)
         await connection.query(`
@@ -100,7 +110,7 @@ async function initializeDatabase() {
                 size VARCHAR(20),
                 color VARCHAR(50),
                 quantity INT DEFAULT 1,
-                status ENUM('pending', 'confirmed', 'fulfilled', 'cancelled') DEFAULT 'pending',
+                status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -108,7 +118,8 @@ async function initializeDatabase() {
 
         // Migration: Ensure reservations table has updated_at and correct ENUM statuses
         try {
-            await connection.query("ALTER TABLE reservations MODIFY COLUMN status ENUM('pending', 'confirmed', 'fulfilled', 'cancelled') DEFAULT 'pending'");
+            await connection.query("UPDATE reservations SET status = 'completed' WHERE status = 'fulfilled'");
+            await connection.query("ALTER TABLE reservations MODIFY COLUMN status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending'");
             const [cols] = await connection.query('SHOW COLUMNS FROM reservations LIKE "updated_at"');
             if (cols.length === 0) {
                 await connection.query('ALTER TABLE reservations ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at');

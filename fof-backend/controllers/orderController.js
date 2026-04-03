@@ -71,7 +71,8 @@ const getMyOrders = async (req, res) => {
 
 const getAllOrders = async (req, res) => {
     try {
-        const orders = await orderModel.getAllOrders();
+        const { status, productId, startDate, endDate } = req.query;
+        const orders = await orderModel.getAllOrders({ status, productId, startDate, endDate });
         res.json({ success: true, orders });
     } catch (error) {
         console.error('❌ Get all orders error:', error);
@@ -87,7 +88,7 @@ const updateStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['pending', 'contacted', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
     if (!status || !validStatuses.includes(status)) {
         return res.status(400).json({
             success: false,

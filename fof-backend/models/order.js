@@ -61,18 +61,46 @@ async function getOrdersByUser(userId) {
     });
 }
 
-async function getAllOrders() {
-    const [rows] = await pool.query(
-        `SELECT o.*, 
+async function getAllOrders(filters = {}) {
+    const { status, productId, startDate, endDate } = filters;
+    let query = `
+        SELECT o.*, 
                 p.name as product_name_from_products, 
                 p.image_urls as product_image_urls,
                 u.name as user_display_name,
                 u.email as user_display_email
-         FROM orders o
-         LEFT JOIN products p ON o.product_id = p.id
-         LEFT JOIN users u ON o.user_id = u.id
-         ORDER BY o.created_at DESC`
-    );
+        FROM orders o
+        LEFT JOIN products p ON o.product_id = p.id
+        LEFT JOIN users u ON o.user_id = u.id
+    `;
+    
+    const whereClauses = [];
+    const params = [];
+
+    if (status && status !== 'all') {
+        whereClauses.push('o.status = ?');
+        params.push(status);
+    }
+    if (productId && productId !== 'all') {
+        whereClauses.push('o.product_id = ?');
+        params.push(productId);
+    }
+    if (startDate) {
+        whereClauses.push('o.created_at >= ?');
+        params.push(`${startDate} 00:00:00`);
+    }
+    if (endDate) {
+        whereClauses.push('o.created_at <= ?');
+        params.push(`${endDate} 23:59:59`);
+    }
+
+    if (whereClauses.length > 0) {
+        query += ` WHERE ${whereClauses.join(' AND ')}`;
+    }
+
+    query += ` ORDER BY o.created_at DESC`;
+
+    const [rows] = await pool.query(query, params);
     return rows.map(row => {
         if (!row.product_name && row.product_name_from_products) {
             row.product_name = row.product_name_from_products;
