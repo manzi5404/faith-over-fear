@@ -20,17 +20,22 @@ const createReservation = async (req, res) => {
 
     try {
         console.log("Executing DB Insert for Reservation...");
-        const reservationData = {
-            userId,
-            fullName: fullName || 'Anonymous Guest',
-            email,
-            phone: phone || 'N/A',
-            productId,
-            size: size || 'M',
-            color: color || 'Default',
-            quantity: quantity || 1,
-            storeMode: storeMode || 'live'
-        };
+
+// Determine proper full name
+const resolvedFullName = fullName && fullName.trim() !== '' ? fullName :
+    (bodyEmail ? bodyEmail.split('@')[0] : 'Guest');
+
+const reservationData = {
+    userId,
+    fullName: resolvedFullName,
+    email,
+    phone: phone || 'N/A',
+    productId,
+    size: size || 'M',
+    color: color || 'Default',
+    quantity: quantity || 1,
+    storeMode: storeMode || 'live'
+};
 
         const [result] = await pool.query(
             `INSERT INTO reservations (user_id, full_name, email, phone, product_id, size, color, quantity, store_mode, status)
