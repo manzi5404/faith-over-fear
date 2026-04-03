@@ -1,24 +1,17 @@
 const pool = require('../db/connection');
 
 async function addDrop(drop) {
-  const { title, description, type, price, sizes, images, status, colors, category, collection } = drop;
-  // map legacy is_active -> status if needed
-  let finalStatus = status || (drop.is_active ? 'live' : 'upcoming');
+  const { name, description, image_url, release_date, status, collection_id } = drop;
   const [result] = await pool.query(
-    `INSERT INTO drops (title, description, type, price, sizes, images, status, colors, category, collection, is_active)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO drops (name, description, image_url, release_date, status, collection_id)
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [
-      title,
+      name,
       description || null,
-      type || 'new-drop',
-      price || null,
-      JSON.stringify(sizes || []),
-      JSON.stringify(images || []),
-      finalStatus,
-      JSON.stringify(colors || []),
-      category || null,
-      collection || null,
-      finalStatus === 'live' ? 1 : 0
+      image_url || null,
+      release_date || null,
+      status || 'upcoming',
+      collection_id || null
     ]
   );
   return result.insertId;
@@ -29,8 +22,7 @@ async function getDrops(statusFilter = null) {
   let params = [];
   if (statusFilter) {
     if (statusFilter === 'active' || statusFilter === 'true') {
-      // Legacy compat
-      sql += ' WHERE is_active = 1 OR status = "live"';
+      sql += ' WHERE status = "live" OR status = "reservation"';
     } else {
       sql += ' WHERE status = ?';
       params.push(statusFilter);
@@ -38,33 +30,22 @@ async function getDrops(statusFilter = null) {
   }
   
   const [rows] = await pool.query(sql, params);
-  return rows.map(row => ({
-    ...row,
-    images: typeof row.images === 'string' ? JSON.parse(row.images) : (row.images || []),
-    sizes: typeof row.sizes === 'string' ? JSON.parse(row.sizes) : (row.sizes || []),
-    colors: typeof row.colors === 'string' ? JSON.parse(row.colors) : (row.colors || [])
-  }));
+  return rows;
 }
 
 async function editDrop(id, drop) {
-  const { title, description, type, price, sizes, images, status, colors, category, collection } = drop;
-  let finalStatus = status || (drop.is_active !== undefined ? (drop.is_active ? 'live' : 'upcoming') : 'upcoming');
+  const { name, description, image_url, release_date, status, collection_id } = drop;
   
   const [rows] = await pool.query(
-    `UPDATE drops SET title = ?, description = ?, type = ?, price = ?, sizes = ?, images = ?, status = ?, colors = ?, category = ?, collection = ?, is_active = ?
+    `UPDATE drops SET name = ?, description = ?, image_url = ?, release_date = ?, status = ?, collection_id = ?
      WHERE id = ?`,
     [
-      title,
+      name,
       description || null,
-      type,
-      price || null,
-      JSON.stringify(sizes || []),
-      JSON.stringify(images || []),
-      finalStatus,
-      JSON.stringify(colors || []),
-      category || null,
-      collection || null,
-      finalStatus === 'live' ? 1 : 0,
+      image_url || null,
+      release_date || null,
+      status || 'upcoming',
+      collection_id || null,
       id
     ]
   );

@@ -34,67 +34,80 @@ async function sendEmail({ email, subject, message, html }) {
 }
 
 async function notifyNewDrop(userEmails, dropDetails) {
-    const { name, price, images } = dropDetails;
+    const { name, description, release_date, image_url, price } = dropDetails;
     const dropName = name || 'New Collection';
-    const dropPrice = price ? `${price.toLocaleString()} FRW` : 'Coming Soon';
-    const dropImage = (images && images.length > 0) ? images[0] : 'https://placehold.co/400x400?text=F%3EF+Drop';
+    const dropDesc = description || 'Our latest collection has arrived. Explore the spirit of resilience.';
+    const dropDate = release_date ? new Date(release_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Coming Soon';
+    const dropImage = image_url || 'https://placehold.co/600x400/000000/FFFFFF/png?text=F%3EF+NEW+DROP';
+    const shopUrl = process.env.CLIENT_URL || 'https://faithoverfear.rw';
 
-    const subject = `NEW DROP: ${dropName} is now available!`;
+    const subject = `NEW DROP: ${dropName} - Now Live`;
     const html = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 40px; text-align: center;">
-            <h1 style="letter-spacing: -2px; font-size: 48px; margin-bottom: 0;">F&gt;F</h1>
-            <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: #888; margin-top: 5px;">Faith Over Fear</p>
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 40px; text-align: center; border: 1px solid #222;">
+            <h1 style="letter-spacing: -2px; font-size: 48px; margin-bottom: 0; font-weight: 900;">F&gt;F</h1>
+            <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: #888; margin-top: 5px; font-weight: bold;">Faith Over Fear</p>
             
-            <div style="margin: 40px 0;">
-                <img src="${dropImage}" alt="${dropName}" style="width: 100%; max-width: 400px; border: 1px solid #333;">
+            <div style="margin: 40px 0; background: #111;">
+                <img src="${dropImage}" alt="${dropName}" style="width: 100%; max-height: 400px; object-fit: cover; border: 1px solid #333;">
             </div>
             
-            <h2 style="text-transform: uppercase; font-size: 24px; margin-bottom: 10px;">${dropName}</h2>
-            <p style="font-size: 18px; color: #aaa; margin-bottom: 30px;">Available now for ${dropPrice}</p>
+            <div style="text-align: left; padding: 0 20px;">
+                <h2 style="text-transform: uppercase; font-size: 28px; margin-bottom: 15px; letter-spacing: -1px;">${dropName}</h2>
+                <p style="font-size: 14px; color: #aaa; line-height: 1.6; margin-bottom: 20px;">${dropDesc}</p>
+                <p style="font-size: 12px; font-weight: bold; color: #f33; text-transform: uppercase; letter-spacing: 1px;">Release Date: ${dropDate}</p>
+            </div>
             
-            <a href="https://yourwebsite.com/product.html" style="background: #fff; color: #000; text-decoration: none; padding: 15px 40px; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 2px;">Shop The Drop</a>
+            <div style="margin-top: 40px;">
+                <a href="${shopUrl}/shop.html" style="background: #fff; color: #000; text-decoration: none; padding: 18px 50px; font-weight: 900; text-transform: uppercase; font-size: 11px; letter-spacing: 3px; display: inline-block;">Explore Collection</a>
+            </div>
             
-            <div style="margin-top: 60px; padding-top: 20px; border-t: 1px solid #222; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px;">
-                &copy; 2024 Faith Over Fear. All Rights Reserved.
+            <div style="margin-top: 60px; padding-top: 30px; border-top: 1px solid #111; font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 2px;">
+                &copy; 2026 Faith Over Fear. Movement Of Believers.
             </div>
         </div>
     `;
 
-    for (const email of userEmails) {
-        await sendEmail({ email, subject, html });
-    }
+    console.log(`[BATCH_NOTIFY] Initializing mailing for ${userEmails.length} subscribers...`);
+    const results = await Promise.allSettled(userEmails.map(email => sendEmail({ email, subject, html })));
+    
+    const successful = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+    console.log(`[BATCH_NOTIFY] Completed. Success: ${successful} | Failed: ${failed}`);
 }
 
 async function notifyLiveDrop(userEmails, dropDetails) {
-    const { title, name, price, images } = dropDetails;
-    const dropName = title || name || 'Collection';
-    const dropPrice = price ? `${price.toLocaleString()} FRW` : '';
-    const dropImage = (images && images.length > 0) ? images[0] : 'https://placehold.co/400x400?text=F%3EF+Drop';
+    const { title, name, description, image_url } = dropDetails;
+    const dropName = title || name || 'New Drop';
+    const dropImage = image_url || 'https://placehold.co/600x400/000000/FFFFFF/png?text=F%3EF+LIVE+NOW';
+    const shopUrl = process.env.CLIENT_URL || 'https://faithoverfear.rw';
 
     const subject = `🔥 ${dropName} IS LIVE NOW!`;
     const html = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 40px; text-align: center;">
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 40px; text-align: center; border: 2px solid #f33;">
             <h1 style="letter-spacing: -2px; font-size: 48px; margin-bottom: 0;">F&gt;F</h1>
-            <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: #888; margin-top: 5px;">Faith Over Fear</p>
+            <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: #f33; margin-top: 5px; font-weight: bold;">Live Release</p>
             
             <div style="margin: 40px 0;">
-                <img src="${dropImage}" alt="${dropName}" style="width: 100%; max-width: 400px; border: 1px solid #333;">
+                <img src="${dropImage}" alt="${dropName}" style="width: 100%; max-height: 400px; object-fit: cover; border: 1px solid #444;">
             </div>
             
-            <h2 style="text-transform: uppercase; font-size: 24px; margin-bottom: 10px; color: #ff3333;">IT'S LIVE. NO MORE WAITING.</h2>
-            <p style="font-size: 18px; color: #ddd; margin-bottom: 30px;">${dropName} is available to purchase now for ${dropPrice}. Act fast.</p>
+            <h2 style="text-transform: uppercase; font-size: 32px; margin-bottom: 10px; color: #fff; font-weight: 900;">NO MORE WAITING.</h2>
+            <p style="font-size: 16px; color: #ccc; margin-bottom: 30px;">The <strong>${dropName}</strong> collection is officially live. Quantities are extremely limited.</p>
             
-            <a href="https://yourwebsite.com/shop.html" style="background: #fff; color: #000; text-decoration: none; padding: 15px 40px; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 2px;">Buy Now</a>
+            <a href="${shopUrl}/shop.html" style="background: #f33; color: #fff; text-decoration: none; padding: 20px 60px; font-weight: 900; text-transform: uppercase; font-size: 12px; letter-spacing: 4px; display: inline-block;">Shop Now</a>
             
-            <div style="margin-top: 60px; padding-top: 20px; border-t: 1px solid #222; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px;">
-                &copy; 2026 Faith Over Fear. All Rights Reserved.
+            <div style="margin-top: 60px; padding-top: 30px; border-top: 1px solid #111; font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 2px;">
+                &copy; 2026 Faith Over Fear. Resilience Over Comfort.
             </div>
         </div>
     `;
 
-    for (const email of userEmails) {
-        await sendEmail({ email, subject, html });
-    }
+    console.log(`[LIVE_BATCH] Broadcasting live alert to ${userEmails.length} users...`);
+    const results = await Promise.allSettled(userEmails.map(email => sendEmail({ email, subject, html })));
+    
+    const successful = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+    console.log(`[LIVE_BATCH] Broadcasting finished. Success: ${successful} | Failed: ${failed}`);
 }
 
 async function notifyReservation(userEmail, reservationData, productData) {

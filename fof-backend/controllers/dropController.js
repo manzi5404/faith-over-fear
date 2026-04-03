@@ -24,8 +24,15 @@ async function createDrop(req, res) {
       try {
         const emails = await userModel.getAllUserEmails();
         if (emails && emails.length > 0) {
-          console.log(`[DROP_NOTIFICATION] Notifying ${emails.length} users about new drop: ${dropData.title || dropData.name}`);
-          await emailUtils.notifyNewDrop(emails, dropData);
+          // Provide metadata for email template
+          const dropMeta = {
+             name: dropData.name,
+             description: dropData.description,
+             release_date: dropData.release_date,
+             image_url: dropData.image_url || (products && products[0]?.image_urls?.[0])
+          };
+          console.log(`[DROP_NOTIFICATION] Notifying ${emails.length} users about new drop: ${dropData.name}`);
+          await emailUtils.notifyNewDrop(emails, dropMeta);
         }
       } catch (notifyErr) {
         console.error('❌ [DROP_NOTIFICATION] Email worker failed:', notifyErr.message);
@@ -96,8 +103,9 @@ async function updateDrop(req, res) {
         try {
           const emails = await userModel.getAllUserEmails();
           if (emails && emails.length > 0) {
-            console.log(`[LIVE_NOTIFICATION] Notifying ${emails.length} users: ${dropData.title || oldDrop.title} IS LIVE!`);
-            await emailUtils.notifyLiveDrop(emails, { ...oldDrop, ...dropData });
+            const dropMeta = { ...oldDrop, ...dropData };
+            console.log(`[LIVE_NOTIFICATION] Notifying ${emails.length} users: ${dropMeta.name} IS LIVE!`);
+            await emailUtils.notifyLiveDrop(emails, dropMeta);
           }
         } catch (notifyErr) {
           console.error('❌ [LIVE_NOTIFICATION] Email worker failed:', notifyErr.message);

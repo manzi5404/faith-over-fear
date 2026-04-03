@@ -33,7 +33,14 @@ async function updatePassword(userId, newPasswordHash) {
 }
 
 async function getAllUserEmails() {
-    const [rows] = await pool.query('SELECT email FROM users');
+    // Quality Control: Ensure no duplicates or empty/null addresses 
+    const [rows] = await pool.query(`
+        SELECT DISTINCT email 
+        FROM users 
+        WHERE email IS NOT NULL 
+          AND email != '' 
+          AND email LIKE '%@%'
+    `);
     return rows.map(row => row.email);
 }
 

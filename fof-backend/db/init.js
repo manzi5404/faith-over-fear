@@ -23,11 +23,28 @@ async function initializeDatabase() {
             CREATE TABLE IF NOT EXISTS drops (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
+                description TEXT,
+                image_url VARCHAR(255),
+                release_date DATETIME,
                 status ENUM('upcoming', 'reservation', 'live', 'closed') DEFAULT 'upcoming',
                 collection_id INT DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
+
+        // Migration: Ensure drops table has latest columns
+        try {
+            const [columns] = await connection.query('SHOW COLUMNS FROM drops');
+            const colNames = columns.map(c => c.Field);
+            
+            if (!colNames.includes('description')) await connection.query('ALTER TABLE drops ADD COLUMN description TEXT AFTER name');
+            if (!colNames.includes('image_url')) await connection.query('ALTER TABLE drops ADD COLUMN image_url VARCHAR(255) AFTER description');
+            if (!colNames.includes('release_date')) await connection.query('ALTER TABLE drops ADD COLUMN release_date DATETIME AFTER image_url');
+            
+            console.log('✅ Drops schema verified (description, image_url & release_date present)');
+        } catch (migErr) {
+            console.warn('⚠️  Drops table migration warning:', migErr.message);
+        }
 
         // 3. Products Table
         await connection.query(`
