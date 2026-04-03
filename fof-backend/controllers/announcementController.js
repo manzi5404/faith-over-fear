@@ -34,10 +34,10 @@ async function updateAnnouncement(req, res) {
             return res.status(400).json({ success: false, message: 'A valid message content is required' });
         }
 
-        const success = await announcementModel.updateAnnouncement({ title, message });
+        const announcement = await announcementModel.updateAnnouncement({ title, message });
 
-        if (success) {
-            res.json({ success: true, message: 'Announcement updated successfully' });
+        if (announcement) {
+            res.json({ success: true, message: 'Announcement updated successfully', announcement });
         } else {
             // Not found? Let's check why
             res.status(404).json({ success: false, message: 'Announcement record with ID: 1 not found for update' });

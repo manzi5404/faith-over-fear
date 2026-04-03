@@ -24,7 +24,7 @@ const shopLogic = () => ({
     cartItems: [],
     configLoading: true,
     storeConfig: {
-        store_mode: 'upcoming',
+        store_mode: 'closed',
         announcement: ''
     },
 

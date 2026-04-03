@@ -350,8 +350,8 @@ const CollectionsSection = ({ onToast }) => {
           value={form.status}
           onChange={(event) => setForm({ ...form, status: event.target.value })}
         >
-          <option value="upcoming">Upcoming (Disabled)</option>
-          <option value="reservation">Reservation (Reserve Now)</option>
+          <option value="closed">Closed (Unavailable)</option>
+          <option value="reserve">Reserve (Reserve Now)</option>
           <option value="live">Live (MoMo Enabled)</option>
         </select>
         <textarea
@@ -377,22 +377,22 @@ const CollectionsSection = ({ onToast }) => {
               </div>
               <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wider ${
                 item.status === 'live' ? 'bg-emerald-500/10 text-emerald-400' :
-                item.status === 'reservation' ? 'bg-blue-500/10 text-blue-400' :
+                item.status === 'reserve' ? 'bg-blue-500/10 text-blue-400' :
                 'bg-zinc-500/10 text-zinc-400'
               }`}>
-                {item.status || 'upcoming'}
+                {item.status || 'closed'}
               </span>
             </div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               <button onClick={() => handleEdit(item)} className="rounded bg-slate-800 px-2 py-1">Edit</button>
               <div className="flex gap-1 border-l border-slate-800 pl-2 ml-1">
                 <button 
-                  onClick={() => updateStatus(item, 'upcoming')} 
-                  className={`rounded px-2 py-1 ${item.status === 'upcoming' ? 'bg-zinc-700 text-white' : 'bg-slate-900 text-slate-500'}`}
-                >Upc</button>
+                  onClick={() => updateStatus(item, 'closed')} 
+                  className={`rounded px-2 py-1 ${item.status === 'closed' ? 'bg-zinc-700 text-white' : 'bg-slate-900 text-slate-500'}`}
+                >Cld</button>
                 <button 
-                  onClick={() => updateStatus(item, 'reservation')} 
-                  className={`rounded px-2 py-1 ${item.status === 'reservation' ? 'bg-zinc-700 text-white' : 'bg-slate-900 text-slate-500'}`}
+                  onClick={() => updateStatus(item, 'reserve')} 
+                  className={`rounded px-2 py-1 ${item.status === 'reserve' ? 'bg-zinc-700 text-white' : 'bg-slate-900 text-slate-500'}`}
                 >Res</button>
                 <button 
                   onClick={() => updateStatus(item, 'live')} 
@@ -436,9 +436,20 @@ const AnnouncementSection = ({ onToast }) => {
       is_enabled: !!form.isActive
     };
     try {
-      await api.put("/api/admin/announcement", payload);
+      const response = await api.put("/api/admin/announcement", payload);
       onToast("Announcement updated");
-      reload();
+      
+      // If the backend returns the updated announcement, update local form state to confirm
+      if (response.data && response.data.announcement) {
+        const ann = response.data.announcement;
+        setForm({
+          title: ann.title || "Movement Update",
+          message: ann.message || "",
+          isActive: true // Assuming active if saved
+        });
+      }
+      
+      reload(); // Trigger background sync
     } catch (err) {
       onToast(err.response?.data?.message || "Failed to save announcement");
     }
@@ -529,8 +540,8 @@ const StoreConfigSection = ({ onToast }) => {
                 value={form.store_mode}
                 onChange={(e) => setForm({ ...form, store_mode: e.target.value })}
               >
-                <option value="upcoming">Upcoming (Coming Soon)</option>
-                <option value="reservation">Reservation (Reserve Now)</option>
+                <option value="closed">Closed (Coming Soon)</option>
+                <option value="reserve">Reserve (Reserve Now)</option>
                 <option value="live">Live (Pay with MoMo)</option>
               </select>
             </div>

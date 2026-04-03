@@ -171,14 +171,14 @@
                         <template x-if="!shop.configLoading">
                             <div class="flex flex-col space-y-4">
                                 <!-- Upcoming Mode -->
-                                <template x-if="shop.storeConfig.store_mode === 'upcoming'">
+                                <template x-if="shop.storeConfig.store_mode === 'closed'">
                                     <button class="w-full bg-black border border-zinc-800 text-zinc-500 font-bold uppercase tracking-[0.2em] text-xs py-6 cursor-not-allowed" disabled>
-                                        Drop Coming Soon
+                                        Drop Unavailable
                                     </button>
                                 </template>
 
                                 <!-- Reservation Mode -->
-                                <template x-if="shop.storeConfig.store_mode === 'reservation'">
+                                <template x-if="shop.storeConfig.store_mode === 'reserve'">
                                     <div class="space-y-6">
                                         <!-- How to Reserve Guide -->
                                         <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-sm space-y-4">

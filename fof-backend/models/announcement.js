@@ -22,10 +22,10 @@ async function updateAnnouncement(data) {
             'INSERT INTO announcements (id, title, message) VALUES (1, ?, ?)',
             [title, message]
         );
-        return true;
     }
     
-    return result.affectedRows > 0;
+    // Return the updated data (id=1 is always the target for the global announcement)
+    return { id: 1, title, message };
 }
 
 module.exports = { getLatestAnnouncement, updateAnnouncement };

@@ -17,15 +17,22 @@ async function createDrop(req, res) {
       }
     }
 
-    // Trigger notifications asynchronously
-    userModel.getAllUserEmails().then(emails => {
-      if (emails.length > 0) {
-        emailUtils.notifyNewDrop(emails, dropData);
+    // Trigger notifications - using await but non-blocking (fire and forget with internal logging)
+    (async () => {
+      try {
+        const emails = await userModel.getAllUserEmails();
+        if (emails && emails.length > 0) {
+          console.log(`[DROP_NOTIFICATION] Notifying ${emails.length} users about new drop: ${dropData.title || dropData.name}`);
+          await emailUtils.notifyNewDrop(emails, dropData);
+        }
+      } catch (notifyErr) {
+        console.error('❌ [DROP_NOTIFICATION] Email worker failed:', notifyErr.message);
       }
-    }).catch(err => console.error('Failed to fetch user emails for notification:', err));
+    })();
 
     res.json({ success: true, dropId });
   } catch (err) {
+    console.error('❌ [CREATE_DROP] Controller failed:', err.message);
     res.status(400).json({ success: false, message: err.message });
   }
 }
@@ -67,11 +74,17 @@ async function updateDrop(req, res) {
 
     // If status changed to live, send notification
     if (!wasLive && isNowLive) {
-      userModel.getAllUserEmails().then(emails => {
-        if (emails.length > 0) {
-          emailUtils.notifyLiveDrop(emails, { ...oldDrop, ...dropData });
+      (async () => {
+        try {
+          const emails = await userModel.getAllUserEmails();
+          if (emails && emails.length > 0) {
+            console.log(`[LIVE_NOTIFICATION] Notifying ${emails.length} users: ${dropData.title || oldDrop.title} IS LIVE!`);
+            await emailUtils.notifyLiveDrop(emails, { ...oldDrop, ...dropData });
+          }
+        } catch (notifyErr) {
+          console.error('❌ [LIVE_NOTIFICATION] Email worker failed:', notifyErr.message);
         }
-      }).catch(err => console.error('Failed to fetch user emails for live notification:', err));
+      })();
     }
 
     if (products && Array.isArray(products)) {

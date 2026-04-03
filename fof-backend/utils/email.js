@@ -18,6 +18,7 @@ async function sendEmail({ email, subject, message, html }) {
     }
 
     try {
+        console.log(`[EMAIL_SERVICE] Attempting to send email to: ${email} | Subject: ${subject}`);
         await transporter.sendMail({
             from: `"Faith Over Fear" <${process.env.SMTP_USER}>`,
             to: email,
@@ -25,9 +26,10 @@ async function sendEmail({ email, subject, message, html }) {
             text: message,
             html: html
         });
-        console.log(`Email sent to ${email}`);
+        console.log(`✅ [EMAIL_SERVICE] Email sent successfully to ${email}`);
     } catch (error) {
-        console.error(`Error sending email to ${email}:`, error);
+        console.error(`❌ [EMAIL_SERVICE] Failed to send email to ${email}:`, error.message);
+        throw error; // Re-throw to allow controller to handle/log it
     }
 }
 
