@@ -11,6 +11,7 @@ async function createDrop(req, res) {
   try {
     const { products, ...dropData } = req.body;
     const dropId = await addDrop(dropData);
+    console.log(`✅ [CREATE_DROP] Drop saved to DB with ID: ${dropId}`);
 
     // Create products if any
     if (products && Array.isArray(products)) {
@@ -20,6 +21,7 @@ async function createDrop(req, res) {
     }
 
     // Trigger notifications - using await but non-blocking (fire and forget with internal logging)
+    console.log("🚀 [CREATE_DROP] EMAIL FUNCTION TRIGGERED");
     (async () => {
       try {
         const emails = await userModel.getAllUserEmails();

@@ -5,31 +5,34 @@ const transporter = nodemailer.createTransport({
     port: process.env.SMTP_PORT || 587,
     secure: false, // true for 465, false for other ports
     auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
+        user: process.env.SMTP_USER || process.env.EMAIL_USER,
+        pass: process.env.SMTP_PASS || process.env.EMAIL_PASS
     }
 });
 
 async function sendEmail({ email, subject, message, html }) {
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        console.warn('SMTP credentials not configured. Email not sent.');
-        console.log(`To: ${email}\nSubject: ${subject}\nBody: ${message || 'HTML content'}`);
+    const authUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+    const authPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+
+    if (!authUser || !authPass) {
+        console.warn('⚠️  [EMAIL_SERVICE] NOT_CONFIGURED: Missing EMAIL_USER/PASS. Email suppressed.');
+        console.log(`[STUB] To: ${email}\n[STUB] Subject: ${subject}`);
         return;
     }
 
     try {
-        console.log(`[EMAIL_SERVICE] Attempting to send email to: ${email} | Subject: ${subject}`);
+        console.log(`📨 [EMAIL_SERVICE] Attempting delivery to: ${email}...`);
         await transporter.sendMail({
-            from: `"Faith Over Fear" <${process.env.SMTP_USER}>`,
+            from: `"Faith Over Fear" <${authUser}>`,
             to: email,
             subject: subject,
             text: message,
             html: html
         });
-        console.log(`✅ [EMAIL_SERVICE] Email sent successfully to ${email}`);
+        console.log(`✅ [EMAIL_SERVICE] Success for ${email}`);
     } catch (error) {
-        console.error(`❌ [EMAIL_SERVICE] Failed to send email to ${email}:`, error.message);
-        throw error; // Re-throw to allow controller to handle/log it
+        console.error(`❌ [EMAIL_SERVICE] Delivery failed for ${email}:`, error.message);
+        throw error; // Re-throw to allow batch summary to track it
     }
 }
 
