@@ -28,10 +28,8 @@ router.use('/notifications', notificationRoutes);
 router.get('/orders', orderController.getAllOrders);
 router.put('/orders/:id/status', orderController.updateStatus);
 
-// Reservations
-router.get('/reservations', reservationController.getReservations);
-router.patch('/reservations/:id/status', reservationController.updateReservationStatus);
-router.delete('/reservations/:id', reservationController.deleteReservation);
+// Reservations moved to dedicated /api/reservations router
+// (GET, PATCH, DELETE now handled in reservationRoutes.js)
 
 // Store Config & Settings
 router.get('/store-config', storeConfigController.getStoreConfig);

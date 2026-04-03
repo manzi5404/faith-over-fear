@@ -20,6 +20,7 @@ const settingsRoutes = require('./routes/settingsRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const reservationRoutes = require('./routes/reservationRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const pool = require('./db/connection');
 const { initializeDatabase } = require('./db/init');
@@ -66,8 +67,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/drops', dropRoutes);
 app.get('/api/store-config', storeConfigController.getStoreConfig);
 app.get('/api/announcement', require('./controllers/announcementController').getLatestAnnouncement);
-app.post('/api/reserve', protect, reservationController.createReservation);
-app.get('/api/reservations/me', protect, reservationController.getReservations);
+app.use('/api/reservations', reservationRoutes);
 app.post('/api/contact', async (req, res) => {
   console.log('Incoming Message:', req.body);
   const { name, email, subject, message } = req.body;
