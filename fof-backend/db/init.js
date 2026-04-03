@@ -22,7 +22,7 @@ async function initializeDatabase() {
         await connection.query(`
             CREATE TABLE IF NOT EXISTS drops (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
+                title VARCHAR(255) NOT NULL,
                 description TEXT,
                 image_url VARCHAR(255),
                 release_date DATETIME,
@@ -32,18 +32,24 @@ async function initializeDatabase() {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
 
-        // Migration: Ensure drops table has latest columns
+        // Migration: Standardize on 'title', rename from 'name' if necessary
         try {
             const [columns] = await connection.query('SHOW COLUMNS FROM drops');
             const colNames = columns.map(c => c.Field);
             
-            if (!colNames.includes('description')) await connection.query('ALTER TABLE drops ADD COLUMN description TEXT AFTER name');
+            // Critical Rename: if 'name' exists but 'title' does not
+            if (colNames.includes('name') && !colNames.includes('title')) {
+                await connection.query('ALTER TABLE drops CHANGE COLUMN name title VARCHAR(255) NOT NULL');
+                console.log('✅ Renamed "name" column to "title" in drops table.');
+            }
+            
+            if (!colNames.includes('description')) await connection.query('ALTER TABLE drops ADD COLUMN description TEXT AFTER title');
             if (!colNames.includes('image_url')) await connection.query('ALTER TABLE drops ADD COLUMN image_url VARCHAR(255) AFTER description');
             if (!colNames.includes('release_date')) await connection.query('ALTER TABLE drops ADD COLUMN release_date DATETIME AFTER image_url');
             
-            console.log('✅ Drops schema verified (description, image_url & release_date present)');
+            console.log('✅ Drops table standardized on "title" and metadata columns.');
         } catch (migErr) {
-            console.warn('⚠️  Drops table migration warning:', migErr.message);
+            console.warn('⚠️  Drops naming migration failed:', migErr.message);
         }
 
         // 3. Products Table

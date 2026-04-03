@@ -26,12 +26,12 @@ async function createDrop(req, res) {
         if (emails && emails.length > 0) {
           // Provide metadata for email template
           const dropMeta = {
-             name: dropData.name,
+             title: dropData.title,
              description: dropData.description,
              release_date: dropData.release_date,
              image_url: dropData.image_url || (products && products[0]?.image_urls?.[0])
           };
-          console.log(`[DROP_NOTIFICATION] Notifying ${emails.length} users about new drop: ${dropData.name}`);
+          console.log(`[DROP_NOTIFICATION] Notifying ${emails.length} users about new drop: ${dropData.title}`);
           await emailUtils.notifyNewDrop(emails, dropMeta);
         }
       } catch (notifyErr) {
@@ -42,15 +42,15 @@ async function createDrop(req, res) {
     // UI BROADCAST: Automatically update the live announcement banner for this new drop
     try {
         const announcementData = {
-          title: `NEW DROP: ${dropData.name}`,
-          message: dropData.description || `The ${dropData.name} collection is now available.`,
+          title: `NEW DROP: ${dropData.title}`,
+          message: dropData.description || `The ${dropData.title} collection is now available.`,
           image_url: dropData.image_url || (products && products[0]?.image_urls[0]),
           status: 'live',
           is_enabled: 1
         };
         const updatedAnn = await announcementModel.updateAnnouncement(announcementData);
         appEmitter.emit('announcement_update', updatedAnn);
-        console.log(`✅ [AUTO_ANNOUNCEMENT] Broadcasted new drop: ${dropData.name}`);
+        console.log(`✅ [AUTO_ANNOUNCEMENT] Broadcasted new drop: ${dropData.title}`);
     } catch (annError) {
         console.warn('⚠️  [AUTO_ANNOUNCEMENT] Failed to auto-update banner:', annError.message);
     }
@@ -104,7 +104,10 @@ async function updateDrop(req, res) {
           const emails = await userModel.getAllUserEmails();
           if (emails && emails.length > 0) {
             const dropMeta = { ...oldDrop, ...dropData };
-            console.log(`[LIVE_NOTIFICATION] Notifying ${emails.length} users: ${dropMeta.name} IS LIVE!`);
+            // Ensure title is consistent
+            dropMeta.title = dropMeta.title || dropMeta.name; 
+            
+            console.log(`[LIVE_NOTIFICATION] Notifying ${emails.length} users: ${dropMeta.title} IS LIVE!`);
             await emailUtils.notifyLiveDrop(emails, dropMeta);
           }
         } catch (notifyErr) {

@@ -1,12 +1,12 @@
 const pool = require('../db/connection');
 
 async function addDrop(drop) {
-  const { name, description, image_url, release_date, status, collection_id } = drop;
+  const { title, description, image_url, release_date, status, collection_id } = drop;
   const [result] = await pool.query(
-    `INSERT INTO drops (name, description, image_url, release_date, status, collection_id)
+    `INSERT INTO drops (title, description, image_url, release_date, status, collection_id)
      VALUES (?, ?, ?, ?, ?, ?)`,
     [
-      name,
+      title,
       description || null,
       image_url || null,
       release_date || null,
@@ -34,13 +34,13 @@ async function getDrops(statusFilter = null) {
 }
 
 async function editDrop(id, drop) {
-  const { name, description, image_url, release_date, status, collection_id } = drop;
+  const { title, description, image_url, release_date, status, collection_id } = drop;
   
   const [rows] = await pool.query(
-    `UPDATE drops SET name = ?, description = ?, image_url = ?, release_date = ?, status = ?, collection_id = ?
+    `UPDATE drops SET title = ?, description = ?, image_url = ?, release_date = ?, status = ?, collection_id = ?
      WHERE id = ?`,
     [
-      name,
+      title,
       description || null,
       image_url || null,
       release_date || null,

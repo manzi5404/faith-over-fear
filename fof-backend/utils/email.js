@@ -34,8 +34,8 @@ async function sendEmail({ email, subject, message, html }) {
 }
 
 async function notifyNewDrop(userEmails, dropDetails) {
-    const { name, description, release_date, image_url, price } = dropDetails;
-    const dropName = name || 'New Collection';
+    const { title, name, description, release_date, image_url } = dropDetails;
+    const dropName = title || name || 'New Collection';
     const dropDesc = description || 'Our latest collection has arrived. Explore the spirit of resilience.';
     const dropDate = release_date ? new Date(release_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Coming Soon';
     const dropImage = image_url || 'https://placehold.co/600x400/000000/FFFFFF/png?text=F%3EF+NEW+DROP';
