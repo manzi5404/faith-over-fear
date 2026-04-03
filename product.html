@@ -158,68 +158,77 @@
                     </div>
 
                      <!-- Actions -->
-                    <div class="flex flex-col space-y-4">
-                        <!-- Upcoming Status -->
-                        <template x-if="product.status === 'upcoming'">
-                            <button class="w-full bg-black border border-zinc-800 text-zinc-500 font-bold uppercase tracking-[0.2em] text-xs py-6 cursor-not-allowed" disabled>
-                                Coming Soon
-                            </button>
-                        </template>
-
-                        <!-- Reservation Status -->
-                        <template x-if="product.status === 'reservation'">
-                            <div class="space-y-6">
-                                <!-- How to Reserve Guide -->
-                                <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-sm space-y-4">
-                                    <h4 class="text-[10px] uppercase font-bold tracking-[0.3em] text-fof-accent">How to Reserve Your Drop</h4>
-                                    <ol class="space-y-3 text-[11px] uppercase tracking-widest text-gray-400 font-bold">
-                                        <li class="flex items-start">
-                                            <span class="text-fof-accent mr-3">01.</span>
-                                            <span>Click the button below to secure your piece.</span>
-                                        </li>
-                                        <li class="flex items-start">
-                                            <span class="text-fof-accent mr-3">02.</span>
-                                            <span>Our team will contact you once production starts.</span>
-                                        </li>
-                                        <li class="flex items-start">
-                                            <span class="text-fof-accent mr-3">03.</span>
-                                            <span>Payment is only requested when the item is ready.</span>
-                                        </li>
-                                    </ol>
-                                    <div class="pt-2">
-                                        <label class="flex items-center space-x-3 cursor-pointer group">
-                                            <input type="checkbox" x-model="viewedInstructions" class="form-checkbox bg-black border-zinc-800 text-fof-accent focus:ring-0 focus:ring-offset-0 w-4 h-4 rounded-none transition-all">
-                                            <span class="text-[10px] uppercase font-bold tracking-widest text-zinc-500 group-hover:text-white transition-colors">I understand the reservation process</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6 disabled:opacity-30 disabled:cursor-not-allowed disabled:grayscale"
-                                        :disabled="!viewedInstructions"
-                                        @click="reserve()">
-                                    Reserve Now
-                                </button>
+                    <div class="flex flex-col space-y-4" x-data="{ get shop() { return Alpine.$data(document.body); } }">
+                        <!-- Loading State -->
+                        <template x-if="shop.configLoading">
+                            <div class="space-y-4 animate-pulse">
+                                <div class="w-full bg-zinc-900 h-16 rounded-sm"></div>
+                                <div class="w-full bg-zinc-900 h-16 rounded-sm"></div>
                             </div>
                         </template>
 
-                        <!-- Live Status -->
-                        <template x-if="product.status === 'live'">
+                        <!-- Loaded State -->
+                        <template x-if="!shop.configLoading">
                             <div class="flex flex-col space-y-4">
-                                <div class="flex items-center space-x-4 h-16">
-                                    <div class="flex items-center border border-zinc-800 h-full">
-                                        <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity > 1 ? quantity-- : null">-</button>
-                                        <span class="px-4 font-mono font-bold text-lg min-w-[3rem] text-center" x-text="quantity"></span>
-                                        <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity++">+</button>
-                                    </div>
-                                    <button class="flex-1 bg-fof-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all h-full"
-                                            @click="addToCart()">
-                                        Add To Cart
+                                <!-- Upcoming Mode -->
+                                <template x-if="shop.storeConfig.store_mode === 'upcoming'">
+                                    <button class="w-full bg-black border border-zinc-800 text-zinc-500 font-bold uppercase tracking-[0.2em] text-xs py-6 cursor-not-allowed" disabled>
+                                        Drop Coming Soon
                                     </button>
-                                </div>
-                                <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6"
-                                        @click="payWithMoMo()">
-                                    Pay with MoMo
-                                </button>
+                                </template>
+
+                                <!-- Reservation Mode -->
+                                <template x-if="shop.storeConfig.store_mode === 'reservation'">
+                                    <div class="space-y-6">
+                                        <!-- How to Reserve Guide -->
+                                        <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-sm space-y-4">
+                                            <h4 class="text-[10px] uppercase font-bold tracking-[0.3em] text-fof-accent">How to Reserve Your Drop</h4>
+                                            <ol class="space-y-3 text-[11px] uppercase tracking-widest text-gray-400 font-bold">
+                                                <li class="flex items-start">
+                                                    <span class="text-fof-accent mr-3">01.</span>
+                                                    <span>Secure your piece during the reservation window.</span>
+                                                </li>
+                                                <li class="flex items-start">
+                                                    <span class="text-fof-accent mr-3">02.</span>
+                                                    <span>Our team will contact you once production starts.</span>
+                                                </li>
+                                            </ol>
+                                            <div class="pt-2">
+                                                <label class="flex items-center space-x-3 cursor-pointer group">
+                                                    <input type="checkbox" x-model="viewedInstructions" class="form-checkbox bg-black border-zinc-800 text-fof-accent focus:ring-0 focus:ring-offset-0 w-4 h-4 rounded-none transition-all">
+                                                    <span class="text-[10px] uppercase font-bold tracking-widest text-zinc-500 group-hover:text-white transition-colors">I understand the reservation process</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                :disabled="!viewedInstructions"
+                                                @click="reserve()">
+                                            Reserve Now
+                                        </button>
+                                    </div>
+                                </template>
+
+                                <!-- Live Mode -->
+                                <template x-if="shop.storeConfig.store_mode === 'live'">
+                                    <div class="flex flex-col space-y-4">
+                                        <div class="flex items-center space-x-4 h-16">
+                                            <div class="flex items-center border border-zinc-800 h-full">
+                                                <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity > 1 ? quantity-- : null">-</button>
+                                                <span class="px-4 font-mono font-bold text-lg min-w-[3rem] text-center" x-text="quantity"></span>
+                                                <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity++">+</button>
+                                            </div>
+                                            <button class="flex-1 bg-fof-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all h-full"
+                                                    @click="addToCart()">
+                                                Add To Cart
+                                            </button>
+                                        </div>
+                                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6"
+                                                @click="payWithMoMo()">
+                                            Pay with MoMo
+                                        </button>
+                                    </div>
+                                </template>
                             </div>
                         </template>
                     </div>

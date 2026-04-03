@@ -18,31 +18,32 @@ const pool = mysql.createPool({
         const connection = await pool.getConnection();
         console.log('✅ Connected successfully to database: faith_over_fear');
 
+        // 1. Store Config Table (Universal mode)
         await connection.query(
-            `CREATE TABLE IF NOT EXISTS contact_messages (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                email VARCHAR(255) NOT NULL,
-                subject VARCHAR(100),
-                message TEXT NOT NULL,
-                status ENUM('unread', 'read', 'replied') DEFAULT 'unread',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            `CREATE TABLE IF NOT EXISTS store_config (
+                id INT PRIMARY KEY DEFAULT 1,
+                store_mode ENUM('upcoming', 'reservation', 'live') DEFAULT 'upcoming',
+                announcement TEXT
             )`
         );
 
+        // Ensure default config exists
+        const [configRows] = await connection.query('SELECT * FROM store_config WHERE id = 1');
+        if (configRows.length === 0) {
+            await connection.query('INSERT INTO store_config (id, store_mode, announcement) VALUES (1, "upcoming", "Welcome to Faith Over Fear")');
+            console.log('✅ Default store_config initialized.');
+        }
+
+        // 2. Announcements Table (Optional/Separate)
         await connection.query(
-            `CREATE TABLE IF NOT EXISTS notifications (
+            `CREATE TABLE IF NOT EXISTS announcements (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                type ENUM('reservation', 'message', 'payment') NOT NULL,
-                reference_id INT NOT NULL,
-                title VARCHAR(255) NOT NULL,
-                description TEXT,
-                is_seen BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                title VARCHAR(255),
+                message TEXT
             )`
         );
 
+        // 3. Orders Table (Align with requested schema)
         await connection.query(
             `CREATE TABLE IF NOT EXISTS orders (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -58,7 +59,7 @@ const pool = mysql.createPool({
                 payment_method VARCHAR(50) DEFAULT 'reservation',
                 customer_name VARCHAR(255) DEFAULT NULL,
                 customer_email VARCHAR(255) DEFAULT NULL,
-                customer_phone VARCHAR(50) DEFAULT NULL,
+                phone_number VARCHAR(50) DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 INDEX idx_user_id (user_id),
@@ -67,7 +68,18 @@ const pool = mysql.createPool({
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
         );
 
-        console.log('✅ Database tables are present or were created successfully.');
+        // Rename logic for backward compatibility if column customer_phone exists
+        try {
+            const [columns] = await connection.query('SHOW COLUMNS FROM orders LIKE "customer_phone"');
+            if (columns.length > 0) {
+                await connection.query('ALTER TABLE orders CHANGE customer_phone phone_number VARCHAR(50)');
+                console.log('✅ Renamed customer_phone to phone_number in orders table.');
+            }
+        } catch (colErr) {
+            console.warn('⚠️  Could not rename customer_phone (might already be renamed or missing):', colErr.message);
+        }
+
+        console.log('✅ Database tables aligned with requested schema.');
         connection.release(); // Always release the connection back to the pool
     } catch (error) {
         console.error('❌ Database initialization failed:', error.message);

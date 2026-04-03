@@ -64,8 +64,6 @@ const createReservation = async (req, res) => {
 };
 
 const getReservations = async (req, res) => {
-    // If called via the protected 'me' route, use req.user.id
-    // Otherwise, fallback to query params (for admin or search)
     const userId = req.user ? req.user.id : req.query.userId;
     const email = req.user ? req.user.email : req.query.email;
 
@@ -91,9 +89,11 @@ const getReservations = async (req, res) => {
         query += ` ORDER BY r.created_at DESC `;
 
         const [rows] = await pool.query(query, params);
-        res.json({ success: true, reservations: rows });
+        res.json({ success: true, reservations: rows || [] });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Failed to fetch reservations', error: error.message });
+        console.error('CRITICAL RESERVATION FETCH ERROR:', error);
+        // User requested to return [] if no data/failure to maintain stability
+        res.json({ success: true, reservations: [], message: 'Reservations unavailable at this time' });
     }
 };
 

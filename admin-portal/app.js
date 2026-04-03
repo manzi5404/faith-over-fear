@@ -486,20 +486,18 @@ const AnnouncementSection = ({ onToast }) => {
   );
 };
 
-const SettingsSection = ({ onToast }) => {
-  const { data, loading, error, reload } = useFetch(() => api.get("/api/settings"), []);
+const StoreConfigSection = ({ onToast }) => {
+  const { data, loading, error, reload } = useFetch(() => api.get("/api/store-config"), []);
   const [form, setForm] = useState({
-    purchasingDisabled: false,
-    isRestocking: false,
-    restockingMessage: ""
+    store_mode: "upcoming",
+    announcement: ""
   });
 
   useEffect(() => {
-    if (data) {
+    if (data?.config) {
       setForm({
-        purchasingDisabled: !!data.purchasingDisabled,
-        isRestocking: !!data.isRestocking,
-        restockingMessage: data.restockingMessage || ""
+        store_mode: data.config.store_mode || "upcoming",
+        announcement: data.config.announcement || ""
       });
     }
   }, [data]);
@@ -507,46 +505,56 @@ const SettingsSection = ({ onToast }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      await api.put("/api/admin/settings", form);
-      onToast("Settings updated");
+      // Use the admin store-config endpoint
+      await api.put("/api/admin/store-config", form);
+      onToast("Store configuration updated");
       reload();
     } catch (err) {
-      onToast(err.response?.data?.message || "Update failed");
+      onToast(err.response?.data?.message || "Failed to update configuration");
     }
   };
 
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-      <h3 className="mb-4 text-lg font-semibold">Store Settings</h3>
+      <h3 className="mb-4 text-lg font-semibold">Store Strategy & Mode</h3>
       {loading && <p className="text-sm text-slate-400">Loading...</p>}
       {error && <p className="text-sm text-rose-400">{error}</p>}
       {!loading && (
-        <form onSubmit={handleSubmit} className="grid gap-3 md:grid-cols-2">
-          <label className="flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={form.purchasingDisabled}
-              onChange={(event) => setForm({ ...form, purchasingDisabled: event.target.checked })}
-            />
-            Disable purchasing
-          </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={form.isRestocking}
-              onChange={(event) => setForm({ ...form, isRestocking: event.target.checked })}
-            />
-            Restocking mode
-          </label>
-          <input
-            className="md:col-span-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-            placeholder="Restocking message"
-            value={form.restockingMessage}
-            onChange={(event) => setForm({ ...form, restockingMessage: event.target.value })}
-          />
-          <button className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-900">
-            Save Settings
-          </button>
+        <form onSubmit={handleSubmit} className="grid gap-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Shop Mode</label>
+              <select
+                className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-white focus:ring-0"
+                value={form.store_mode}
+                onChange={(e) => setForm({ ...form, store_mode: e.target.value })}
+              >
+                <option value="upcoming">Upcoming (Coming Soon)</option>
+                <option value="reservation">Reservation (Reserve Now)</option>
+                <option value="live">Live (Pay with MoMo)</option>
+              </select>
+            </div>
+            
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Live Announcement</label>
+              <textarea
+                rows="1"
+                className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-white focus:ring-0"
+                placeholder="Banner message..."
+                value={form.announcement}
+                onChange={(e) => setForm({ ...form, announcement: e.target.value })}
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+             <button type="submit" className="flex-1 rounded-lg bg-white px-3 py-2.5 text-sm font-bold uppercase tracking-widest text-slate-900 hover:bg-slate-200 transition-colors">
+               Apply Configuration
+             </button>
+             <button type="button" onClick={reload} className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-bold text-slate-400 hover:text-white">
+               Reset
+             </button>
+          </div>
         </form>
       )}
     </section>
@@ -680,8 +688,8 @@ const OrdersSection = ({ onToast }) => {
                       <div>
                         <p className="font-medium">{order.customer_name || order.user_display_name || "Guest"}</p>
                         <p className="text-xs text-slate-500">{order.customer_email || order.user_display_email || ""}</p>
-                        {order.customer_phone && (
-                          <p className="text-xs text-slate-500">{order.customer_phone}</p>
+                        {order.phone_number && (
+                          <p className="text-xs text-slate-500">{order.phone_number}</p>
                         )}
                       </div>
                     </td>
@@ -790,7 +798,7 @@ const Dashboard = () => {
         <ProductsSection onToast={notify} />
         <CollectionsSection onToast={notify} />
         <AnnouncementSection onToast={notify} />
-        <SettingsSection onToast={notify} />
+        <StoreConfigSection onToast={notify} />
       </div>
     </PageShell>
   );

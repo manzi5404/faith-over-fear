@@ -1,22 +1,30 @@
 const pool = require('../db/connection');
 
 async function getLatestAnnouncement() {
-    // Return the specific announcement with ID 1 as requested, 
-    // or the latest enabled one if we want flexibility. 
-    // The prompt says "Returns the latest enabled announcement (ID: 1)".
+    // Exact schema matching: id, title, message
     const [rows] = await pool.query(
-        'SELECT * FROM announcements WHERE is_enabled = 1 AND id = 1 LIMIT 1'
+        'SELECT * FROM announcements WHERE id = 1 LIMIT 1'
     );
     return rows[0] || null;
 }
 
 async function updateAnnouncement(data) {
-    const { title, message, is_enabled } = data;
-    // Increment version number on every update
+    const { title, message } = data;
+    // Matching exact schema for updates
     const [result] = await pool.query(
-        'UPDATE announcements SET title = ?, message = ?, is_enabled = ?, version = version + 1 WHERE id = 1',
-        [title, message, is_enabled]
+        'UPDATE announcements SET title = ?, message = ? WHERE id = 1',
+        [title, message]
     );
+    
+    // If we didn't update anything, try to insert a new one for id=1
+    if (result.affectedRows === 0) {
+        await pool.query(
+            'INSERT INTO announcements (id, title, message) VALUES (1, ?, ?)',
+            [title, message]
+        );
+        return true;
+    }
+    
     return result.affectedRows > 0;
 }
 

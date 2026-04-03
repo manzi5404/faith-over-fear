@@ -22,21 +22,10 @@ const shopLogic = () => ({
     senderEmail: "",
     senderPhone: "",
     cartItems: [],
+    configLoading: true,
     storeConfig: {
-        store_mode: 'live',
-        announcement_message: '',
-        banner_enabled: false
-    },
-    showAnnouncement: false,
-    reservationModalOpen: false,
-    reservationData: {
-        fullName: 'Anonymous Customer', // Default value
-        email: '',
-        phone: 'Not provided', // Default value
-        size: 'M',
-        color: 'Default', // Default value
-        quantity: 1,
-        productId: null
+        store_mode: 'upcoming',
+        announcement: ''
     },
 
     async init() {
@@ -44,25 +33,35 @@ const shopLogic = () => ({
         if (!this.requireLoginForProductPages()) return;
 
         this.loading = true;
+        this.configLoading = true;
+        
         try {
+            // Fetch store config FIRST to ensure UI mode is correct
+            await this.fetchStoreConfig();
+            
             await Promise.all([
                 this.fetchProducts(),
-                this.fetchSettings(),
                 this.initCart()
             ]);
         } catch (error) {
             console.error("Initialization failed:", error);
         } finally {
             this.loading = false;
+            this.configLoading = false;
         }
         window.addEventListener('cart-updated', () => this.initCart());
-        window.addEventListener('store-config-loaded', (e) => {
-            this.storeConfig = e.detail;
-        });
+    },
 
-        // Check if global storeConfig is already loaded
-        if (window.storeConfig) {
-            this.storeConfig = window.storeConfig;
+    async fetchStoreConfig() {
+        try {
+            const res = await fetch('/api/store-config');
+            const data = await res.json();
+            if (data.success && data.config) {
+                this.storeConfig = data.config;
+                console.log('✅ Store Config Loaded:', this.storeConfig.store_mode);
+            }
+        } catch (err) {
+            console.error('❌ Failed to fetch store config:', err);
         }
     },
 
