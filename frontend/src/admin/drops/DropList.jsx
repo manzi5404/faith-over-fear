@@ -1,6 +1,8 @@
 import React from 'react';
 
 const DropList = ({ drops, onEdit, onDelete, onStatusFilter }) => {
+    console.log("DROPS STATE:", drops);
+
     return (
         <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
             <div className="p-4 border-b border-slate-800 flex justify-between items-center">
@@ -20,14 +22,14 @@ const DropList = ({ drops, onEdit, onDelete, onStatusFilter }) => {
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-slate-800/50 text-slate-400 text-sm uppercase tracking-wider">
-                            <th className="px-6 py-4 font-medium">Name</th>
+                            <th className="px-6 py-4 font-medium">Drop</th>
                             <th className="px-6 py-4 font-medium">Price</th>
-                            <th className="px-6 py-4 font-medium">Type</th>
+                            <th className="px-6 py-4 font-medium">Status</th>
                             <th className="px-6 py-4 font-medium text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
-                        {drops.length === 0 ? (
+                        {(!Array.isArray(drops) || drops.length === 0) ? (
                             <tr>
                                 <td colSpan="4" className="px-6 py-10 text-center text-slate-500">
                                     No drops found. Add one to get started.
@@ -38,30 +40,30 @@ const DropList = ({ drops, onEdit, onDelete, onStatusFilter }) => {
                                 <tr key={drop.id} className="hover:bg-slate-800/30 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded bg-slate-800 overflow-hidden flex-shrink-0">
-                                                {drop.images && drop.images.length > 0 ? (
-                                                    <img src={drop.images[0]} alt={drop.name} className="w-full h-full object-cover" />
+                                            <div className="w-10 h-10 rounded bg-slate-800 overflow-hidden flex-shrink-0 border border-slate-700">
+                                                {drop.image ? (
+                                                    <img src={drop.image} alt={drop.title} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs">No img</div>
+                                                    <div className="w-full h-full flex items-center justify-center text-slate-600 text-[10px] font-bold text-center">NO IMAGE</div>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium text-slate-200">{drop.name}</span>
-                                                {drop.is_active === 1 || drop.is_active === true ? (
-                                                    <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" title="Active"></span>
-                                                ) : (
-                                                    <span className="w-2 h-2 rounded-full bg-slate-600" title="Inactive"></span>
-                                                )}
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-slate-200">{drop.title || "Untitled Drop"}</span>
+                                                <span className="text-[10px] text-slate-500 line-clamp-1">{drop.description}</span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-slate-300">
-                                        ${parseFloat(drop.price).toFixed(2)}
+                                    <td className="px-6 py-4 text-slate-300 font-mono text-sm">
+                                        ${parseFloat(drop.price || 0).toFixed(2)}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${drop.type === 'new-drop' ? 'bg-blue-900/40 text-blue-400' : 'bg-slate-800 text-slate-400'
-                                            }`}>
-                                            {drop.type}
+                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                                            drop.status === 'live' ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-500/10' :
+                                            drop.status === 'upcoming' ? 'bg-blue-900/40 text-blue-400 border border-blue-500/10' :
+                                            drop.status === 'reservation' ? 'bg-amber-900/40 text-amber-400 border border-amber-500/10' :
+                                            'bg-slate-800 text-slate-500 border border-slate-700'
+                                        }`}>
+                                            {drop.status || 'closed'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">

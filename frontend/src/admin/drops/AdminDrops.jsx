@@ -19,7 +19,11 @@ const AdminDrops = () => {
         setLoading(true);
         try {
             const data = await DropService.getDrops(filter === 'active');
-            setDrops(data);
+            console.log("API RESPONSE:", data); // RAW RESPONSE FROM SERVICE
+            // Based on backend refactor, we need data.drops if the service doesn't extract it, 
+            // but DropService.js currently returns response.data.drops || []
+            // So 'data' here is already the array. Let's make sure it's an array.
+            setDrops(Array.isArray(data) ? data : (data.drops || []));
         } catch (error) {
             showNotification('error', 'Failed to fetch drops');
         } finally {
