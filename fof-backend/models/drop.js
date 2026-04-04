@@ -20,7 +20,8 @@ async function addDrop(drop) {
 async function getDrops(statusFilter = null) {
   let sql = 'SELECT * FROM drops';
   let params = [];
-  if (statusFilter) {
+  
+  if (statusFilter && statusFilter !== 'all') {
     if (statusFilter === 'active' || statusFilter === 'true') {
       sql += ' WHERE status = "live" OR status = "reservation"';
     } else {

@@ -70,6 +70,8 @@ async function listDrops(req, res) {
     const drops = await getDrops(statusFilter);
     const includeProducts = req.query.includeProducts === 'true';
 
+    console.log("RAW DROPS:", drops);
+
     for (const drop of drops) {
       if (!drop.images || drop.images.length === 0) {
         drop.images = drop.image_url ? [drop.image_url] : [];
