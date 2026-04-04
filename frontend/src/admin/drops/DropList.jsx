@@ -41,11 +41,24 @@ const DropList = ({ drops, onEdit, onDelete, onStatusFilter }) => {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded bg-slate-800 overflow-hidden flex-shrink-0 border border-slate-700">
-                                                {drop.image ? (
-                                                    <img src={drop.image} alt={drop.title} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-slate-600 text-[10px] font-bold text-center">NO IMAGE</div>
-                                                )}
+                                                {(() => {
+                                                    let imgSrc = drop.image;
+                                                    // Parse if it's a stringified JSON array like '["test.jpg"]'
+                                                    if (typeof imgSrc === 'string' && imgSrc.startsWith('[') && imgSrc.endsWith(']')) {
+                                                        try {
+                                                            const parsed = JSON.parse(imgSrc);
+                                                            imgSrc = Array.isArray(parsed) ? parsed[0] : imgSrc;
+                                                        } catch (e) {
+                                                            console.warn("Image parse failed for drop id:", drop.id);
+                                                        }
+                                                    }
+                                                    
+                                                    return imgSrc ? (
+                                                        <img src={imgSrc} alt={drop.title} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-slate-600 text-[10px] font-bold text-center uppercase">No Image</div>
+                                                    );
+                                                })()}
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="font-medium text-slate-200">{drop.title || "Untitled Drop"}</span>
