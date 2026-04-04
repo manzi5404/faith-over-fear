@@ -66,7 +66,11 @@ async function createDrop(req, res) {
 
 async function listDrops(req, res) {
   try {
-    const statusFilter = req.query.status || req.query.active; // support old and new
+    let statusFilter = req.query.status || req.query.active;
+    // If the filter is 'false', 'all', or undefined, treat as no filter
+    if (statusFilter === 'false' || statusFilter === 'all' || !statusFilter) {
+      statusFilter = null;
+    }
     const drops = await getDrops(statusFilter);
     const includeProducts = req.query.includeProducts === 'true';
 
