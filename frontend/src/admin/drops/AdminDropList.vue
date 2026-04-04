@@ -17,13 +17,14 @@
         </div>
         
         <select 
-          v-model="typeFilter"
+          v-model="statusFilter"
           class="bg-slate-800 text-slate-200 text-sm rounded-lg px-4 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
         >
-          <option value="all">All Types</option>
-          <option value="new-drop">New Drop</option>
-          <option value="recent-drop">Recent Drop</option>
-          <option value="limited">Limited Edition</option>
+          <option value="all">All Statuses</option>
+          <option value="live">Live</option>
+          <option value="upcoming">Upcoming</option>
+          <option value="reservation">Reservation</option>
+          <option value="closed">Closed</option>
         </select>
       </div>
     </div>
@@ -34,14 +35,13 @@
           <tr class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-widest border-b border-slate-800">
             <th class="px-6 py-4 font-semibold">Drop</th>
             <th class="px-6 py-4 font-semibold">Price</th>
-            <th class="px-6 py-4 font-semibold">Type</th>
-            <th class="px-6 py-4 font-semibold">Sizes</th>
+            <th class="px-6 py-4 font-semibold">Status</th>
             <th class="px-6 py-4 font-semibold text-right">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-800">
           <tr v-if="filteredDrops.length === 0">
-            <td colSpan="5" class="px-6 py-20 text-center">
+            <td colSpan="4" class="px-6 py-20 text-center">
               <div class="flex flex-col items-center gap-2 text-slate-500">
                 <svg class="w-12 h-12 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -54,44 +54,28 @@
             <td class="px-6 py-4">
               <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-lg bg-slate-800 overflow-hidden flex-shrink-0 border border-slate-700 shadow-inner group-hover:scale-105 transition-transform">
-                  <img v-if="getImages(drop)[0]" :src="getImages(drop)[0]" :alt="drop.name" class="w-full h-full object-cover" />
-                  <div v-else-if="drop.products?.[0]?.image_urls?.[0]" :src="drop.products[0].image_urls[0]" class="w-full h-full object-cover">
-                    <img :src="drop.products[0].image_urls[0]" class="w-full h-full object-cover" />
-                  </div>
-                  <div v-else class="w-full h-full flex items-center justify-center text-slate-600 text-[10px] font-bold">COLLECTION</div>
+                  <img v-if="drop.image" :src="drop.image" :alt="drop.title" class="w-full h-full object-cover" />
+                  <div v-else class="w-full h-full flex items-center justify-center text-slate-600 text-[10px] font-bold text-center">NO IMAGE</div>
                 </div>
                 <div>
                   <div class="flex items-center gap-2">
-                    <span class="font-bold text-slate-100">{{ drop.name }}</span>
-                    <span 
-                      :class="['w-2 h-2 rounded-full', drop.is_active ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-slate-600']" 
-                      :title="drop.is_active ? 'Active' : 'Inactive'"
-                    ></span>
+                    <span class="font-bold text-slate-100">{{ drop.title }}</span>
                   </div>
                   <p class="text-xs text-slate-500 line-clamp-1 max-w-[200px]">
-                    {{ drop.products?.length || 0 }} Items • {{ drop.type }}
+                    {{ drop.description }}
                   </p>
                 </div>
               </div>
             </td>
             <td class="px-6 py-4">
-              <span class="font-mono text-slate-300 font-semibold" v-if="drop.products?.length > 0">
-                ${{ Math.min(...drop.products.map(p => p.price)) }} - ${{ Math.max(...drop.products.map(p => p.price)) }}
-              </span>
-              <span class="text-slate-500 text-xs" v-else>No items</span>
-            </td>
-            <td class="px-6 py-4">
-              <span :class="['px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider', typeBadgeClass(drop.type)]">
-                {{ drop.type }}
+              <span class="font-mono text-slate-300 font-semibold">
+                ${{ drop.price }}
               </span>
             </td>
             <td class="px-6 py-4">
-              <div class="flex flex-wrap gap-1 max-w-[120px]">
-                <span v-if="drop.products?.length > 0" class="text-[10px] text-slate-400 font-medium italic">
-                  {{ Array.from(new Set(drop.products.flatMap(p => p.sizes))).length }} Sizes
-                </span>
-                <span v-else class="text-[10px] text-slate-500 italic">N/A</span>
-              </div>
+              <span :class="['px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider', statusBadgeClass(drop.status)]">
+                {{ drop.status }}
+              </span>
             </td>
             <td class="px-6 py-4 text-right">
               <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -123,7 +107,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watchEffect } from 'vue';
 
 const props = defineProps({
   drops: {
@@ -135,39 +119,28 @@ const props = defineProps({
 const emit = defineEmits(['edit', 'delete']);
 
 const searchQuery = ref('');
-const typeFilter = ref('all');
+const statusFilter = ref('all');
+
+watchEffect(() => {
+  if (props.drops.length > 0) {
+    console.log('📦 [ADMIN] Normalized Drop Data:', props.drops);
+  }
+});
 
 const filteredDrops = computed(() => {
   return props.drops.filter(drop => {
-    const matchesSearch = drop.name.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const matchesType = typeFilter.value === 'all' || drop.type === typeFilter.value;
-    return matchesSearch && matchesType;
+    const matchesSearch = drop.title.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchesStatus = statusFilter.value === 'all' || drop.status === statusFilter.value;
+    return matchesSearch && matchesStatus;
   });
 });
 
-const getImages = (drop) => {
-  if (Array.isArray(drop.images)) return drop.images;
-  try {
-    return drop.images ? JSON.parse(drop.images) : [];
-  } catch (e) {
-    return [drop.images].filter(Boolean);
-  }
-};
-
-const getSizes = (drop) => {
-  if (Array.isArray(drop.sizes)) return drop.sizes;
-  try {
-    return drop.sizes ? JSON.parse(drop.sizes) : [];
-  } catch (e) {
-    return [];
-  }
-};
-
-const typeBadgeClass = (type) => {
-  switch (type) {
-    case 'new-drop': return 'bg-blue-900/40 text-blue-400 border border-blue-500/20';
-    case 'recent-drop': return 'bg-slate-800 text-slate-400 border border-slate-700';
-    case 'limited': return 'bg-amber-900/40 text-amber-400 border border-amber-500/20';
+const statusBadgeClass = (status) => {
+  switch (status) {
+    case 'live': return 'bg-emerald-900/40 text-emerald-400 border border-emerald-500/20';
+    case 'upcoming': return 'bg-blue-900/40 text-blue-400 border border-blue-500/20';
+    case 'reservation': return 'bg-amber-900/40 text-amber-400 border border-amber-500/20';
+    case 'closed': return 'bg-slate-800 text-slate-400 border border-slate-700';
     default: return 'bg-slate-800 text-slate-500';
   }
 };

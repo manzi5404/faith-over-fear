@@ -76,18 +76,18 @@ async function listDrops(req, res) {
 
     console.log("RAW DROPS:", drops);
 
-    for (const drop of drops) {
-      if (!drop.images || drop.images.length === 0) {
-        drop.images = drop.image_url ? [drop.image_url] : [];
-      }
+    // Normalize drops for the frontend
+    const normalizedDrops = drops.map(item => ({
+      id: item.id,
+      title: item.title || item.name || "Untitled Drop",
+      description: item.description || "",
+      image: item.image_url || (Array.isArray(item.images) && item.images[0]) || (item.products?.[0]?.image_urls?.[0]) || null,
+      status: item.status || (item.is_active ? "live" : "upcoming"),
+      price: item.price || (item.products?.length ? Math.min(...item.products.map(p => p.price)) : 0)
+    }));
 
-      if (includeProducts) {
-        drop.products = await productService.getProductsByDropId(drop.id);
-      }
-    }
-
-    res.json({ success: true, drops });
-    console.log(`📦 [ADMIN] Fetched ${drops.length} drops`);
+    res.json({ success: true, drops: normalizedDrops });
+    console.log(`📦 [ADMIN] Fetched and normalized ${normalizedDrops.length} drops`);
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
