@@ -1,6 +1,13 @@
 const pool = require('./db/connection');
 const announcementModel = require('./models/announcement');
 
+
+async function testDrops() {
+  const [rows] = await pool.query('SELECT * FROM drops WHERE status="live"');
+  console.log(rows);
+}
+
+testDrops();
 async function testUpdate() {
     try {
         console.log('Testing version increment...');
