@@ -319,6 +319,7 @@ const CollectionsSection = ({ onToast }) => {
   };
 
   const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this drop? This action cannot be undone.")) return;
     try {
       await api.delete(`/api/admin/drops/${id}`);
       onToast("Drop deleted");
@@ -417,7 +418,7 @@ const CollectionsSection = ({ onToast }) => {
                   className={`rounded px-2 py-1 ${item.status === 'live' ? 'bg-zinc-700 text-white' : 'bg-slate-900 text-slate-500'}`}
                 >Live</button>
               </div>
-              <button onClick={() => handleDelete(item._id || item.id)} className="ml-auto rounded bg-rose-600/20 text-rose-400 px-2 py-1 hover:bg-rose-600 hover:text-white transition-colors">
+              <button onClick={() => handleDelete(item.id)} className="ml-auto rounded bg-rose-600/20 text-rose-400 px-2 py-1 hover:bg-rose-600 hover:text-white transition-colors">
                 Delete
               </button>
             </div>
