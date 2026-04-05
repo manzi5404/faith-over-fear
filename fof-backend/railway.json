@@ -11,7 +11,7 @@
   },
   
   "start": {
-    "cmd": "node app.js"
+    "cmd": "node server.js"
   }
 
 }
