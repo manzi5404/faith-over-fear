@@ -121,7 +121,7 @@
                         <div class="flex items-baseline space-x-4">
                             <p class="text-3xl text-white font-mono" x-text="dynamicPrice.toLocaleString() + ' FRW'"></p>
                             <template x-if="quantity > 1">
-                                <p class="text-sm text-gray-500 font-mono" x-text="'(' + product.price.toLocaleString() + ' / unit)'"></p>
+                                <p class="text-sm text-gray-500 font-mono" x-text="'(' + (selectedQuality ? parseFloat(selectedQuality.price) : product.price).toLocaleString() + ' / unit)'"></p>
                             </template>
                         </div>
                     </div>
@@ -152,6 +152,20 @@
                                             :class="selectedSize === size ? 'border-fof-white bg-white text-black' : 'border-zinc-800 text-gray-400 hover:border-white'"
                                             @click="selectedSize = size"
                                             x-text="size"></button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div x-show="qualityLevels && qualityLevels.length > 0" class="pt-6">
+                            <span class="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-500 mb-4 block">Select Quality</span>
+                            <div class="flex flex-wrap gap-3">
+                                <template x-for="quality in qualityLevels" :key="quality.quality_level_id">
+                                    <button class="px-5 py-3 border text-xs font-bold uppercase tracking-widest transition-all text-left"
+                                            :class="selectedQuality && selectedQuality.quality_level_id === quality.quality_level_id ? 'border-fof-accent bg-fof-accent text-black' : 'border-zinc-800 text-gray-400 hover:border-white'"
+                                            @click="selectedQuality = quality">
+                                        <span x-text="quality.quality_name"></span>
+                                        <span class="block text-[10px] font-normal uppercase tracking-[0.2em] text-gray-400" x-text="quality.price.toLocaleString() + ' FRW'"></span>
+                                    </button>
                                 </template>
                             </div>
                         </div>

@@ -127,6 +127,9 @@
                                 <!-- Details -->
                                 <div class="flex-1 text-center md:text-left w-full">
                                     <h3 class="font-display font-bold text-xl uppercase tracking-wide mb-1" x-text="item.name"></h3>
+                                    <template x-if="item.selectedQuality">
+                                        <p class="text-xs text-gray-400 uppercase tracking-widest mb-3" x-text="'Quality: ' + item.selectedQuality"></p>
+                                    </template>
                                     <div class="flex items-center gap-2 mb-4">
                                         <p class="text-[10px] text-gray-400 uppercase tracking-widest">Size:</p>
                                         <select 

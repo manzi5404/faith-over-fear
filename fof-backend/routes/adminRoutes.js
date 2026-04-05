@@ -16,6 +16,7 @@ const notificationRoutes = require('./notificationRoutes');
 const dropRoutes = require('./dropRoutes');
 const productRoutes = require('./productRoutes');
 const adminReservationRoutes = require('./adminReservationRoutes');
+const qualityLevelRoutes = require('./qualityLevelRoutes');
 
 // Apply verifyAdmin to ALL routes in this router
 router.use(verifyAdmin);
@@ -24,6 +25,7 @@ router.use(verifyAdmin);
 router.use('/drops', dropRoutes);
 router.use('/products', productRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/quality-levels', qualityLevelRoutes);
 
 // Orders
 router.get('/orders', orderController.getAllOrders);

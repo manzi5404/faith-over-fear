@@ -14,6 +14,7 @@ const shopLogic = () => ({
     showMomoModal: false,
     modalQuantity: 1,
     modalSize: "M",
+    modalQuality: null,
     reservationModalOpen: false,
     reservationData: {
         fullName: '',
@@ -182,12 +183,14 @@ const shopLogic = () => ({
 
     get totalPrice() {
         if (!this.selectedProduct) return "0.00";
-        return (parseFloat(this.selectedProduct.price) * parseInt(this.modalQuantity)).toFixed(2);
+        const basePrice = this.modalQuality ? parseFloat(this.modalQuality.price) : parseFloat(this.selectedProduct.price);
+        return (basePrice * parseInt(this.modalQuantity)).toFixed(2);
     },
 
     get momoQuickPayAmount() {
         if (!this.activeProduct) return "0.00";
-        return (parseFloat(this.activeProduct.price) * parseInt(this.modalQuantity || 1)).toFixed(2);
+        const basePrice = this.modalQuality ? parseFloat(this.modalQuality.price) : parseFloat(this.activeProduct.price);
+        return (basePrice * parseInt(this.modalQuantity || 1)).toFixed(2);
     },
 
     toggleCategory(r) {
@@ -196,7 +199,7 @@ const shopLogic = () => ({
             : this.filters.category.push(r);
     },
 
-    initPayment(product, qty = 1, size = "M") {
+    initPayment(product, qty = 1, size = "M", qualityLevel = null) {
         console.log('MoMo Button Clicked', product ? product.id : 'cart');
         if (!this.ensureLoggedIn()) return;
         if (this.storeSettings.purchasingDisabled) {
@@ -208,12 +211,13 @@ const shopLogic = () => ({
         this.selectedProduct = product;
         this.modalQuantity = product ? (parseInt(qty) || 1) : 0;
         this.modalSize = product ? (size || product.uiSize || "M") : "";
+        this.modalQuality = qualityLevel;
         this.paymentModalOpen = true;
     },
 
     initCart() { this.cartItems = JSON.parse(localStorage.getItem("fof_cart")) || []; },
 
-    openMomoQuickPay(product, qty = 1, size = "M") {
+    openMomoQuickPay(product, qty = 1, size = "M", qualityLevel = null) {
         if (!this.ensureLoggedIn()) return;
         if (this.storeSettings.purchasingDisabled) {
             window.dispatchEvent(new CustomEvent("notify", {
@@ -225,6 +229,7 @@ const shopLogic = () => ({
         this.selectedProduct = product;
         this.modalQuantity = product ? (parseInt(qty) || 1) : 1;
         this.modalSize = product ? (size || product.uiSize || "M") : "M";
+        this.modalQuality = qualityLevel;
         this.showMomoModal = true;
     },
 
@@ -310,8 +315,15 @@ const shopLogic = () => ({
 
         // Prepare WhatsApp message components
         let itemsList = isCartCheckout
-            ? this.cartItems.map(item => `- ${item.name} (${item.selectedSize}) x${item.quantity} [${(item.price * item.quantity).toLocaleString()} FRW]`).join("\n")
-            : `- ${checkoutProduct.name} (${this.modalSize}) x${this.modalQuantity} [${(checkoutProduct.price * this.modalQuantity).toLocaleString()} FRW]`;
+            ? this.cartItems.map(item => {
+                const qualityStr = item.selectedQuality ? ` (${item.selectedQuality})` : '';
+                return `- ${item.name}${qualityStr} (${item.selectedSize}) x${item.quantity} [${(item.price * item.quantity).toLocaleString()} FRW]`;
+            }).join("\n")
+            : (() => {
+                const qualityStr = this.modalQuality ? ` (${this.modalQuality.quality_name})` : '';
+                const basePrice = this.modalQuality ? parseFloat(this.modalQuality.price) : parseFloat(checkoutProduct.price);
+                return `- ${checkoutProduct.name}${qualityStr} (${this.modalSize}) x${this.modalQuantity} [${(basePrice * this.modalQuantity).toLocaleString()} FRW]`;
+            })();
 
         let createdOrderIds = [];
 
@@ -319,6 +331,7 @@ const shopLogic = () => ({
             if (isCartCheckout) {
                 // Create one order per cart item
                 for (const item of this.cartItems) {
+                    const effectivePrice = item.price;
                     const response = await fetch('/api/orders', {
                         method: 'POST',
                         headers: {
@@ -330,7 +343,8 @@ const shopLogic = () => ({
                             product_name: item.name,
                             size: item.selectedSize,
                             quantity: item.quantity,
-                            total_price: parseFloat(item.price) * parseInt(item.quantity),
+                            total_price: parseFloat(effectivePrice) * parseInt(item.quantity),
+                            quality_level_id: item.qualityLevelId || null,
                             payment_method: 'momo',
                             customer_name: this.senderName,
                             customer_email: this.senderEmail || null,
@@ -343,6 +357,7 @@ const shopLogic = () => ({
                     }
                 }
             } else {
+                const basePrice = this.modalQuality ? parseFloat(this.modalQuality.price) : parseFloat(checkoutProduct.price);
                 const response = await fetch('/api/orders', {
                     method: 'POST',
                     headers: {
@@ -354,7 +369,8 @@ const shopLogic = () => ({
                         product_name: checkoutProduct.name,
                         size: this.modalSize,
                         quantity: this.modalQuantity,
-                        total_price: parseFloat(checkoutProduct.price) * parseInt(this.modalQuantity),
+                        total_price: parseFloat(basePrice) * parseInt(this.modalQuantity),
+                        quality_level_id: this.modalQuality ? this.modalQuality.quality_level_id : null,
                         payment_method: 'momo',
                         customer_name: this.senderName,
                         customer_email: this.senderEmail || null,
@@ -424,10 +440,18 @@ const shopLogic = () => ({
         }
     },
 
-    addToCart(product, qty = 1, size = "M") {
+    addToCart(product, qty = 1, size = "M", qualityLevel = null) {
         if (this.storeSettings.purchasingDisabled) return;
 
-        const existingItemIndex = this.cartItems.findIndex(item => item.id === product.id && item.selectedSize === size);
+        const effectivePrice = qualityLevel ? parseFloat(qualityLevel.price) : parseFloat(product.price);
+        const qualityName = qualityLevel ? qualityLevel.quality_name : null;
+        const qualityLevelId = qualityLevel ? qualityLevel.quality_level_id : null;
+
+        const existingItemIndex = this.cartItems.findIndex(item =>
+            item.id === product.id &&
+            item.selectedSize === size &&
+            item.qualityLevelId === qualityLevelId
+        );
 
         if (existingItemIndex > -1) {
             this.cartItems[existingItemIndex].quantity += parseInt(qty);
@@ -436,8 +460,11 @@ const shopLogic = () => ({
             this.cartItems.push({
                 ...product,
                 selectedSize: size,
+                selectedQuality: qualityName,
+                qualityLevelId: qualityLevelId,
+                price: effectivePrice,
                 quantity: parseInt(qty),
-                totalPrice: product.price * parseInt(qty)
+                totalPrice: effectivePrice * parseInt(qty)
             });
         }
 
@@ -448,7 +475,7 @@ const shopLogic = () => ({
     incrementQty(product) { product.uiQuantity++; },
     decrementQty(product) { if (product.uiQuantity > 1) product.uiQuantity--; },
 
-    initReservation(product, size = "M") {
+    initReservation(product, size = "M", qualityLevel = null) {
         if (!this.ensureLoggedIn()) return;
         this.selectedProduct = product;
         this.reservationData = {
@@ -457,7 +484,9 @@ const shopLogic = () => ({
             phone: this.senderPhone || '',
             size: size || product.uiSize || "M",
             color: product.colors && product.colors.length > 0 ? product.colors[0] : '',
-            quantity: product.uiQuantity || 1
+            quantity: product.uiQuantity || 1,
+            selectedQuality: qualityLevel ? qualityLevel.quality_name : null,
+            qualityLevelId: qualityLevel ? qualityLevel.quality_level_id : null
         };
         this.reservationModalOpen = true;
     },
@@ -497,6 +526,7 @@ const shopLogic = () => ({
                     size: this.reservationData.size,
                     color: this.reservationData.color,
                     quantity: this.reservationData.quantity,
+                    quality_level_id: this.reservationData.qualityLevelId || null,
                     storeMode: this.storeConfig.store_mode || 'live'
                 })
             });

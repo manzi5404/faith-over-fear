@@ -69,6 +69,49 @@ async function initializeDatabase() {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
 
+        // 3b. Quality Levels Table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS quality_levels (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                description VARCHAR(255) DEFAULT NULL,
+                sort_order INT DEFAULT 0,
+                is_active TINYINT(1) DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        `);
+
+        const [qualityRows] = await connection.query('SELECT id FROM quality_levels LIMIT 1');
+        if (qualityRows.length === 0) {
+            await connection.query(
+                `INSERT INTO quality_levels (name, description, sort_order, is_active)
+                 VALUES
+                    ('Basic', 'Entry-level quality for budget-conscious shoppers', 1, 1),
+                    ('Standard', 'Balanced quality and value for everyday wear', 2, 1),
+                    ('Premium', 'Highest quality with premium materials and finishes', 3, 1)`
+            );
+            console.log('✅ Seeded default quality levels');
+        }
+
+        // 3c. Product Quality Prices Table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS product_quality_prices (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                product_id INT NOT NULL,
+                quality_level_id INT NOT NULL,
+                price DECIMAL(15, 2) NOT NULL,
+                is_active TINYINT(1) DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_product_quality (product_id, quality_level_id),
+                INDEX idx_product_quality_prices_product (product_id),
+                INDEX idx_product_quality_prices_quality (quality_level_id),
+                FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+                FOREIGN KEY (quality_level_id) REFERENCES quality_levels(id) ON DELETE RESTRICT
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        `);
+
         // 4. Store Config Table (Modes: live, reserve, closed)
         await connection.query(`
             CREATE TABLE IF NOT EXISTS store_config (
@@ -125,6 +168,12 @@ async function initializeDatabase() {
                 user_id INT,
                 product_id INT,
                 drop_id INT,
+                product_name VARCHAR(255),
+                size VARCHAR(20),
+                color VARCHAR(50),
+                quantity INT DEFAULT 1,
+                quality_level_id INT DEFAULT NULL,
+                price_at_purchase DECIMAL(15, 2) DEFAULT NULL,
                 customer_name VARCHAR(255),
                 customer_email VARCHAR(255),
                 phone_number VARCHAR(50),
@@ -135,6 +184,64 @@ async function initializeDatabase() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
+
+        // Migration: Ensure orders table has quality and purchase fields for the updated model
+        try {
+            const [orderColumns] = await connection.query('SHOW COLUMNS FROM orders');
+            const orderFields = orderColumns.map(c => c.Field);
+            if (!orderFields.includes('quality_level_id')) {
+                await connection.query('ALTER TABLE orders ADD COLUMN quality_level_id INT DEFAULT NULL AFTER quantity');
+            }
+            if (!orderFields.includes('price_at_purchase')) {
+                await connection.query('ALTER TABLE orders ADD COLUMN price_at_purchase DECIMAL(15, 2) DEFAULT NULL AFTER quality_level_id');
+            }
+            console.log('✅ Orders schema verified for quality and purchase fields');
+        } catch (orderMigrationErr) {
+            console.warn('⚠️  Orders schema migration warning:', orderMigrationErr.message);
+        }
+
+        // 5b. Order Items Table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS order_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                order_id INT NOT NULL,
+                product_id INT DEFAULT NULL,
+                product_name VARCHAR(255) DEFAULT NULL,
+                quantity INT DEFAULT 1,
+                size VARCHAR(50) DEFAULT NULL,
+                color VARCHAR(50) DEFAULT NULL,
+                quality_level_id INT DEFAULT NULL,
+                price_at_purchase DECIMAL(15, 2) DEFAULT NULL,
+                total_price DECIMAL(15, 2) DEFAULT NULL,
+                price DECIMAL(15, 2) DEFAULT NULL,
+                FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+                FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        `);
+
+        // Migration: Ensure order_items columns exist for updated backend logic
+        try {
+            const [orderItemColumns] = await connection.query('SHOW COLUMNS FROM order_items');
+            const orderItemFields = orderItemColumns.map(c => c.Field);
+            if (!orderItemFields.includes('product_name')) {
+                await connection.query('ALTER TABLE order_items ADD COLUMN product_name VARCHAR(255) DEFAULT NULL AFTER product_id');
+            }
+            if (!orderItemFields.includes('color')) {
+                await connection.query('ALTER TABLE order_items ADD COLUMN color VARCHAR(50) DEFAULT NULL AFTER size');
+            }
+            if (!orderItemFields.includes('quality_level_id')) {
+                await connection.query('ALTER TABLE order_items ADD COLUMN quality_level_id INT DEFAULT NULL AFTER color');
+            }
+            if (!orderItemFields.includes('price_at_purchase')) {
+                await connection.query('ALTER TABLE order_items ADD COLUMN price_at_purchase DECIMAL(15, 2) DEFAULT NULL AFTER quality_level_id');
+            }
+            if (!orderItemFields.includes('total_price')) {
+                await connection.query('ALTER TABLE order_items ADD COLUMN total_price DECIMAL(15, 2) DEFAULT NULL AFTER price_at_purchase');
+            }
+            console.log('✅ order_items schema verified for quality and pricing fields');
+        } catch (orderItemsMigrationErr) {
+            console.warn('⚠️  order_items migration warning:', orderItemsMigrationErr.message);
+        }
 
         // Migration: Unified Status ENUM for Orders
         try {
@@ -155,9 +262,12 @@ async function initializeDatabase() {
                 email VARCHAR(255),
                 phone VARCHAR(50),
                 product_id INT,
+                product_name VARCHAR(255) DEFAULT NULL,
                 size VARCHAR(20),
                 color VARCHAR(50),
                 quantity INT DEFAULT 1,
+                quality_level_id INT DEFAULT NULL,
+                price_at_purchase DECIMAL(15, 2) DEFAULT NULL,
                 store_mode VARCHAR(50) DEFAULT 'live',
                 status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -184,11 +294,23 @@ async function initializeDatabase() {
                 console.log('✅ Reservations column store_mode added');
             }
 
+            const [reservationColumns] = await connection.query('SHOW COLUMNS FROM reservations');
+            const reservationFields = reservationColumns.map(c => c.Field);
+            if (!reservationFields.includes('product_name')) {
+                await connection.query('ALTER TABLE reservations ADD COLUMN product_name VARCHAR(255) DEFAULT NULL AFTER product_id');
+            }
+            if (!reservationFields.includes('quality_level_id')) {
+                await connection.query('ALTER TABLE reservations ADD COLUMN quality_level_id INT DEFAULT NULL AFTER color');
+            }
+            if (!reservationFields.includes('price_at_purchase')) {
+                await connection.query('ALTER TABLE reservations ADD COLUMN price_at_purchase DECIMAL(15, 2) DEFAULT NULL AFTER quality_level_id');
+            }
+
             const [cols] = await connection.query('SHOW COLUMNS FROM reservations LIKE "updated_at"');
             if (cols.length === 0) {
                 await connection.query('ALTER TABLE reservations ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at');
             }
-            console.log('✅ Reservations schema verified (status, store_mode & updated_at ensured)');
+            console.log('✅ Reservations schema verified (status, store_mode, and new purchase fields ensured)');
         } catch (migErr) {
             console.warn('⚠️  Reservations migration warning:', migErr.message);
         }

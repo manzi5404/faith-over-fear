@@ -2,71 +2,79 @@ const pool = require('../db/connection');
 const notification = require('../models/notification');
 const emailUtils = require('../utils/email');
 const productService = require('../models/product');
+const qualityPriceService = require('../models/productQualityPrice');
 
 const createReservation = async (req, res) => {
-    console.log("=== INCOMING RESERVATION REQUEST ===");
-    console.log("Headers:", JSON.stringify(req.headers['content-type']));
-    console.log("Body:", JSON.stringify(req.body, null, 2));
-
-    const { fullName, email: bodyEmail, phone, productId, size, color, quantity, storeMode } = req.body;
+    const { fullName, email: bodyEmail, phone, productId, size, color, quantity, storeMode, quality_level_id } = req.body;
     const userId = req.user ? req.user.id : null;
     const email = req.user ? req.user.email : bodyEmail;
 
-    // Basic validation check
     if (!email || !productId) {
-        console.error("Missing required reservation fields:", { email, productId });
         return res.status(400).json({ success: false, message: 'Missing email or productId' });
     }
 
     try {
-        console.log("Executing DB Insert for Reservation...");
+        const resolvedFullName = fullName && fullName.trim() !== '' ? fullName :
+            (bodyEmail ? bodyEmail.split('@')[0] : 'Guest');
 
-// Determine proper full name
-const resolvedFullName = fullName && fullName.trim() !== '' ? fullName :
-    (bodyEmail ? bodyEmail.split('@')[0] : 'Guest');
+        const product = await productService.getProductById(productId);
+        if (!product) {
+            return res.status(400).json({ success: false, message: 'Product not found' });
+        }
 
-const reservationData = {
-    userId,
-    fullName: resolvedFullName,
-    email,
-    phone: phone || 'N/A',
-    productId,
-    size: size || 'M',
-    color: color || 'Default',
-    quantity: quantity || 1,
-    storeMode: storeMode || 'live'
-};
+        let priceAtPurchase = Number(product.price);
+        if (quality_level_id) {
+            const qualityPrice = await qualityPriceService.getActiveQualityPrice(productId, quality_level_id);
+            if (!qualityPrice) {
+                return res.status(400).json({ success: false, message: 'Invalid quality_level_id for selected product' });
+            }
+            priceAtPurchase = Number(qualityPrice.price);
+        }
+
+        const reservationData = {
+            userId,
+            fullName: resolvedFullName,
+            email,
+            phone: phone || 'N/A',
+            productId,
+            productName: product.name,
+            size: size || 'M',
+            color: color || 'Default',
+            quantity: quantity || 1,
+            qualityLevelId: quality_level_id || null,
+            priceAtPurchase,
+            storeMode: storeMode || 'live'
+        };
 
         const [result] = await pool.query(
-            `INSERT INTO reservations (user_id, full_name, email, phone, product_id, size, color, quantity, store_mode, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+            `INSERT INTO reservations (
+                user_id, full_name, email, phone, product_id, product_name,
+                size, color, quantity, quality_level_id, price_at_purchase,
+                store_mode, status
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
             [
-                reservationData.userId, 
-                reservationData.fullName, 
-                reservationData.email, 
-                reservationData.phone, 
-                reservationData.productId, 
-                reservationData.size, 
-                reservationData.color, 
+                reservationData.userId,
+                reservationData.fullName,
+                reservationData.email,
+                reservationData.phone,
+                reservationData.productId,
+                reservationData.productName,
+                reservationData.size,
+                reservationData.color,
                 reservationData.quantity,
+                reservationData.qualityLevelId,
+                reservationData.priceAtPurchase,
                 reservationData.storeMode
             ]
         );
 
-        console.log("✅ Reservation Insert Success ID:", result.insertId);
-
-        // Fetch product info for notification
-        const product = await productService.getProductById(productId);
-
-        // Create in-app notification for admin
         await notification.createNotification(
             'reservation',
             result.insertId,
             `Reservation: ${reservationData.fullName}`,
-            `Product: ${product?.name || productId} | Mode: ${reservationData.storeMode}`
+            `Product: ${reservationData.productName} | Mode: ${reservationData.storeMode}`
         );
 
-        // Trigger email notification (fire and forget)
         (async () => {
             try {
                 await emailUtils.notifyReservation(email, reservationData, product);
@@ -80,19 +88,19 @@ const reservationData = {
             message: 'Reservation created successfully',
             data: {
                 id: result.insertId,
-                fullName: fullName || 'Anonymous',
-                email,
-                phone: phone || 'N/A',
-                productId,
-                size: size || 'M',
-                color: color || 'Default',
-                quantity: quantity || 1
+                fullName: reservationData.fullName,
+                email: reservationData.email,
+                phone: reservationData.phone,
+                productId: reservationData.productId,
+                size: reservationData.size,
+                color: reservationData.color,
+                quantity: reservationData.quantity,
+                quality_level_id: reservationData.qualityLevelId,
+                price_at_purchase: reservationData.priceAtPurchase
             }
         });
     } catch (error) {
         console.error("❌ DB Reservation Error:", error);
-        console.error("Error code:", error.code);
-        console.error("Error sqlMessage:", error.sqlMessage);
         res.status(500).json({
             success: false,
             message: 'Failed to create reservation',

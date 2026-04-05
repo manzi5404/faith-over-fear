@@ -63,7 +63,38 @@ CREATE TABLE IF NOT EXISTS products (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- 5. ORDERS
+-- 5. QUALITY_LEVELS
+--    Source: models/productQualityPrice.js
+CREATE TABLE IF NOT EXISTS quality_levels (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255) DEFAULT NULL,
+    sort_order INT DEFAULT 0,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- 6. PRODUCT_QUALITY_PRICES
+--    Source: models/productQualityPrice.js
+CREATE TABLE IF NOT EXISTS product_quality_prices (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    quality_level_id INT NOT NULL,
+    price DECIMAL(15, 2) NOT NULL,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_product_quality (product_id, quality_level_id),
+    INDEX idx_product_quality_prices_product (product_id),
+    INDEX idx_product_quality_prices_quality (quality_level_id),
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (quality_level_id) REFERENCES quality_levels(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- 7. ORDERS
 --    Source: models/order.js
 --    phone_number field (NOT phone — different from reservations)
 CREATE TABLE IF NOT EXISTS orders (
@@ -71,12 +102,14 @@ CREATE TABLE IF NOT EXISTS orders (
     user_id        INT            DEFAULT NULL,
     product_id     INT            DEFAULT NULL,
     drop_id        INT            DEFAULT NULL,
-    product_name   VARCHAR(255)   DEFAULT NULL,
-    size           VARCHAR(50)    DEFAULT NULL,
-    color          VARCHAR(50)    DEFAULT NULL,
-    quantity       INT            DEFAULT 1,
-    total_price    DECIMAL(15, 2) NOT NULL,
-    status         ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
+    product_name      VARCHAR(255)   DEFAULT NULL,
+    size              VARCHAR(50)    DEFAULT NULL,
+    color             VARCHAR(50)    DEFAULT NULL,
+    quantity          INT            DEFAULT 1,
+    quality_level_id  INT            DEFAULT NULL,
+    price_at_purchase DECIMAL(15, 2) DEFAULT NULL,
+    total_price       DECIMAL(15, 2) NOT NULL,
+    status            ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
     payment_method VARCHAR(50)    DEFAULT 'reservation',
     customer_name  VARCHAR(255)   DEFAULT NULL,
     customer_email VARCHAR(255)   DEFAULT NULL,
@@ -89,21 +122,26 @@ CREATE TABLE IF NOT EXISTS orders (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- 6. ORDER ITEMS
+-- 8. ORDER ITEMS
 --    Source: models/orderItem.js
 CREATE TABLE IF NOT EXISTS order_items (
-    id         INT AUTO_INCREMENT PRIMARY KEY,
-    order_id   INT            NOT NULL,
-    product_id INT            DEFAULT NULL,
-    quantity   INT            DEFAULT 1,
-    size       VARCHAR(50)    DEFAULT NULL,
-    price      DECIMAL(15, 2) NOT NULL,
+    id                INT AUTO_INCREMENT PRIMARY KEY,
+    order_id          INT            NOT NULL,
+    product_id        INT            DEFAULT NULL,
+    product_name      VARCHAR(255)   DEFAULT NULL,
+    quantity          INT            DEFAULT 1,
+    size              VARCHAR(50)    DEFAULT NULL,
+    color             VARCHAR(50)    DEFAULT NULL,
+    quality_level_id  INT            DEFAULT NULL,
+    price_at_purchase DECIMAL(15, 2) DEFAULT NULL,
+    total_price       DECIMAL(15, 2) DEFAULT NULL,
+    price             DECIMAL(15, 2) DEFAULT NULL,
     FOREIGN KEY (order_id)   REFERENCES orders(id)   ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- 7. RESERVATIONS
+-- 9. RESERVATIONS
 --    Source: controllers/reservationController.js + db/init.js
 --    phone field (NOT phone_number — different from orders)
 --    store_mode tracks the store state at time of reservation
@@ -113,11 +151,14 @@ CREATE TABLE IF NOT EXISTS reservations (
     full_name  VARCHAR(255) DEFAULT NULL,
     email      VARCHAR(255) DEFAULT NULL,
     phone      VARCHAR(50)  DEFAULT NULL,
-    product_id INT          DEFAULT NULL,
-    size       VARCHAR(20)  DEFAULT NULL,
-    color      VARCHAR(50)  DEFAULT NULL,
-    quantity   INT          DEFAULT 1,
-    store_mode VARCHAR(50)  DEFAULT 'live',
+    product_id        INT            DEFAULT NULL,
+    product_name      VARCHAR(255)   DEFAULT NULL,
+    size              VARCHAR(20)    DEFAULT NULL,
+    color             VARCHAR(50)    DEFAULT NULL,
+    quantity          INT            DEFAULT 1,
+    quality_level_id  INT            DEFAULT NULL,
+    price_at_purchase DECIMAL(15, 2) DEFAULT NULL,
+    store_mode        VARCHAR(50)    DEFAULT 'live',
     status     ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
     created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -1,42 +1,133 @@
 const orderModel = require('../models/order');
 const notification = require('../models/notification');
+const productService = require('../models/product');
+const qualityPriceService = require('../models/productQualityPrice');
 
 const createOrder = async (req, res) => {
     const userId = req.user ? req.user.id : null;
     const {
-        product_id, drop_id, product_name, size, color,
-        quantity, total_price, payment_method,
-        customer_name, customer_email, phone_number
+        items,
+        product_id,
+        drop_id,
+        product_name,
+        size,
+        color,
+        quantity,
+        quality_level_id,
+        price_at_purchase,
+        total_price,
+        payment_method,
+        customer_name,
+        customer_email,
+        phone_number,
+        customer_phone
     } = req.body;
 
-    if (!product_id) {
-        return res.status(400).json({ success: false, message: 'product_id is required' });
-    }
-    if (total_price === undefined || total_price === null) {
-        return res.status(400).json({ success: false, message: 'total_price is required' });
-    }
+    const normalizeItem = async (item) => {
+        const productId = item.product_id;
+        const quantityValue = Number(item.quantity || 1);
+        if (!productId) {
+            throw new Error('Each order item must include product_id');
+        }
+        if (!quantityValue || quantityValue <= 0) {
+            throw new Error('Each order item must include a positive quantity');
+        }
+
+        const product = await productService.getProductById(productId);
+        if (!product) {
+            throw new Error(`Product not found: ${productId}`);
+        }
+
+        let priceValue = item.price_at_purchase !== undefined && item.price_at_purchase !== null
+            ? Number(item.price_at_purchase)
+            : null;
+        let validatedQualityId = item.quality_level_id || null;
+
+        if (validatedQualityId) {
+            const qualityPrice = await qualityPriceService.getActiveQualityPrice(productId, validatedQualityId);
+            if (!qualityPrice) {
+                throw new Error(`Invalid quality_level_id ${validatedQualityId} for product ${productId}`);
+            }
+            if (priceValue !== null && Number(priceValue) !== Number(qualityPrice.price)) {
+                throw new Error('price_at_purchase must equal the authorized quality price');
+            }
+            priceValue = Number(qualityPrice.price);
+        }
+
+        if (priceValue === null) {
+            priceValue = Number(product.price);
+        }
+        if (Number.isNaN(priceValue) || priceValue <= 0) {
+            throw new Error('Invalid price_at_purchase for order item');
+        }
+
+        const itemTotal = Number((priceValue * quantityValue).toFixed(2));
+        if (item.total_price !== undefined && item.total_price !== null) {
+            const providedTotal = Number(item.total_price);
+            if (Number.isNaN(providedTotal) || providedTotal !== itemTotal) {
+                throw new Error('total_price must equal price_at_purchase * quantity for each item');
+            }
+        }
+
+        return {
+            product_id: productId,
+            drop_id: item.drop_id || drop_id || null,
+            product_name: item.product_name || product.name,
+            size: item.size || size || null,
+            color: item.color || color || null,
+            quantity: quantityValue,
+            quality_level_id: validatedQualityId,
+            price_at_purchase: priceValue,
+            total_price: itemTotal
+        };
+    };
 
     try {
+        let orderItems = [];
+        if (Array.isArray(items) && items.length > 0) {
+            orderItems = await Promise.all(items.map(normalizeItem));
+        } else {
+            if (!product_id) {
+                return res.status(400).json({ success: false, message: 'product_id is required' });
+            }
+            orderItems = [await normalizeItem({
+                product_id,
+                drop_id,
+                product_name,
+                size,
+                color,
+                quantity: quantity || 1,
+                quality_level_id,
+                price_at_purchase,
+                total_price
+            })];
+        }
+
+        const orderTotal = orderItems.reduce((sum, item) => sum + item.total_price, 0);
+        const requestTotal = total_price !== undefined && total_price !== null ? Number(total_price) : orderTotal;
+        if (Number.isNaN(requestTotal) || requestTotal !== Number(orderTotal.toFixed(2))) {
+            return res.status(400).json({
+                success: false,
+                message: 'total_price must equal the sum of item totals'
+            });
+        }
+
         const orderId = await orderModel.createOrder({
             user_id: userId,
-            product_id,
             drop_id: drop_id || null,
-            product_name: product_name || null,
-            size: size || null,
-            color: color || null,
-            quantity: quantity || 1,
-            total_price,
             payment_method: payment_method || 'reservation',
             customer_name: customer_name || (req.user ? req.user.name : null),
             customer_email: customer_email || (req.user ? req.user.email : null),
-            phone_number: phone_number || null
+            phone_number: phone_number || customer_phone || null,
+            items: orderItems,
+            total_price: orderTotal
         });
 
         await notification.createNotification(
             payment_method === 'momo' ? 'payment' : 'reservation',
             orderId,
             `New ${payment_method === 'momo' ? 'MoMo payment' : 'reservation'} from ${customer_name || (req.user ? req.user.name : 'Customer')}`,
-            `Product: ${product_name || 'ID ' + product_id} | Qty: ${quantity || 1} | Total: ${total_price} FRW`
+            `Order ID: ${orderId} | Total: ${orderTotal} FRW`
         );
 
         res.status(201).json({

@@ -2,30 +2,84 @@ const pool = require('../db/connection');
 
 async function createOrder(orderData) {
     const {
-        user_id, product_id, drop_id, product_name, size, color,
-        quantity, total_price, payment_method, customer_name,
-        customer_email, phone_number
+        user_id, drop_id, payment_method, customer_name,
+        customer_email, phone_number, items, total_price
     } = orderData;
 
-    const [result] = await pool.query(
-        `INSERT INTO orders (user_id, product_id, drop_id, product_name, size, color, quantity, total_price, status, payment_method, customer_name, customer_email, phone_number)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
-        [
-            user_id || null,
-            product_id,
-            drop_id || null,
-            product_name || null,
-            size || null,
-            color || null,
-            quantity || 1,
-            total_price,
-            payment_method || 'reservation',
-            customer_name || null,
-            customer_email || null,
-            phone_number || null
-        ]
-    );
-    return result.insertId;
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const orderItems = Array.isArray(items) ? items : [];
+        const itemCount = orderItems.length;
+        const totalQuantity = orderItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+
+        const singleItem = itemCount === 1 ? orderItems[0] : null;
+        const orderProductName = singleItem ? singleItem.product_name : itemCount > 1 ? 'Multiple Products' : null;
+        const orderSize = singleItem ? singleItem.size : null;
+        const orderColor = singleItem ? singleItem.color : null;
+        const orderQualityLevelId = singleItem ? singleItem.quality_level_id : null;
+        const orderPriceAtPurchase = singleItem ? singleItem.price_at_purchase : null;
+        const orderQuantity = itemCount === 1 ? Number(singleItem.quantity || 1) : totalQuantity;
+        const orderDropId = drop_id || (singleItem && singleItem.drop_id) || null;
+        const orderTotalPrice = Number(total_price);
+
+        const orderProductId = singleItem ? singleItem.product_id : null;
+        const [orderResult] = await connection.query(
+            `INSERT INTO orders (
+                user_id, product_id, drop_id, product_name, size, color,
+                quantity, quality_level_id, price_at_purchase, total_price,
+                status, payment_method, customer_name, customer_email, phone_number
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
+            [
+                user_id || null,
+                orderProductId,
+                orderDropId,
+                orderProductName,
+                orderSize,
+                orderColor,
+                orderQuantity,
+                orderQualityLevelId || null,
+                orderPriceAtPurchase !== undefined ? orderPriceAtPurchase : null,
+                orderTotalPrice,
+                payment_method || 'reservation',
+                customer_name || null,
+                customer_email || null,
+                phone_number || null
+            ]
+        );
+
+        const orderId = orderResult.insertId;
+
+        for (const item of orderItems) {
+            await connection.query(
+                `INSERT INTO order_items (
+                    order_id, product_id, product_name, size, color,
+                    quantity, quality_level_id, price_at_purchase, total_price
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    orderId,
+                    item.product_id,
+                    item.product_name || null,
+                    item.size || null,
+                    item.color || null,
+                    item.quantity,
+                    item.quality_level_id || null,
+                    item.price_at_purchase,
+                    item.total_price
+                ]
+            );
+        }
+
+        await connection.commit();
+        return orderId;
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
 }
 
 async function getOrderById(id) {

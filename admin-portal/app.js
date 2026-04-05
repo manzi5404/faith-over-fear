@@ -136,22 +136,52 @@ const useFetch = (fetcher, deps = []) => {
 
 const ProductsSection = ({ onToast }) => {
   const { data, loading, error, reload } = useFetch(() => api.get("/api/products"), []);
-  const [form, setForm] = useState({ name: "", price: "", sizes: "", images: "", isActive: true });
+  const [qualityLevels, setQualityLevels] = useState([]);
+  const [form, setForm] = useState({ 
+    name: "", 
+    price: "", 
+    sizes: "", 
+    images: "", 
+    isActive: true,
+    quality_prices: []
+  });
   const [editingId, setEditingId] = useState(null);
 
+  useEffect(() => {
+    api.get("/api/admin/quality-levels").then(res => {
+      setQualityLevels(res.data?.qualityLevels || []);
+    }).catch(() => {});
+  }, []);
+
   const resetForm = () => {
-    setForm({ name: "", price: "", sizes: "", images: "", isActive: true });
+    setForm({ 
+      name: "", 
+      price: "", 
+      sizes: "", 
+      images: "", 
+      isActive: true,
+      quality_prices: []
+    });
     setEditingId(null);
+  };
+
+  const handleQualityPriceChange = (levelId, price) => {
+    const existing = form.quality_prices.filter(qp => qp.quality_level_id !== levelId);
+    if (price && parseFloat(price) > 0) {
+      existing.push({ quality_level_id: parseInt(levelId), price: parseFloat(price) });
+    }
+    setForm({ ...form, quality_prices: existing });
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const payload = {
       name: form.name,
-      price: Number(form.price),
+      price: Number(form.price) || 0,
       sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()).filter(Boolean) : [],
       images: form.images ? form.images.split(",").map((s) => s.trim()).filter(Boolean) : [],
-      isActive: !!form.isActive
+      isActive: !!form.isActive,
+      quality_prices: form.quality_prices
     };
     try {
       if (editingId) {
@@ -170,12 +200,17 @@ const ProductsSection = ({ onToast }) => {
 
   const handleEdit = (product) => {
     setEditingId(product._id || product.id);
+    const existingPrices = (product.quality_prices || []).map(qp => ({
+      quality_level_id: qp.quality_level_id,
+      price: qp.price
+    }));
     setForm({
       name: product.name || "",
       price: product.price || "",
       sizes: (product.sizes || []).join(", "),
       images: (product.images || []).join(", "),
-      isActive: product.isActive !== false
+      isActive: product.isActive !== false,
+      quality_prices: existingPrices
     });
   };
 
@@ -237,6 +272,28 @@ const ProductsSection = ({ onToast }) => {
           />
           Active
         </label>
+        {qualityLevels.length > 0 && (
+          <div className="md:col-span-2 space-y-2 border border-slate-700 rounded-lg p-3 bg-slate-800/50">
+            <p className="text-xs font-bold uppercase text-slate-500 tracking-wider">Quality Level Prices</p>
+            {qualityLevels.map(level => {
+              const existingQp = form.quality_prices.find(qp => qp.quality_level_id === level.id);
+              return (
+                <div key={level.id} className="flex items-center justify-between">
+                  <label className="text-sm text-slate-300">{level.name}</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="w-32 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1 text-sm"
+                    placeholder="Price"
+                    value={existingQp?.price || ''}
+                    onChange={(event) => handleQualityPriceChange(level.id, event.target.value)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
         <button className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-900">
           {editingId ? "Update Product" : "Add Product"}
         </button>
