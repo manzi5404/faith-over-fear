@@ -66,7 +66,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/drops', dropRoutes);
 app.get('/api/store-config', storeConfigController.getStoreConfig);
-app.get('/api/announcement', require('./controllers/announcementController').getLatestAnnouncement);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/announcement', announcementRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.post('/api/contact', async (req, res) => {
   console.log('Incoming Message:', req.body);

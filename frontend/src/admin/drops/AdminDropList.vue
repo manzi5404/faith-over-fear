@@ -131,7 +131,9 @@ const filteredDrops = computed(() => {
   return props.drops.filter(drop => {
     const title = drop.title || '';
     const query = searchQuery.value || '';
-    const matchesSearch = title.toLowerCase().includes(query.toLowerCase());
+    const titleStr = (title || 'Untitled Drop').toLowerCase();
+    const queryStr = (query || '').toLowerCase();
+    const matchesSearch = titleStr.includes(queryStr);
     const matchesStatus = statusFilter.value === 'all' || drop.status === statusFilter.value;
     return matchesSearch && matchesStatus;
   });

@@ -43,18 +43,21 @@ const DropList = ({ drops, onEdit, onDelete, onStatusFilter }) => {
                                             <div className="w-10 h-10 rounded bg-slate-800 overflow-hidden flex-shrink-0 border border-slate-700">
                                                 {(() => {
                                                     let imgSrc = drop.image;
-                                                    // Parse if it's a stringified JSON array like '["test.jpg"]'
-                                                    if (typeof imgSrc === 'string' && imgSrc.startsWith('[') && imgSrc.endsWith(']')) {
-                                                        try {
+                                                    
+                                                    // Handle images stored as stringified JSON or raw arrays
+                                                    try {
+                                                        if (typeof imgSrc === 'string' && imgSrc.startsWith('[')) {
                                                             const parsed = JSON.parse(imgSrc);
                                                             imgSrc = Array.isArray(parsed) ? parsed[0] : imgSrc;
-                                                        } catch (e) {
-                                                            console.warn("Image parse failed for drop id:", drop.id);
+                                                        } else if (Array.isArray(imgSrc)) {
+                                                            imgSrc = imgSrc[0];
                                                         }
+                                                    } catch (e) {
+                                                        console.warn("Image resolution failed for drop:", drop.id, e);
                                                     }
                                                     
                                                     return imgSrc ? (
-                                                        <img src={imgSrc} alt={drop.title} className="w-full h-full object-cover" />
+                                                        <img src={imgSrc} alt={drop.title || 'Drop Image'} className="w-full h-full object-cover" onError={(e) => { e.target.src = '/placeholder.jpg'; e.target.onerror = null; }} />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-slate-600 text-[10px] font-bold text-center uppercase">No Image</div>
                                                     );

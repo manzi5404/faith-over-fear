@@ -14,18 +14,34 @@ const shopLogic = () => ({
     showMomoModal: false,
     modalQuantity: 1,
     modalSize: "M",
-    paymentModalOpen: false,
-    momoCode: "123-456",
-    momoPhone: "0780000000",
-    copyFeedback: "",
-    senderName: "",
-    senderEmail: "",
-    senderPhone: "",
-    cartItems: [],
-    configLoading: true,
-    storeConfig: {
-        store_mode: 'closed',
-        announcement: ''
+    reservationModalOpen: false,
+    reservationData: {
+        fullName: '',
+        email: '',
+        phone: '',
+        size: 'M',
+        color: '',
+        quantity: 1
+    },
+
+    resolveImage(product) {
+        if (!product) return '/placeholder.jpg';
+        
+        // Handle images stored as stringified JSON or raw arrays
+        let imgList = [];
+        try {
+            if (typeof product.image === 'string' && product.image.startsWith('[')) {
+                imgList = JSON.parse(product.image);
+            } else if (Array.isArray(product.images)) {
+                imgList = product.images;
+            } else if (product.image) {
+                imgList = [product.image];
+            }
+        } catch (e) {
+            console.error("Image resolution failed for product:", product.id, e);
+        }
+
+        return (imgList && imgList.length > 0) ? imgList[0] : '/placeholder.jpg';
     },
 
     async init() {
