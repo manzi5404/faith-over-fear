@@ -6,14 +6,14 @@
       "providers": ["nodejs"],
       "phases": {
         "setup": {
-          "nixpacksPkgs": ["nodejs_20", "mysql80"]
+          "nixpacksPkgs": ["nodejs_20"]
         }
       }
     }
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": "mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < ./db/schema.sql && node server.js",
+    "startCommand": "node server.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
