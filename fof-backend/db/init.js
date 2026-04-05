@@ -140,8 +140,8 @@ async function initializeDatabase() {
         await connection.query(`
             CREATE TABLE IF NOT EXISTS settings (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                \`key\` VARCHAR(255) UNIQUE NOT NULL,
-                \`value\` VARCHAR(255) NOT NULL,
+                setting_key VARCHAR(255) UNIQUE NOT NULL,
+                setting_value VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -149,15 +149,15 @@ async function initializeDatabase() {
 
         // Ensure default settings exist
         const defaultSettings = [
-            { key: 'purchasingDisabled', value: 'false' },
-            { key: 'isRestocking', value: 'false' }
+            { setting_key: 'purchasingDisabled', setting_value: 'false' },
+            { setting_key: 'isRestocking', setting_value: 'false' }
         ];
 
         for (const setting of defaultSettings) {
-            const [rows] = await connection.query('SELECT * FROM settings WHERE `key` = ?', [setting.key]);
+            const [rows] = await connection.query('SELECT * FROM settings WHERE setting_key = ?', [setting.setting_key]);
             if (rows.length === 0) {
-                await connection.query('INSERT INTO settings (`key`, `value`) VALUES (?, ?)', [setting.key, setting.value]);
-                console.log(`✅ Default setting created: ${setting.key} = ${setting.value}`);
+                await connection.query('INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)', [setting.setting_key, setting.setting_value]);
+                console.log(`✅ Default setting created: ${setting.setting_key} = ${setting.setting_value}`);
             }
         }
 

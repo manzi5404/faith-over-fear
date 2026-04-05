@@ -116,9 +116,11 @@ CREATE TABLE IF NOT EXISTS orders (
     phone_number   VARCHAR(50)    DEFAULT NULL,
     created_at     TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_orders_quality_level (quality_level_id),
     FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE SET NULL,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
-    FOREIGN KEY (drop_id)    REFERENCES drops(id)    ON DELETE SET NULL
+    FOREIGN KEY (drop_id)    REFERENCES drops(id)    ON DELETE SET NULL,
+    FOREIGN KEY (quality_level_id) REFERENCES quality_levels(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -136,8 +138,10 @@ CREATE TABLE IF NOT EXISTS order_items (
     price_at_purchase DECIMAL(15, 2) DEFAULT NULL,
     total_price       DECIMAL(15, 2) DEFAULT NULL,
     price             DECIMAL(15, 2) DEFAULT NULL,
+    INDEX idx_order_items_quality_level (quality_level_id),
     FOREIGN KEY (order_id)   REFERENCES orders(id)   ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
+    FOREIGN KEY (quality_level_id) REFERENCES quality_levels(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -162,8 +166,10 @@ CREATE TABLE IF NOT EXISTS reservations (
     status     ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
     created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_reservations_quality_level (quality_level_id),
     FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE SET NULL,
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
+    FOREIGN KEY (quality_level_id) REFERENCES quality_levels(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 

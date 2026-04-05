@@ -11,8 +11,8 @@ async function getSettings(req, res) {
 
 async function updateSetting(req, res) {
     try {
-        const { key, value } = req.body;
-        const success = await settingsModel.updateSetting(key, value);
+        const { setting_key, setting_value } = req.body;
+        const success = await settingsModel.updateSetting(setting_key, setting_value);
         res.json({ success });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
