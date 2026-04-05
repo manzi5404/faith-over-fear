@@ -129,7 +129,9 @@ watchEffect(() => {
 
 const filteredDrops = computed(() => {
   return props.drops.filter(drop => {
-    const matchesSearch = drop.title.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const title = drop.title || '';
+    const query = searchQuery.value || '';
+    const matchesSearch = title.toLowerCase().includes(query.toLowerCase());
     const matchesStatus = statusFilter.value === 'all' || drop.status === statusFilter.value;
     return matchesSearch && matchesStatus;
   });
