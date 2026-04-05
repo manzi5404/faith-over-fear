@@ -18,15 +18,45 @@ const AdminDrops = () => {
     const fetchDrops = async () => {
         setLoading(true);
         try {
-            const response = await DropService.getDrops(filter === 'active');
-            console.log("API RESPONSE:", response); // RAW RESPONSE FROM SERVICE
-            // Correctly target data.drops if the service didn't extract it
-            setDrops(response?.drops || (Array.isArray(response) ? response : []));
+            // DropService.getDrops already extracts response.data.drops and returns the array
+            const dropsArray = await DropService.getDrops(filter === 'active');
+            console.log("RAW DROPS FROM SERVICE:", dropsArray);
+
+            // Client-side safety normalization — guards against any null/undefined fields
+            // even if the backend normalization has a gap
+            const safe = (Array.isArray(dropsArray) ? dropsArray : []).map(drop => ({
+                ...drop,
+                id: drop.id,
+                title: (drop.title || '').trim() || 'Untitled Drop',
+                description: drop.description || '',
+                image: parseImage(drop.image),
+                status: drop.status || 'upcoming',
+                price: drop.price != null ? drop.price : 0
+            }));
+
+            setDrops(safe);
         } catch (error) {
+            console.error('fetchDrops failed:', error);
             showNotification('error', 'Failed to fetch drops');
+            setDrops([]);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Resolve image to a usable URL or null — matches backend logic for client-side safety
+    const parseImage = (imageField) => {
+        if (!imageField) return null;
+        if (typeof imageField === 'string' && imageField.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(imageField);
+                return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : null;
+            } catch (_) {
+                return imageField; // treat as raw URL
+            }
+        }
+        if (Array.isArray(imageField)) return imageField[0] || null;
+        return imageField;
     };
 
     const showNotification = (type, message) => {

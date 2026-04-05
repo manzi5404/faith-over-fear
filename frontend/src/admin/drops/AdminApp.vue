@@ -308,9 +308,33 @@ const handleLogout = async () => {
     }
 };
 
+// Resolve image to a usable URL or null
+const parseImage = (imageField) => {
+  if (!imageField) return null;
+  if (typeof imageField === 'string' && imageField.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(imageField);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : null;
+    } catch (_) {
+      return imageField;
+    }
+  }
+  if (Array.isArray(imageField)) return imageField[0] || null;
+  return imageField;
+};
+
 const fetchDrops = async () => {
   try {
-    drops.value = await DropService.getDrops(false, true); 
+    const raw = await DropService.getDrops(false, true);
+    // Client-side safety normalization — ensures no undefined fields reach templates
+    drops.value = (Array.isArray(raw) ? raw : []).map(drop => ({
+      ...drop,
+      title: (drop.title || '').trim() || 'Untitled Drop',
+      description: drop.description || '',
+      image: parseImage(drop.image),
+      status: drop.status || 'upcoming',
+      price: drop.price != null ? drop.price : 0
+    }));
   } catch (error) {
     if (error.response?.status === 401 || error.response?.status === 403) {
         isAuthenticated.value = false;

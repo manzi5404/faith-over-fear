@@ -72,23 +72,63 @@ async function listDrops(req, res) {
       statusFilter = null;
     }
     const drops = await getDrops(statusFilter);
-    const includeProducts = req.query.includeProducts === 'true';
 
     console.log("RAW DROPS:", drops);
+
+    // --- Helper: normalize any image field into a single usable URL or null ---
+    const resolveImageUrl = (imageField, fallbackProducts) => {
+      // Case 1: valid non-JSON string URL
+      if (typeof imageField === 'string' && imageField.trim() !== '') {
+        // Case 1a: stringified JSON array e.g. '["https://..."]'
+        if (imageField.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(imageField);
+            if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+              return parsed[0];
+            }
+          } catch (_) {
+            // Not valid JSON, treat as raw URL
+          }
+        }
+        return imageField; // plain URL string
+      }
+
+      // Case 2: actual JS array
+      if (Array.isArray(imageField) && imageField.length > 0) {
+        return imageField[0];
+      }
+
+      // Case 3: fall through to products
+      if (fallbackProducts && Array.isArray(fallbackProducts)) {
+        for (const p of fallbackProducts) {
+          const urls = p.image_urls;
+          if (Array.isArray(urls) && urls.length > 0) return urls[0];
+          if (typeof urls === 'string' && urls.startsWith('[')) {
+            try {
+              const parsed = JSON.parse(urls);
+              if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+            } catch (_) {}
+          }
+        }
+      }
+
+      return null;
+    };
 
     // Normalize drops for the frontend
     const normalizedDrops = drops.map(item => ({
       id: item.id,
-      title: item.title || item.name || "Untitled Drop",
-      description: item.description || "",
-      image: item.image_url || (Array.isArray(item.images) && item.images[0]) || (item.products?.[0]?.image_urls?.[0]) || null,
-      status: item.status || (item.is_active ? "live" : "upcoming"),
-      price: item.price || (item.products?.length ? Math.min(...item.products.map(p => p.price)) : 0)
+      title: (item.title || item.name || '').trim() || 'Untitled Drop',
+      description: item.description || '',
+      image: resolveImageUrl(item.image_url || item.images, item.products),
+      status: item.status || (item.is_active ? 'live' : 'upcoming'),
+      price: item.price != null ? item.price : (item.products?.length ? Math.min(...item.products.map(p => parseFloat(p.price) || 0)) : 0)
     }));
 
     res.json({ success: true, drops: normalizedDrops });
     console.log(`📦 [ADMIN] Fetched and normalized ${normalizedDrops.length} drops`);
   } catch (err) {
+    console.error('❌ [LIST_DROPS] Controller failed:', err.message);
     res.status(400).json({ success: false, message: err.message });
   }
 }
