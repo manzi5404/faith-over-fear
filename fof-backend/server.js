@@ -69,6 +69,33 @@ app.get('/api/store-config', storeConfigController.getStoreConfig);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/announcement', announcementRoutes);
 app.use('/api/reservations', reservationRoutes);
+
+// ─────────────────────────────────────────────────────────────
+// TEMPORARY MIGRATION ENDPOINT — DELETE AFTER USE
+// Trigger: GET /api/migrate?secret=FOF_MIGRATE_2026
+// Example: https://your-railway-app.railway.app/api/migrate?secret=FOF_MIGRATE_2026
+// ─────────────────────────────────────────────────────────────
+app.get('/api/migrate', async (req, res) => {
+  const MIGRATION_SECRET = process.env.MIGRATION_SECRET || 'FOF_MIGRATE_2026';
+  if (req.query.secret !== MIGRATION_SECRET) {
+    return res.status(403).json({ success: false, error: 'Forbidden — invalid secret token.' });
+  }
+  try {
+    const { runMigration } = require('./migrate');
+    const success = await runMigration();
+    if (success) {
+      return res.json({
+        success: true,
+        message: '✅ Migration complete! All 12 tables created. Delete this endpoint from server.js now.'
+      });
+    } else {
+      return res.status(500).json({ success: false, error: 'Migration failed — check Railway logs.' });
+    }
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+// ─────────────────────────────────────────────────────────────
 app.post('/api/contact', async (req, res) => {
   console.log('Incoming Message:', req.body);
   const { name, email, subject, message } = req.body;
