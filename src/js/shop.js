@@ -24,6 +24,21 @@ const shopLogic = () => ({
         quantity: 1
     },
 
+    // User & Payment Information (missing in initial state)
+    senderPhone: "",
+    senderName: "",
+    senderEmail: "",
+    copyFeedback: "",
+    paymentModalOpen: false,
+
+    // Store Configuration & Loading State
+    configLoading: true,
+    storeConfig: {
+        store_mode: 'closed',
+        announcement: ''
+    },
+    cartItems: [],
+
     resolveImage(product) {
         if (!product) return '/placeholder.jpg';
         
@@ -219,7 +234,11 @@ const shopLogic = () => ({
     },
 
     isValidMomoPhone(phone) {
-        const normalizedPhone = String(phone || "").replace(/\s+/g, "");
+        if (!phone) return false;
+        // Strip spaces, dashes, and ensure it's a string
+        const normalizedPhone = String(phone).replace(/[\s\-]/g, "");
+        // Support with or without 250 prefix, focusing on standard 10-digit RW numbers starting with 07...
+        // Supported 07 prefixes: 2, 3, 8, 9
         return /^07(?:2|3|8|9)\d{7}$/.test(normalizedPhone);
     },
 

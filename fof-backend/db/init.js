@@ -93,6 +93,31 @@ async function initializeDatabase() {
             await connection.query('INSERT INTO store_config (id, store_mode, announcement) VALUES (1, "closed", "Welcome to Faith Over Fear")');
         }
 
+        // 4b. Settings Table (For boolean flags and general config)
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS settings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                \`key\` VARCHAR(255) UNIQUE NOT NULL,
+                \`value\` VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        `);
+
+        // Ensure default settings exist
+        const defaultSettings = [
+            { key: 'purchasingDisabled', value: 'false' },
+            { key: 'isRestocking', value: 'false' }
+        ];
+
+        for (const setting of defaultSettings) {
+            const [rows] = await connection.query('SELECT * FROM settings WHERE `key` = ?', [setting.key]);
+            if (rows.length === 0) {
+                await connection.query('INSERT INTO settings (`key`, `value`) VALUES (?, ?)', [setting.key, setting.value]);
+                console.log(`✅ Default setting created: ${setting.key} = ${setting.value}`);
+            }
+        }
+
         // 5. Orders Table
         await connection.query(`
             CREATE TABLE IF NOT EXISTS orders (
