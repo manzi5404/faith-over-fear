@@ -1,5 +1,6 @@
 const path = require('path'); 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+console.log('🚀 server.js loaded');
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('./middleware/cookieParser');
@@ -22,7 +23,18 @@ const contactRoutes = require('./routes/contactRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
 const errorHandler = require('./middleware/errorHandler');
-const pool = require('./db/connection');
+
+let pool;
+try {
+  console.log('⚙️ Loading db/connection module');
+  pool = require('./db/connection');
+  console.log('✅ db/connection module loaded successfully');
+} catch (err) {
+  console.error('❌ Failed loading db/connection module:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+}
+
 const { initializeDatabase } = require('./db/init');
 
 const { protect, verifyAdmin } = require('./middleware/authMiddleware');
@@ -31,6 +43,16 @@ const orderController = require('./controllers/orderController');
 
 const storeConfigController = require('./controllers/storeConfigController');
 const reservationController = require('./controllers/reservationController');
+
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
 
 async function startServer() {
   try {
@@ -62,6 +84,10 @@ app.use((req, res, next) => {
 });
 app.use(checkStoreMode);
 
+app.get('/health', (req, res) => {
+  console.log('⚙️ GET /health');
+  res.json({ status: 'ok' });
+});
 
 // Public Routes (No auth required)
 app.use('/api/auth', authRoutes);

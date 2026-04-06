@@ -1,5 +1,21 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
+console.log('🚀 db/connection.js loaded');
+
+const envPresence = {
+  MYSQLHOST: !!process.env.MYSQLHOST,
+  MYSQLUSER: !!process.env.MYSQLUSER,
+  MYSQLPASSWORD: process.env.MYSQLPASSWORD !== undefined && process.env.MYSQLPASSWORD !== null,
+  MYSQLDATABASE: !!process.env.MYSQLDATABASE,
+  MYSQLPORT: !!process.env.MYSQLPORT,
+  DB_HOST: !!process.env.DB_HOST,
+  DB_USER: !!process.env.DB_USER,
+  DB_PASSWORD: process.env.DB_PASSWORD !== undefined && process.env.DB_PASSWORD !== null,
+  DB_NAME: !!process.env.DB_NAME,
+  DB_PORT: !!process.env.DB_PORT
+};
+console.log('⚙️ DB env presence:', envPresence);
+console.log('⚙️ Validating DB environment variables');
 
 const dbConfig = {
   host: process.env.MYSQLHOST,
@@ -17,12 +33,16 @@ if (!dbConfig.database) missing.push('MYSQLDATABASE');
 if (!dbConfig.port) missing.push('MYSQLPORT');
 
 if (missing.length > 0) {
-  throw new Error(`Missing required DB env vars: ${missing.join(', ')}`);
+  const message = `Missing required DB env vars: ${missing.join(', ')}`;
+  console.error('❌ DB connection validation failed:', message);
+  throw new Error(message);
 }
 
 const normalizedPort = parseInt(dbConfig.port, 10);
 if (Number.isNaN(normalizedPort) || normalizedPort <= 0) {
-  throw new Error(`Invalid DB port value: ${dbConfig.port}`);
+  const message = `Invalid DB port value: ${dbConfig.port}`;
+  console.error('❌ DB connection validation failed:', message);
+  throw new Error(message);
 }
 
 const pool = mysql.createPool({
@@ -36,11 +56,6 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-console.log('DB config loaded:', {
-  host: dbConfig.host,
-  user: dbConfig.user,
-  database: dbConfig.database,
-  port: normalizedPort
-});
+console.log('✅ DB config validated');
 
 module.exports = pool;
