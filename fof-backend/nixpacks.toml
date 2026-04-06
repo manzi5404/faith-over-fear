@@ -1,4 +1,4 @@
-providers = ["nodejs"]
+providers = ["nodejs_20"]
 
 [phases.setup]
-nixpkgs = ["nodejs_20", "mysql80"]
+nixpkgs = ["mysql80"]
