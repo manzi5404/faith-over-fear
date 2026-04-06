@@ -8,11 +8,17 @@ const emailUtils = require('../utils/email');
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const timestamp = () => new Date().toISOString();
+const authLog = (...args) => console.log(`[${timestamp()}]`, ...args);
+const authError = (...args) => console.error(`[${timestamp()}]`, ...args);
+
 const signup = async (req, res) => {
+    authLog('⚙️ authController.signup start', { email: req.body.email });
     try {
         const { email, password, name } = req.body;
         const existingUser = await userModel.getUserByEmail(email);
         if (existingUser) {
+            authLog('⚠️ authController.signup user exists', { email });
             return res.status(400).json({ message: 'User already exists' });
         }
 
@@ -32,15 +38,18 @@ const signup = async (req, res) => {
 
         res.status(201).json({ success: true, token, userId, name, email });
     } catch (error) {
+        authError('❌ authController.signup error:', error);
         res.status(500).json({ message: 'Something went wrong', error: error.message });
     }
 };
 
 const login = async (req, res) => {
+    authLog('⚙️ authController.login start', { email: req.body.email });
     try {
         const { email, password } = req.body;
         const user = await userModel.getUserByEmail(email);
         if (!user) {
+            authLog('⚠️ authController.login user not found', { email });
             return res.status(404).json({ message: 'User not found' });
         }
 
@@ -51,6 +60,7 @@ const login = async (req, res) => {
 
         const isPasswordCorrect = await bcrypt.compare(password, user.password_hash);
         if (!isPasswordCorrect) {
+            authLog('⚠️ authController.login invalid credentials', { email });
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
@@ -65,6 +75,7 @@ const login = async (req, res) => {
 
         res.status(200).json({ success: true, token, userId: user.id, name: user.name, email: user.email });
     } catch (error) {
+        authError('❌ authController.login error:', error);
         res.status(500).json({ message: 'Something went wrong', error: error.message });
     }
 };

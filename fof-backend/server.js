@@ -1,11 +1,16 @@
 const path = require('path'); 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
-console.log('🚀 server.js loaded');
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('./middleware/cookieParser');
 
 const app = express();
+
+const timestamp = () => new Date().toISOString();
+const log = (...args) => console.log(`[${timestamp()}]`, ...args);
+const logError = (...args) => console.error(`[${timestamp()}]`, ...args);
+
+log('🚀 server.js loaded');
 
 // Body Parsing Middleware (Always before routes)
 app.use(express.json());
@@ -26,13 +31,16 @@ const errorHandler = require('./middleware/errorHandler');
 
 let pool;
 try {
-  console.log('⚙️ Loading db/connection module');
+  log('⚙️ Loading db/connection module');
   pool = require('./db/connection');
-  console.log('✅ db/connection module loaded successfully');
+  log('✅ db/connection module loaded successfully');
 } catch (err) {
-  console.error('❌ Failed loading db/connection module:', err.message);
-  console.error(err.stack);
-  process.exit(1);
+  logError('❌ Failed loading db/connection module:', err.message);
+  logError(err.stack);
+  pool = {
+    query: async () => { throw new Error('DB connection module unavailable'); },
+    getConnection: async () => { throw new Error('DB connection module unavailable'); }
+  };
 }
 
 const { initializeDatabase } = require('./db/init');
@@ -45,22 +53,20 @@ const storeConfigController = require('./controllers/storeConfigController');
 const reservationController = require('./controllers/reservationController');
 
 process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
-  process.exit(1);
+  logError('❌ Uncaught Exception:', err);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
+  logError('❌ Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 async function startServer() {
+  log('⚙️ Database initialization starting');
   try {
     await initializeDatabase();
-    console.log('🚀 Database ready.');
+    log('✅ Database initialization complete');
   } catch (err) {
-    console.error('💥 Database initialization failed. Exiting.', err);
-    process.exit(1);
+    logError('❌ Database initialization failed:', err);
   }
 }
 
@@ -141,11 +147,10 @@ console.log("ENV CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "L
 
 function listen() {
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ API listening on port ${PORT}`);
+    log(`✅ API listening on host 0.0.0.0 port ${PORT}`);
   });
 }
 
 startServer().then(listen).catch(err => {
-  console.error('Server startup failed:', err);
-  process.exit(1);
+  logError('❌ Server startup failed:', err);
 });

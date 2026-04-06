@@ -1,9 +1,12 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
-console.log('🚀 db/connection.js loaded');
+const timestamp = () => new Date().toISOString();
+const log = (...args) => console.log(`[${timestamp()}]`, ...args);
+const logError = (...args) => console.error(`[${timestamp()}]`, ...args);
+log('🚀 db/connection.js loaded');
 
 const envPresence = {
-  MYSQLHOST: !!process.env.MYSQLHOST,
+  MYSQLHOST: !!process.env.MYSQLHOST ,
   MYSQLUSER: !!process.env.MYSQLUSER,
   MYSQLPASSWORD: process.env.MYSQLPASSWORD !== undefined && process.env.MYSQLPASSWORD !== null,
   MYSQLDATABASE: !!process.env.MYSQLDATABASE,
@@ -18,44 +21,64 @@ console.log('⚙️ DB env presence:', envPresence);
 console.log('⚙️ Validating DB environment variables');
 
 const dbConfig = {
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT
+  host: process.env.MYSQLHOST || process.env.DB_HOST,
+  user: process.env.MYSQLUSER || process.env.DB_USER,
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
+  database: process.env.MYSQLDATABASE || process.env.DB_NAME,
+  port: process.env.MYSQLPORT || process.env.DB_PORT
 };
 
 const missing = [];
-if (!dbConfig.host) missing.push('MYSQLHOST');
-if (!dbConfig.user) missing.push('MYSQLUSER');
-if (dbConfig.password === undefined || dbConfig.password === null) missing.push('MYSQLPASSWORD');
-if (!dbConfig.database) missing.push('MYSQLDATABASE');
-if (!dbConfig.port) missing.push('MYSQLPORT');
-
-if (missing.length > 0) {
-  const message = `Missing required DB env vars: ${missing.join(', ')}`;
-  console.error('❌ DB connection validation failed:', message);
-  throw new Error(message);
-}
+if (!dbConfig.host) missing.push('MYSQLHOST/DB_HOST');
+if (!dbConfig.user) missing.push('MYSQLUSER/DB_USER');
+if (dbConfig.password === undefined || dbConfig.password === null) missing.push('MYSQLPASSWORD/DB_PASSWORD');
+if (!dbConfig.database) missing.push('MYSQLDATABASE/DB_NAME');
+if (!dbConfig.port) missing.push('MYSQLPORT/DB_PORT');
 
 const normalizedPort = parseInt(dbConfig.port, 10);
-if (Number.isNaN(normalizedPort) || normalizedPort <= 0) {
-  const message = `Invalid DB port value: ${dbConfig.port}`;
-  console.error('❌ DB connection validation failed:', message);
-  throw new Error(message);
+const invalidPort = Number.isNaN(normalizedPort) || normalizedPort <= 0;
+
+if (missing.length > 0) {
+  logError('❌ DB env validation warning: missing variables:', missing.join(', '));
+}
+if (!dbConfig.port) {
+  logError('❌ DB env validation warning: port variable missing');
+}
+if (invalidPort && dbConfig.port) {
+  logError('❌ DB env validation warning: invalid port value:', dbConfig.port);
 }
 
-const pool = mysql.createPool({
-  host: dbConfig.host,
-  user: dbConfig.user,
-  password: dbConfig.password,
-  database: dbConfig.database,
-  port: normalizedPort,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+const createUnavailablePool = (reason) => {
+  const error = new Error(`DB pool unavailable: ${reason}`);
+  return {
+    query: async () => { throw error; },
+    execute: async () => { throw error; },
+    getConnection: async () => { throw error; }
+  };
+};
 
-console.log('✅ DB config validated');
+let pool;
+if (missing.length > 0 || invalidPort) {
+  const reason = missing.length > 0 ? `Missing env vars: ${missing.join(', ')}` : `Invalid port: ${dbConfig.port}`;
+  logError('❌ DB pool not created due to invalid configuration:', reason);
+  pool = createUnavailablePool(reason);
+} else {
+  try {
+    pool = mysql.createPool({
+      host: dbConfig.host,
+      user: dbConfig.user,
+      password: dbConfig.password,
+      database: dbConfig.database,
+      port: normalizedPort,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
+    });
+    log('✅ DB pool created successfully');
+  } catch (err) {
+    logError('❌ Failed to create DB pool:', err);
+    pool = createUnavailablePool(err.message || 'createPool failure');
+  }
+}
 
 module.exports = pool;
