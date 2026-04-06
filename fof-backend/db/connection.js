@@ -1,5 +1,5 @@
 // connection.js
-import mysql from 'mysql2/promise';
+const mysql = require('mysql2/promise');
 
 // ==============================
 // Database Configuration with Fallbacks
@@ -39,7 +39,7 @@ try {
 // ==============================
 // Function to Verify Connection
 // ==============================
-export async function initializeDatabase() {
+async function initializeDatabase() {
   if (!pool) {
     console.error('❌ Pool not initialized. Check DB configuration.');
     return;
@@ -56,6 +56,6 @@ export async function initializeDatabase() {
 }
 
 // ==============================
-// Export Pool
+// Export Pool & Initialize Function
 // ==============================
-export default pool;
+module.exports = { pool, initializeDatabase };
