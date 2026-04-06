@@ -1,4 +1,10 @@
-const path = require('path'); 
+const path = require('path');
+// server.js
+require('dotenv').config(); // must be first line
+const express = require('express');
+const { pool, initializeDatabase } = require('./db/connection.js');
+
+// rest of your code... 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
