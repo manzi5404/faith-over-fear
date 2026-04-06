@@ -8,7 +8,7 @@ const router = express.Router();
 // temporary storage
 const upload = multer({ dest: "uploads/" });
 
-router.post("/upload", upload.single("image"), async (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: "No image file provided. Ensure field name is 'image'." });
