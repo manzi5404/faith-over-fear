@@ -25,13 +25,6 @@ const errorHandler = require('./middleware/errorHandler');
 const pool = require('./db/connection');
 const { initializeDatabase } = require('./db/init');
 
-// Initialize database tables before the app logic starts
-initializeDatabase()
-  .then(() => console.log('🚀 Database ready.'))
-  .catch(err => {
-    console.error('💥 Database initialization failed. Some features may be broken:', err.message);
-  });
-
 const { protect, verifyAdmin } = require('./middleware/authMiddleware');
 const checkStoreMode = require('./middleware/storeModeMiddleware');
 const orderController = require('./controllers/orderController');
@@ -39,6 +32,15 @@ const orderController = require('./controllers/orderController');
 const storeConfigController = require('./controllers/storeConfigController');
 const reservationController = require('./controllers/reservationController');
 
+async function startServer() {
+  try {
+    await initializeDatabase();
+    console.log('🚀 Database ready.');
+  } catch (err) {
+    console.error('💥 Database initialization failed. Exiting.', err);
+    process.exit(1);
+  }
+}
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -111,6 +113,13 @@ console.log("ENV CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME ?? "
 console.log("ENV CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY ? "Loaded" : "Missing");
 console.log("ENV CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "Loaded" : "Missing");
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ API listening on port ${PORT}`);
+function listen() {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ API listening on port ${PORT}`);
+  });
+}
+
+startServer().then(listen).catch(err => {
+  console.error('Server startup failed:', err);
+  process.exit(1);
 });
