@@ -4,23 +4,10 @@ require('dotenv').config(); // Must be first
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('./middleware/cookieParser');
-const { protect } = require('./middleware/authMiddleware');
-const checkStoreMode = require('./middleware/storeModeMiddleware');
-const errorHandler = require('./middleware/errorHandler');
+const path = require('path');
 
-const pool = require('./db/connection');
+const pool = require('./db/connection'); // Single require
 const { initializeDatabase } = require('./db/init');
-
-const authRoutes = require('./routes/authRoutes');
-const productRoutes = require('./routes/productRoutes');
-const dropRoutes = require('./routes/dropRoutes');
-const settingsRoutes = require('./routes/settingsRoutes');
-const announcementRoutes = require('./routes/announcementRoutes');
-const reservationRoutes = require('./routes/reservationRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const uploadRoutes = require('./routes/upload');
-const adminRoutes = require('./routes/adminRoutes');
-const storeConfigController = require('./controllers/storeConfigController');
 
 const app = express();
 const timestamp = () => new Date().toISOString();
@@ -34,19 +21,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: true, credentials: true }));
 app.use(cookieParser);
-app.use(checkStoreMode);
 
 // Health Check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-// Public Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/drops', dropRoutes);
-app.get('/api/store-config', storeConfigController.getStoreConfig);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/announcement', announcementRoutes);
-app.use('/api/reservations', reservationRoutes);
+// Routes
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/drops', require('./routes/dropRoutes'));
+app.use('/api/store-config', require('./controllers/storeConfigController').getStoreConfig);
+app.use('/api/settings', require('./routes/settingsRoutes'));
+app.use('/api/announcement', require('./routes/announcementRoutes'));
+app.use('/api/reservations', require('./routes/reservationRoutes'));
 
 // Contact message route
 app.post('/api/contact', async (req, res) => {
@@ -65,17 +51,18 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // Protected Routes
-app.use('/api/orders', protect, orderRoutes);
-app.use('/api/upload', protect, uploadRoutes);
+const { protect } = require('./middleware/authMiddleware');
+app.use('/api/orders', protect, require('./routes/orderRoutes'));
+app.use('/api/upload', protect, require('./routes/upload'));
 
 // Admin Routes
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ success: false, error: 'Not Found', path: req.path }));
 
 // Error handler
-app.use(errorHandler);
+app.use(require('./middleware/errorHandler'));
 
 // Start server
 const PORT = process.env.PORT || 5000;
