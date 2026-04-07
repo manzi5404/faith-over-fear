@@ -167,11 +167,14 @@ onMounted(() => {
 
 const handleSave = () => {
   errors.name = !productData.name ? 'Required' : '';
-  errors.price = productData.price <= 0 ? 'Invalid' : '';
+  const hasQualityPrices = qualityPrices.value.length > 0;
+  errors.price = (!hasQualityPrices && productData.price <= 0) ? 'Invalid' : '';
   
   if (errors.name || errors.price) return;
 
   productData.colors = colorsInput.value.split(',').map(c => c.trim()).filter(Boolean);
+  const essentialQp = qualityPrices.value.find(q => q.quality_level_id === 1);
+  if (essentialQp && productData.price <= 0) productData.price = essentialQp.price;
   emit('save', { ...productData, quality_prices: qualityPrices.value });
 };
 </script>
