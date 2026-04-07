@@ -1,4 +1,4 @@
-const pool = require('./connection');
+const {pool} = require('./connection');
 
 /**
  * Initializes the database schema.

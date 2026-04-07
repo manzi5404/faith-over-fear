@@ -8,7 +8,7 @@ const { protect } = require('./middleware/authMiddleware');
 const checkStoreMode = require('./middleware/storeModeMiddleware');
 const errorHandler = require('./middleware/errorHandler');
 
-const pool = require('./db/connection');
+const {pool} = require('./db/connection');
 const { initializeDatabase } = require('./db/init');
 
 const authRoutes = require('./routes/authRoutes');
