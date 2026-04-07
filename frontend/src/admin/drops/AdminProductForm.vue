@@ -31,6 +31,24 @@
       </div>
     </div>
 
+    <div class="space-y-3">
+      <label class="text-sm font-medium text-slate-400">Quality Level Prices (FRW)</label>
+      <div class="grid grid-cols-3 gap-4">
+        <div v-for="level in qualityLevels" :key="level.id" class="space-y-1">
+          <label class="text-xs font-bold uppercase tracking-widest text-slate-500">{{ level.name }}</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            :placeholder="level.name + ' price'"
+            :value="getQualityPrice(level.id)"
+            @input="setQualityPrice(level.id, $event.target.value)"
+            class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+          />
+        </div>
+      </div>
+    </div>
+
     <div class="space-y-2">
       <label class="text-sm font-medium text-slate-400">Description</label>
       <textarea 
@@ -114,11 +132,34 @@ const colorsInput = ref('');
 const errors = reactive({});
 const isEditing = ref(false);
 
+const qualityLevels = [
+  { id: 1, name: 'Essential' },
+  { id: 2, name: 'Premium' },
+  { id: 3, name: 'Luxe' }
+];
+
+const qualityPrices = ref([]);
+
+const getQualityPrice = (levelId) => {
+  const entry = qualityPrices.value.find(q => q.quality_level_id === levelId);
+  return entry ? entry.price : '';
+};
+
+const setQualityPrice = (levelId, value) => {
+  const price = parseFloat(value);
+  qualityPrices.value = qualityPrices.value.filter(q => q.quality_level_id !== levelId);
+  if (price > 0) qualityPrices.value.push({ quality_level_id: levelId, price });
+};
+
 onMounted(() => {
   if (props.initialData) {
     isEditing.value = !!props.initialData.id || !!props.initialData.tempId;
     Object.assign(productData, { ...props.initialData });
     colorsInput.value = Array.isArray(productData.colors) ? productData.colors.join(', ') : '';
+    qualityPrices.value = (props.initialData.quality_prices || []).map(q => ({
+      quality_level_id: q.quality_level_id,
+      price: parseFloat(q.price)
+    }));
   }
 });
 
@@ -129,6 +170,6 @@ const handleSave = () => {
   if (errors.name || errors.price) return;
 
   productData.colors = colorsInput.value.split(',').map(c => c.trim()).filter(Boolean);
-  emit('save', { ...productData });
+  emit('save', { ...productData, quality_prices: qualityPrices.value });
 };
 </script>
