@@ -206,6 +206,29 @@ async function runMigrations(connection) {
         if (!orderFields.includes('quality_level_id')) {
             await connection.query('ALTER TABLE orders ADD COLUMN quality_level_id INT AFTER quantity');
         }
+
+        // Migration: Seed quality prices for products that have none
+        const [unseededProducts] = await connection.query(`
+            SELECT id, price FROM products
+            WHERE id NOT IN (SELECT DISTINCT product_id FROM product_quality_prices)
+        `);
+        if (unseededProducts.length > 0) {
+            for (const product of unseededProducts) {
+                const base = parseFloat(product.price);
+                await connection.query(`
+                    INSERT IGNORE INTO product_quality_prices (product_id, quality_level_id, price, is_active)
+                    VALUES
+                        (?, 1, ?, 1),
+                        (?, 2, ?, 1),
+                        (?, 3, ?, 1)
+                `, [
+                    product.id, base,
+                    product.id, Math.round(base * 1.3),
+                    product.id, Math.round(base * 1.7)
+                ]);
+            }
+            console.log(`🔧 Migrated: Seeded quality prices for ${unseededProducts.length} product(s)`);
+        }
     } catch (err) {
         console.warn('⚠️  Migration Warning:', err.message);
     }
