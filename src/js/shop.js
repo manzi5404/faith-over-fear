@@ -143,6 +143,7 @@ const shopLogic = () => ({
                                 uiQuantity: 1,
                                 uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
                                 images: p.image_urls || [],
+                                quality_prices: p.quality_prices || [],
                                 // If the drop is inactive, mark as reservation-only
                                 status: drop.status || "live"
                             });

@@ -74,9 +74,9 @@ async function initializeDatabase() {
             await connection.query(`
                 INSERT INTO quality_levels (name, description, sort_order, is_active)
                 VALUES
-                    ('Basic', 'Entry-level quality', 1, 1),
-                    ('Standard', 'Balanced quality and value', 2, 1),
-                    ('Premium', 'Highest quality materials', 3, 1)
+                    ('Essential', 'Everyday tees, solid quality, standard cotton. Focus on comfort and value.', 1, 1),
+                    ('Premium', 'Softer fabrics, better fit, stronger collar and seams. Emphasizes durability and shape retention.', 2, 1),
+                    ('Luxe', 'High-end fabrics, very soft handfeel, best construction. Maximum comfort and longevity.', 3, 1)
             `);
             console.log('✅ Seeded default quality levels');
         }
@@ -130,7 +130,23 @@ async function initializeDatabase() {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
 
-        // 8. Run Schema Migrations (Rename/Add columns safely)
+        // 8. Product Quality Prices Table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS product_quality_prices (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                product_id INT NOT NULL,
+                quality_level_id INT NOT NULL,
+                price DECIMAL(15, 2) NOT NULL,
+                is_active TINYINT(1) DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_product_quality (product_id, quality_level_id),
+                FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+                FOREIGN KEY (quality_level_id) REFERENCES quality_levels(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        `);
+
+        // 9. Run Schema Migrations (Rename/Add columns safely)
         await runMigrations(connection);
 
         console.log('✅ Database Schema verified and tables ensured.');
@@ -162,6 +178,27 @@ async function runMigrations(connection) {
             await connection.query("ALTER TABLE drops ADD COLUMN type ENUM('new-drop', 'recent-drop') DEFAULT 'new-drop' AFTER status");
             console.log('🔧 Migrated: Added drops.type column');
         }
+
+        // Migration: Rename quality levels from old seed names to Essential/Premium/Luxe
+        await connection.query(`
+            UPDATE quality_levels SET
+                name = 'Essential',
+                description = 'Everyday tees, solid quality, standard cotton. Focus on comfort and value.'
+            WHERE id = 1 AND name IN ('Basic', 'Essential')
+        `);
+        await connection.query(`
+            UPDATE quality_levels SET
+                name = 'Premium',
+                description = 'Softer fabrics, better fit, stronger collar and seams. Emphasizes durability and shape retention.'
+            WHERE id = 2 AND name IN ('Standard', 'Premium')
+        `);
+        await connection.query(`
+            UPDATE quality_levels SET
+                name = 'Luxe',
+                description = 'High-end fabrics, very soft handfeel, best construction. Maximum comfort and longevity.'
+            WHERE id = 3 AND name IN ('Premium', 'Luxe')
+        `);
+        console.log('🔧 Migrated: Quality levels renamed to Essential / Premium / Luxe');
 
         // Migration: Add quality_level_id to orders if missing (legacy support)
         const [orderCols] = await connection.query('SHOW COLUMNS FROM orders');
