@@ -179,8 +179,8 @@ const ProductsSection = ({ onToast }) => {
       name: form.name,
       price: Number(form.price) || 0,
       sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()).filter(Boolean) : [],
-      images: form.images ? form.images.split(",").map((s) => s.trim()).filter(Boolean) : [],
-      isActive: !!form.isActive,
+      image_urls: form.images ? form.images.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      is_active: form.isActive ? 1 : 0,
       quality_prices: form.quality_prices
     };
     try {
@@ -208,8 +208,8 @@ const ProductsSection = ({ onToast }) => {
       name: product.name || "",
       price: product.price || "",
       sizes: (product.sizes || []).join(", "),
-      images: (product.images || []).join(", "),
-      isActive: product.isActive !== false,
+      images: (product.image_urls || product.images || []).join(", "),
+      isActive: product.isActive !== false && product.is_active !== 0,
       quality_prices: existingPrices
     });
   };
@@ -226,7 +226,7 @@ const ProductsSection = ({ onToast }) => {
 
   const toggleActive = async (product) => {
     try {
-      await api.put(`/api/admin/products/${product._id || product.id}`, { isActive: !product.isActive });
+      await api.put(`/api/admin/products/${product._id || product.id}`, { is_active: product.is_active ? 0 : 1 });
       reload();
     } catch (err) {
       onToast("Toggle failed");
@@ -306,10 +306,15 @@ const ProductsSection = ({ onToast }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold">{product.name}</p>
-                <p className="text-xs text-slate-400">${product.price}</p>
+                <p className="text-xs text-slate-400">{Number(product.price).toLocaleString()} FRW</p>
+                {(product.quality_prices || []).length > 0 && (
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    {product.quality_prices.map(qp => `${qp.quality_name}: ${Number(qp.price).toLocaleString()}`).join(' · ')}
+                  </p>
+                )}
               </div>
-              <span className={`text-xs ${product.isActive ? "text-emerald-400" : "text-rose-400"}`}>
-                {product.isActive ? "Active" : "Inactive"}
+              <span className={`text-xs ${product.is_active ? "text-emerald-400" : "text-rose-400"}`}>
+                {product.is_active ? "Active" : "Inactive"}
               </span>
             </div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
