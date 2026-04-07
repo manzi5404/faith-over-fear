@@ -139,7 +139,6 @@ const ProductsSection = ({ onToast }) => {
   const [qualityLevels, setQualityLevels] = useState([]);
   const [form, setForm] = useState({ 
     name: "", 
-    price: "", 
     sizes: "", 
     images: "", 
     isActive: true,
@@ -156,7 +155,6 @@ const ProductsSection = ({ onToast }) => {
   const resetForm = () => {
     setForm({ 
       name: "", 
-      price: "", 
       sizes: "", 
       images: "", 
       isActive: true,
@@ -175,9 +173,10 @@ const ProductsSection = ({ onToast }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const essentialPrice = form.quality_prices.find(qp => qp.quality_level_id === 1)?.price || 0;
     const payload = {
       name: form.name,
-      price: Number(form.price) || 0,
+      price: essentialPrice,
       sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()).filter(Boolean) : [],
       image_urls: form.images ? form.images.split(",").map((s) => s.trim()).filter(Boolean) : [],
       is_active: form.isActive ? 1 : 0,
@@ -206,7 +205,6 @@ const ProductsSection = ({ onToast }) => {
     }));
     setForm({
       name: product.name || "",
-      price: product.price || "",
       sizes: (product.sizes || []).join(", "),
       images: (product.image_urls || product.images || []).join(", "),
       isActive: product.isActive !== false && product.is_active !== 0,
@@ -245,12 +243,6 @@ const ProductsSection = ({ onToast }) => {
           placeholder="Name"
           value={form.name}
           onChange={(event) => setForm({ ...form, name: event.target.value })}
-        />
-        <input
-          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-          placeholder="Price"
-          value={form.price}
-          onChange={(event) => setForm({ ...form, price: event.target.value })}
         />
         <input
           className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
