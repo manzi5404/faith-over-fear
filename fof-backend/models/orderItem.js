@@ -1,4 +1,4 @@
-const pool = require('../db/connection');
+const { pool } = require('../db/connection');
 
 async function addOrderItem(conn, orderId, productId, productName, quantity, priceAtPurchase, totalPrice, size, color, qualityLevelId) {
   const db = conn || pool;

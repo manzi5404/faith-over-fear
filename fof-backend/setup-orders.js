@@ -1,6 +1,6 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
-const pool = require('./db/connection');
+const { pool } = require('./db/connection');
 
 async function setupOrders() {
     console.log('🔧 Setting up orders table...\n');

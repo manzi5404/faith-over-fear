@@ -1,4 +1,4 @@
-const pool = require('../db/connection');
+const { pool } = require('../db/connection');
 const qualityPriceService = require('./productQualityPrice');
 const qualityLevelService = require('./qualityLevel');
 

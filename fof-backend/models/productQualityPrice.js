@@ -1,4 +1,4 @@
-const pool = require('../db/connection');
+const { pool } = require('../db/connection');
 
 /**
  * Get all quality prices for a specific product

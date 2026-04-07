@@ -1,4 +1,4 @@
-const pool = require('../db/connection');
+const { pool } = require('../db/connection');
 
 const checkStoreMode = async (req, res, next) => {
     const restrictedPaths = ['/api/momo-pay'];

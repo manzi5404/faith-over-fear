@@ -1,4 +1,4 @@
-const pool = require('../db/connection');
+const { pool } = require('../db/connection');
 const notification = require('../models/notification');
 const emailUtils = require('../utils/email');
 const productService = require('../models/product');

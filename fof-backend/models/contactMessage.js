@@ -1,4 +1,4 @@
-const pool = require('../db/connection');
+const { pool } = require('../db/connection');
 
 async function createMessage(data) {
     const { name, email, subject, message } = data;

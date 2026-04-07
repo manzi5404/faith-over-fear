@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const pool = require('./db/connection');
+const { pool } = require('./db/connection');
 
 async function run() {
   const sql = fs.readFileSync(path.join(__dirname, 'db/migration_status_restructure.sql'), 'utf8');

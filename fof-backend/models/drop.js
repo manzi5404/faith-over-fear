@@ -1,4 +1,4 @@
-const pool = require('../db/connection');
+const { pool } = require('../db/connection');
 
 async function addDrop(drop) {
   const { title, description, image_url, release_date, status, collection_id } = drop;
