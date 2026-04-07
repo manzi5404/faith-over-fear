@@ -151,15 +151,17 @@ const setQualityPrice = (levelId, value) => {
   if (price > 0) qualityPrices.value.push({ quality_level_id: levelId, price });
 };
 
+const nameToId = { 'Essential': 1, 'Premium': 2, 'Luxe': 3 };
+
 onMounted(() => {
   if (props.initialData) {
     isEditing.value = !!props.initialData.id || !!props.initialData.tempId;
     Object.assign(productData, { ...props.initialData });
     colorsInput.value = Array.isArray(productData.colors) ? productData.colors.join(', ') : '';
     qualityPrices.value = (props.initialData.quality_prices || []).map(q => ({
-      quality_level_id: q.quality_level_id,
+      quality_level_id: q.quality_level_id || nameToId[q.quality_name],
       price: parseFloat(q.price)
-    }));
+    })).filter(q => q.quality_level_id);
   }
 });
 
