@@ -7,10 +7,10 @@ const { pool } = require('../db/connection');
  */
 async function getQualityPricesByProductId(productId) {
   const [rows] = await pool.query(
-    `SELECT qp.*, ql.name as quality_name, ql.description as quality_description, ql.sort_order
+    `SELECT qp.product_id, qp.quality_level_id, qp.price, ql.name as quality_name, ql.description as quality_description, ql.sort_order
      FROM product_quality_prices qp
      JOIN quality_levels ql ON qp.quality_level_id = ql.id
-     WHERE qp.product_id = ? AND qp.is_active = 1 AND ql.is_active = 1
+     WHERE qp.product_id = ?
      ORDER BY ql.sort_order ASC`,
     [productId]
   );
@@ -148,10 +148,10 @@ async function getQualityPricesForProducts(productIds) {
 
   const placeholders = productIds.map(() => '?').join(',');
   const [rows] = await pool.query(
-    `SELECT qp.*, ql.name as quality_name, ql.sort_order
+    `SELECT qp.product_id, qp.quality_level_id, qp.price, ql.name as quality_name, ql.sort_order
      FROM product_quality_prices qp
      JOIN quality_levels ql ON qp.quality_level_id = ql.id
-     WHERE qp.product_id IN (${placeholders}) AND qp.is_active = 1 AND ql.is_active = 1
+     WHERE qp.product_id IN (${placeholders})
      ORDER BY qp.product_id, ql.sort_order ASC`,
     productIds
   );

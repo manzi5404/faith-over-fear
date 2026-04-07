@@ -182,6 +182,7 @@ const openProductForm = (product = null, index = -1) => {
     colors: [],
     image_urls: [],
     is_active: true,
+    quality_prices: [],
     tempId: Date.now()
   };
   editingProductIndex.value = index;
