@@ -137,8 +137,8 @@ const shopLogic = () => ({
                         drop.products.forEach(p => {
                             allProducts.push({
                                 ...p,
-                                dropName: drop.name,
-                                dropType: drop.type,
+                                dropName: drop.title || drop.name || '',
+                                dropType: drop.type || 'new-drop',
                                 showDetails: false,
                                 uiQuantity: 1,
                                 uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
@@ -179,7 +179,13 @@ const shopLogic = () => ({
     },
 
     get newDrops() { return this.products.filter(r => r.dropType === "new-drop"); },
-    get recentDrops() { return this.products.filter(r => r.dropType === "recent-drop"); },
+    get recentDrops() {
+        const seenDrops = [];
+        return this.products.filter(p => {
+            if (!seenDrops.includes(p.dropName)) seenDrops.push(p.dropName);
+            return seenDrops.indexOf(p.dropName) < 2;
+        });
+    },
 
     get totalPrice() {
         if (!this.selectedProduct) return "0.00";
