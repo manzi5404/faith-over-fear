@@ -46,20 +46,25 @@ async function getDrops(statusFilter = null, includeProducts = false) {
 }
 
 async function editDrop(id, drop) {
-  const { title, description, image_url, release_date, status, collection_id } = drop;
-  
+  const fields = ['title', 'description', 'image_url', 'release_date', 'status', 'collection_id'];
+  const updates = [];
+  const params = [];
+
+  fields.forEach((field) => {
+    if (drop[field] !== undefined) {
+      updates.push(`${field} = ?`);
+      params.push(drop[field]);
+    }
+  });
+
+  if (updates.length === 0) {
+    return false;
+  }
+
+  params.push(id);
   const [rows] = await pool.query(
-    `UPDATE drops SET title = ?, description = ?, image_url = ?, release_date = ?, status = ?, collection_id = ?
-     WHERE id = ?`,
-    [
-      title,
-      description || null,
-      image_url || null,
-      release_date || null,
-      status || 'upcoming',
-      collection_id || null,
-      id
-    ]
+    `UPDATE drops SET ${updates.join(', ')} WHERE id = ?`,
+    params
   );
   return rows.affectedRows > 0;
 }

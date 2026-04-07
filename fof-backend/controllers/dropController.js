@@ -91,6 +91,16 @@ async function listDrops(req, res) {
     const includeProducts = req.query.includeProducts === 'true' || req.query.includeProducts === '1';
     const drops = await getDrops(statusFilter, includeProducts);
 
+    let priceByDrop = {};
+    if (drops.length > 0) {
+      const dropIds = drops.map((drop) => drop.id);
+      const [priceRows] = await require('../db/connection').pool.query(
+        'SELECT drop_id, MIN(price) AS min_price FROM products WHERE drop_id IN (?) GROUP BY drop_id',
+        [dropIds]
+      );
+      priceByDrop = Object.fromEntries(priceRows.map((row) => [row.drop_id, row.min_price]));
+    }
+
     console.log("RAW DROPS:", drops);
 
     // --- Helper: normalize any image field into a single usable URL or null ---
@@ -143,7 +153,11 @@ async function listDrops(req, res) {
       image: resolveImageUrl(item.image_url || item.images, item.products),
       status: item.status || (item.is_active ? 'live' : 'upcoming'),
       products: item.products || [],
-      price: item.price != null ? item.price : (item.products?.length ? Math.min(...item.products.map(p => parseFloat(p.price) || 0)) : 0)
+      price: item.price != null
+        ? item.price
+        : priceByDrop[item.id] != null
+          ? Number(priceByDrop[item.id])
+          : (item.products?.length ? Math.min(...item.products.map(p => parseFloat(p.price) || 0)) : 0)
     }));
 
     res.json({ success: true, drops: normalizedDrops });
