@@ -5,11 +5,27 @@ const emailUtils = require('../utils/email');
 const announcementModel = require('../models/announcement');
 const appEmitter = require('../utils/events');
 
-
-
 async function createDrop(req, res) {
   try {
-    const { products, ...dropData } = req.body;
+    const { products, ...rest } = req.body;
+    
+    // Map frontend's 'name' field to 'title' if present
+    const dropData = {
+      title: rest.name || rest.title,
+      ...rest
+    };
+    
+    // Remove the original 'name' field to avoid confusion
+    delete dropData.name;
+    
+    // Validate required title
+    if (!dropData.title || dropData.title.trim() === '') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Title is required. Please provide a drop title.' 
+      });
+    }
+    
     const dropId = await addDrop(dropData);
     console.log(`✅ [CREATE_DROP] Drop saved to DB with ID: ${dropId}`);
 
@@ -138,6 +154,12 @@ async function updateDrop(req, res) {
     const { products, ...dropData } = req.body;
     const dropId = req.params.id;
     
+    // Map 'name' to 'title' for updates as well
+    if (dropData.name && !dropData.title) {
+      dropData.title = dropData.name;
+      delete dropData.name;
+    }
+    
     // Check old status to see if it just flipped to live
     const oldDrops = await getDrops(null);
     const oldDrop = oldDrops.find(d => d.id == dropId);
@@ -212,10 +234,10 @@ async function removeDrop(req, res) {
     const removed = await deleteDrop(req.params.id);
     res.json({ success: removed });
     console.log(`🗑️ [ADMIN] Deleted drop ID: ${req.params.id}`);
- } catch (err) {
-  console.error("CREATE DROP ERROR:", err); // 👈 THIS IS THE LINE YOU ADD
-  res.status(400).json({ success: false, message: err.message });
-}
+  } catch (err) {
+    console.error("CREATE DROP ERROR:", err);
+    res.status(400).json({ success: false, message: err.message });
+  }
 }
 
 module.exports = { createDrop, listDrops, updateDrop, removeDrop };
