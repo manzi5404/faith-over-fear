@@ -1,6 +1,5 @@
 const { pool } = require('../db/connection');
 const qualityPriceService = require('./productQualityPrice');
-const qualityLevelService = require('./qualityLevel');
 
 async function createProduct(product) {
   const { drop_id, name, description, price, sizes, colors, image_urls, is_active, quality_prices } = product;
@@ -31,11 +30,6 @@ async function createProduct(product) {
       for (const qp of quality_prices) {
         if (!qp.quality_level_id || qp.price === undefined || qp.price === null || qp.price <= 0) {
           continue;
-        }
-
-        const qualityLevel = await qualityLevelService.getQualityLevelById(qp.quality_level_id);
-        if (!qualityLevel || qualityLevel.is_active !== 1) {
-          throw new Error(`Invalid or inactive quality_level_id: ${qp.quality_level_id}`);
         }
 
         await connection.query(
@@ -147,11 +141,6 @@ async function updateProduct(id, product) {
       for (const qp of quality_prices) {
         if (!qp.quality_level_id || qp.price === undefined || qp.price === null || qp.price <= 0) {
           continue;
-        }
-
-        const qualityLevel = await qualityLevelService.getQualityLevelById(qp.quality_level_id);
-        if (!qualityLevel || qualityLevel.is_active !== 1) {
-          throw new Error(`Invalid or inactive quality_level_id: ${qp.quality_level_id}`);
         }
 
         await connection.query(
