@@ -33,9 +33,9 @@
             transform: scale(1.2);
         }
     </style>
-  <script type="module" crossorigin src="/assets/reservations-DgQzHJ9p.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/style-Bww9t9z0.js">
-  <link rel="stylesheet" crossorigin href="/assets/style-OkD-pd6L.css">
+  <script type="module" crossorigin src="/assets/reservations-qobnSgbB.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/style-G6xZZ6g_.js">
+  <link rel="stylesheet" crossorigin href="/assets/style-DdimkiTq.css">
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased" 
       x-data="resLogic()"
@@ -80,13 +80,13 @@
                             <!-- Product Info -->
                             <div class="flex items-center space-x-6 min-w-[300px]">
                                 <div class="w-20 h-24 bg-zinc-800 overflow-hidden flex-shrink-0">
-                                    <template x-if="res.productImageUrls && JSON.parse(res.productImageUrls).length > 0">
-                                        <img :src="JSON.parse(res.productImageUrls)[0]" class="w-full h-full object-cover">
+                                    <template x-if="(() => { const imgs = typeof res.productImageUrls === 'string' ? JSON.parse(res.productImageUrls) : res.productImageUrls; return imgs && imgs.length > 0; })()">
+                                        <img :src="(() => { const imgs = typeof res.productImageUrls === 'string' ? JSON.parse(res.productImageUrls) : res.productImageUrls; return imgs && imgs.length > 0 ? imgs[0] : ''; })()" class="w-full h-full object-cover">
                                     </template>
                                 </div>
                                 <div>
                                     <h3 class="text-lg font-bold uppercase tracking-wide mb-1" x-text="res.productName"></h3>
-                                    <p class="text-[10px] uppercase text-zinc-500 font-bold tracking-widest" x-text="'Size: ' + res.size + ' | Qty: ' + res.quantity"></p>
+                                    <p class="text-[10px] uppercase text-zinc-500 font-bold tracking-widest" x-text="'Size: ' + (res.size || 'N/A') + ' | Qty: ' + (res.quantity || 1)"></p>
                                     <p class="text-[9px] uppercase text-zinc-600 font-bold tracking-tighter mt-2" x-text="'Reserved on ' + new Date(res.created_at).toLocaleDateString()"></p>
                                 </div>
                             </div>

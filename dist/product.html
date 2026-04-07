@@ -27,10 +27,10 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/style-Bww9t9z0.js"></script>
+  <script type="module" crossorigin src="/assets/style-G6xZZ6g_.js"></script>
   <script type="module" crossorigin src="/assets/module.esm-CwKKyv8g.js"></script>
-  <script type="module" crossorigin src="/assets/main-eWfeVMaO.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/style-OkD-pd6L.css">
+  <script type="module" crossorigin src="/assets/main-CDZ3y_Dn.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/style-DdimkiTq.css">
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
       x-data="shopLogic()"
@@ -95,7 +95,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24">
                 <!-- Image Gallery -->
                 <div class="space-y-6" x-data="{ zooming: false, mouseX: 50, mouseY: 50 }">
-                    <div class="zoom-container aspect-[4/5] bg-fof-dark"
+                    <div class="zoom-container aspect-[4/5] bg-fof-dark overflow-hidden"
                          :class="{ 'zooming': zooming }"
                          @mouseenter="zooming = true"
                          @mouseleave="zooming = false; mouseX = 50; mouseY = 50"
@@ -124,7 +124,7 @@
                         <div class="flex items-baseline space-x-4">
                             <p class="text-3xl text-white font-mono" x-text="dynamicPrice.toLocaleString() + ' FRW'"></p>
                             <template x-if="quantity > 1">
-                                <p class="text-sm text-gray-500 font-mono" x-text="'(' + product.price.toLocaleString() + ' / unit)'"></p>
+                                <p class="text-sm text-gray-500 font-mono" x-text="'(' + (selectedQuality ? parseFloat(selectedQuality.price) : product.price).toLocaleString() + ' / unit)'"></p>
                             </template>
                         </div>
                     </div>
@@ -158,20 +158,47 @@
                                 </template>
                             </div>
                         </div>
+
+                        <div x-show="qualityLevels && qualityLevels.length > 0" class="pt-6">
+                            <span class="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-500 mb-4 block">Select Quality</span>
+                            <div class="flex flex-col gap-3">
+                                <template x-for="quality in qualityLevels" :key="quality.quality_level_id">
+                                    <button class="px-5 py-4 border text-left transition-all"
+                                            :class="selectedQuality && selectedQuality.quality_level_id === quality.quality_level_id ? 'border-fof-accent bg-fof-accent/10' : 'border-zinc-800 hover:border-zinc-600'"
+                                            @click="selectedQuality = quality">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="text-xs font-bold uppercase tracking-widest" x-text="quality.quality_name"></span>
+                                            <span class="text-sm font-mono font-bold" x-text="(parseFloat(quality.price) * quantity).toLocaleString() + ' FRW'"></span>
+                                        </div>
+                                        <span class="text-[10px] text-gray-500 leading-relaxed" x-text="quality.quality_description"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
                     </div>
 
                      <!-- Actions -->
-                    <div class="flex flex-col space-y-4">
-                        <template x-if="product.isWaitlist">
-                            <button class="w-full bg-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all py-6"
-                                    @click="window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Joined waitlist for ' + product.name + '!', type: 'success' } }))">
-                                Join Waitlist
-                            </button>
+                    <div class="flex flex-col space-y-4" x-data="{ get shop() { return Alpine.$data(document.body); } }">
+                        <!-- Loading State -->
+                        <template x-if="shop.configLoading">
+                            <div class="space-y-4 animate-pulse">
+                                <div class="w-full bg-zinc-900 h-16 rounded-sm"></div>
+                                <div class="w-full bg-zinc-900 h-16 rounded-sm"></div>
+                            </div>
                         </template>
-                        <template x-if="!product.isWaitlist">
+
+                        <!-- Loaded State -->
+                        <template x-if="!shop.configLoading">
                             <div class="flex flex-col space-y-4">
-                                <!-- Reserve Mode -->
-                                <template x-if="storeConfig.store_mode === 'reserve'">
+                                <!-- Upcoming Mode -->
+                                <template x-if="shop.storeConfig.store_mode === 'closed'">
+                                    <button class="w-full bg-black border border-zinc-800 text-zinc-500 font-bold uppercase tracking-[0.2em] text-xs py-6 cursor-not-allowed" disabled>
+                                        Drop Unavailable
+                                    </button>
+                                </template>
+
+                                <!-- Reservation Mode -->
+                                <template x-if="shop.storeConfig.store_mode === 'reserve'">
                                     <div class="space-y-6">
                                         <!-- How to Reserve Guide -->
                                         <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-sm space-y-4">
@@ -179,15 +206,11 @@
                                             <ol class="space-y-3 text-[11px] uppercase tracking-widest text-gray-400 font-bold">
                                                 <li class="flex items-start">
                                                     <span class="text-fof-accent mr-3">01.</span>
-                                                    <span>Click the button below to secure your piece.</span>
+                                                    <span>Secure your piece during the reservation window.</span>
                                                 </li>
                                                 <li class="flex items-start">
                                                     <span class="text-fof-accent mr-3">02.</span>
                                                     <span>Our team will contact you once production starts.</span>
-                                                </li>
-                                                <li class="flex items-start">
-                                                    <span class="text-fof-accent mr-3">03.</span>
-                                                    <span>Payment is only requested when the item is ready.</span>
                                                 </li>
                                             </ol>
                                             <div class="pt-2">
@@ -198,7 +221,7 @@
                                             </div>
                                         </div>
 
-                                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6 disabled:opacity-30 disabled:cursor-not-allowed disabled:grayscale"
+                                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6 disabled:opacity-30 disabled:cursor-not-allowed"
                                                 :disabled="!viewedInstructions"
                                                 @click="reserve()">
                                             Reserve Now
@@ -207,7 +230,7 @@
                                 </template>
 
                                 <!-- Live Mode -->
-                                <template x-if="storeConfig.store_mode === 'live'">
+                                <template x-if="shop.storeConfig.store_mode === 'live'">
                                     <div class="flex flex-col space-y-4">
                                         <div class="flex items-center space-x-4 h-16">
                                             <div class="flex items-center border border-zinc-800 h-full">

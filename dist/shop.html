@@ -44,10 +44,10 @@
             opacity: 1;
         }
     </style>
-  <script type="module" crossorigin src="/assets/style-Bww9t9z0.js"></script>
+  <script type="module" crossorigin src="/assets/style-G6xZZ6g_.js"></script>
   <script type="module" crossorigin src="/assets/module.esm-CwKKyv8g.js"></script>
-  <script type="module" crossorigin src="/assets/main-eWfeVMaO.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/style-OkD-pd6L.css">
+  <script type="module" crossorigin src="/assets/main-CDZ3y_Dn.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/style-DdimkiTq.css">
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
       x-data="shopLogic()"
@@ -194,10 +194,6 @@
                                              class="w-full py-3 border border-fof-gray text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all">
                                          See Details
                                      </button>
-                                     <button @click.stop="activeProduct = product; openMomoQuickPay(activeProduct, 1, product.uiSize || 'M')"
-                                             class="w-full py-3 bg-fof-accent text-black font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all">
-                                         Pay with MoMo
-                                     </button>
                                  </div>
                              </div>
                          </div>
@@ -222,7 +218,7 @@
                     <span class="text-fof-accent text-[10px] font-bold uppercase tracking-[0.3em] mb-4 block">Limited Production</span>
                     <h2 class="fof-modal-title">Reserve <span class="text-fof-accent">Now</span></h2>
                     <div class="w-12 h-1 bg-fof-accent mb-6"></div>
-                    <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-8" x-text="'Item: ' + selectedProduct?.name"></p>
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-8" x-text="'Item: ' + (selectedProduct ? selectedProduct.name : '')"></p>
 
                     <div class="space-y-6">
                         <div>

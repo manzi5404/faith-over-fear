@@ -16,18 +16,47 @@ const resLogic = () => ({
         this.loading = true;
         try {
             const token = localStorage.getItem('fof_token');
-            const response = await fetch('/api/reservations/me', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            const data = await response.json();
-            if (data.success) {
-                this.reservations = data.reservations.map(res => ({
-                    ...res,
-                    statusSteps: this.getStatusSteps(res.status)
-                }));
+            const headers = { 'Authorization': `Bearer ${token}` };
+
+            // Fetch from both APIs in parallel
+            const [ordersRes, reservationsRes] = await Promise.all([
+                fetch('/api/orders/my', { headers }).then(r => r.json()).catch(() => ({ success: false, orders: [] })),
+                fetch('/api/reservations/me', { headers }).then(r => r.json()).catch(() => ({ success: false, reservations: [] }))
+            ]);
+
+            let allReservations = [];
+
+            // Normalize orders data
+            if (ordersRes.success && ordersRes.orders) {
+                ordersRes.orders.forEach(order => {
+                    allReservations.push({
+                        ...order,
+                        productName: order.product_name || order.product_name_from_products || 'Product',
+                        productImageUrls: order.product_image_urls,
+                        statusSteps: this.getStatusSteps(order.status),
+                        source: 'order'
+                    });
+                });
             }
+
+            // Normalize legacy reservations data
+            if (reservationsRes.success && reservationsRes.reservations) {
+                reservationsRes.reservations.forEach(res => {
+                    // Skip if we already have this as an order (avoid duplicates)
+                    allReservations.push({
+                        ...res,
+                        productName: res.productName || 'Product',
+                        productImageUrls: res.productImageUrls,
+                        statusSteps: this.getStatusSteps(res.status),
+                        source: 'reservation'
+                    });
+                });
+            }
+
+            // Sort by created_at descending
+            allReservations.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            this.reservations = allReservations;
+
         } catch (error) {
             console.error('Failed to fetch reservations:', error);
         } finally {
@@ -36,9 +65,7 @@ const resLogic = () => ({
     },
 
     getStatusSteps(currentStatus) {
-        const stages = ['pending', 'contacted', 'delivered', 'returned', 'cancelled'];
-        // If cancelled or returned, they are terminal but 'returned' is specific.
-        // Standard flow: pending -> contacted -> delivered
+        const stages = ['pending', 'contacted', 'delivered', 'cancelled'];
 
         const steps = [
             { id: 'pending', label: 'Pending', active: false, completed: false },
@@ -46,17 +73,13 @@ const resLogic = () => ({
             { id: 'delivered', label: 'Delivered', active: false, completed: false }
         ];
 
-        if (currentStatus === 'returned') {
-            steps.push({ id: 'returned', label: 'Returned', active: true, completed: true, isTerminal: true });
-        } else if (currentStatus === 'cancelled') {
+        if (currentStatus === 'cancelled') {
             steps.push({ id: 'cancelled', label: 'Cancelled', active: true, completed: true, isTerminal: true });
         }
 
-        // Map standard steps
-        let foundCurrent = false;
         const currentIndex = stages.indexOf(currentStatus);
 
-        return steps.map((step, index) => {
+        return steps.map((step) => {
             const stepIndex = stages.indexOf(step.id);
             if (step.id === currentStatus) {
                 return { ...step, active: true, completed: true };

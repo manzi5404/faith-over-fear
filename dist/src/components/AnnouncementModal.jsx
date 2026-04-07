@@ -22,30 +22,20 @@ const AnnouncementModal = () => {
     useEffect(() => {
         const fetchAnnouncement = async () => {
             try {
-                // UX Rule: Do not block checkout or cart pages
-                const isCheckoutPath = window.location.pathname.includes('checkout') ||
-                    window.location.pathname.includes('cart');
+                const isCheckoutPath = window.location.pathname.includes('checkout') || window.location.pathname.includes('cart');
                 if (isCheckoutPath) return;
 
-                // Pre-fetch check: Quick local check (Redundant but safe)
                 const savedVersion = localStorage.getItem('fof_announcement_version');
-
                 const response = await axios.get('/api/announcement');
                 const data = response.data;
 
                 if (data.success && data.announcement) {
                     const active = data.announcement;
-                    console.log("Announcement Data:", active); // Debug logging as requested
-
-                    // Only display if is_enabled is true
                     if (!active.is_enabled) return;
 
-                    // Persistence Logic: Compare version with localStorage
-                    // Logic: version is integer, savedVersion is string. 
                     if (!savedVersion || parseInt(savedVersion) !== parseInt(active.version)) {
                         setAnnouncement(active);
-                        // Delay modal appearance for a premium feel
-                        setTimeout(() => setIsVisible(true), 800);
+                        setTimeout(() => setIsVisible(true), 1200);
                     }
                 }
             } catch (error) {
@@ -54,22 +44,31 @@ const AnnouncementModal = () => {
         };
 
         fetchAnnouncement();
+
+        // 🟢 REAL-TIME SUBSCRIPTION (SSE)
+        const eventSource = new EventSource('/api/announcement/stream');
+        
+        eventSource.onmessage = (event) => {
+            try {
+                const updatedAnn = JSON.parse(event.data);
+                if (updatedAnn && updatedAnn.is_enabled) {
+                    setAnnouncement(updatedAnn);
+                    // Force visibility for real-time updates even if previously dismissed
+                    setIsVisible(true); 
+                }
+            } catch (err) {
+                console.error("SSE parse error:", err);
+            }
+        };
+
+        return () => eventSource.close();
     }, []);
 
-    // Centralized Dismissal Logic
     const handleDismiss = () => {
         setIsVisible(false);
         if (announcement) {
             localStorage.setItem('fof_announcement_version', announcement.version.toString());
         }
-    };
-
-    const handleCTAClick = (e) => {
-        // Prevent default only if we need to ensure localStorage is set first
-        // In most cases, localStorage.setItem is fast enough, but let's be safe.
-        handleDismiss();
-        // Since handleDismiss triggers state change, but navigation might be immediate,
-        // we allow the natural href to work.
     };
 
     if (!announcement) return null;
@@ -78,81 +77,83 @@ const AnnouncementModal = () => {
         <AnimatePresence>
             {isVisible && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6 overflow-hidden">
-                    {/* Professional Backdrop with Blur */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={handleDismiss}
-                        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/95 backdrop-blur-md"
                     />
 
-                    {/* Modal Content Box */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.9, y: 40 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        transition={{ type: "spring", damping: 30, stiffness: 200 }}
-                        className="relative w-full max-w-lg bg-zinc-900 border border-zinc-800/80 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
+                        exit={{ opacity: 0, scale: 0.9, y: 40 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 120 }}
+                        className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 shadow-[0_0_80px_rgba(255,0,0,0.15)] overflow-hidden"
                     >
-                        {/* Elegant Top Border Accent */}
-                        <div className="absolute top-0 left-0 w-full h-[3px] bg-red-600" />
+                        <div className="absolute top-0 left-0 w-full h-[4px] bg-red-600 animate-pulse" />
 
-                        {/* Close Button (X) */}
                         <button
                             onClick={handleDismiss}
-                            className="absolute top-5 right-5 text-zinc-500 hover:text-white transition-all duration-300 transform hover:rotate-90"
-                            aria-label="Close Announcement"
+                            className="absolute top-6 right-6 z-20 text-zinc-500 hover:text-white transition-all duration-300"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
 
-                        <div className="p-8 md:p-12 text-center space-y-7">
-                            <div className="space-y-3">
-                                <motion.span
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="inline-block text-[10px] uppercase tracking-[0.5em] font-bold text-red-600"
-                                >
-                                    F&gt;F Drop Alert
-                                </motion.span>
+                        <div className="flex flex-col md:flex-row">
+                            {/* Image Side */}
+                            {announcement.image_url && (
+                                <div className="w-full md:w-1/2 h-48 md:h-auto bg-zinc-900 overflow-hidden">
+                                    <img 
+                                        src={announcement.image_url} 
+                                        alt={announcement.title} 
+                                        className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                                    />
+                                </div>
+                            )}
 
-                                <h2 className="text-3xl md:text-5xl font-display font-black text-white uppercase tracking-tighter leading-tight italic">
-                                    {announcement.title}
-                                </h2>
+                            {/* Content Side */}
+                            <div className={`p-8 md:p-12 flex flex-col justify-center ${announcement.image_url ? 'md:w-1/2' : 'w-full text-center'}`}>
+                                <div className="space-y-4">
+                                    <span className="inline-block text-[10px] uppercase tracking-[0.6em] font-black text-red-600">
+                                        Movement Alert
+                                    </span>
+
+                                    <h2 className="text-3xl md:text-4xl font-display font-black text-white uppercase tracking-tighter leading-none italic">
+                                        {announcement.title}
+                                    </h2>
+
+                                    <div className={`w-12 h-[1px] bg-zinc-800 ${announcement.image_url ? '' : 'mx-auto'}`} />
+
+                                    <p className="text-zinc-400 text-sm leading-relaxed font-light">
+                                        {announcement.message}
+                                    </p>
+                                </div>
+
+                                <div className="mt-8 space-y-4">
+                                    <a
+                                        href={SHOP_URL}
+                                        onClick={handleDismiss}
+                                        className="group relative inline-flex items-center justify-center w-full bg-white text-black text-[10px] uppercase font-black tracking-[0.3em] py-4 px-8 transition-all hover:bg-red-600 hover:text-white"
+                                    >
+                                        <span className="relative z-10">{announcement.button_text || "GET IT NOW"}</span>
+                                    </a>
+
+                                    <button
+                                        onClick={handleDismiss}
+                                        className="text-[9px] uppercase tracking-[0.4em] text-zinc-600 hover:text-zinc-300 transition-colors w-full text-center"
+                                    >
+                                        Dismiss
+                                    </button>
+                                </div>
                             </div>
-
-                            <div className="w-16 h-[1px] bg-zinc-800 mx-auto" />
-
-                            <p className="text-zinc-400 text-sm md:text-base leading-relaxed max-w-xs mx-auto font-light">
-                                {announcement.message || "No message provided"}
-                            </p>
-
-                            <div className="pt-4">
-                                <a
-                                    href={SHOP_URL}
-                                    onClick={handleCTAClick}
-                                    className="group relative inline-flex items-center justify-center w-full bg-white text-black text-[11px] uppercase font-bold tracking-[0.25em] py-5 px-10 transition-all duration-500 hover:bg-red-600 hover:text-white"
-                                >
-                                    <span className="relative z-10">{announcement.button_text || "SHOP THE DROP"}</span>
-                                    <div className="absolute inset-0 bg-red-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
-                                </a>
-                            </div>
-
-                            <button
-                                onClick={handleDismiss}
-                                className="text-[9px] uppercase tracking-[0.3em] text-zinc-600 hover:text-zinc-300 transition-colors pt-2 block mx-auto underline-offset-4 hover:underline"
-                            >
-                                Not Today
-                            </button>
                         </div>
 
-                        {/* Subtle Branding Bottom Accent */}
-                        <div className="absolute bottom-0 right-0 p-3 opacity-10 pointer-events-none">
-                            <span className="text-4xl font-black text-white">F&gt;F</span>
+                        <div className="absolute bottom-0 right-0 p-4 opacity-5 pointer-events-none">
+                            <span className="text-6xl font-black text-white italic">F&gt;F</span>
                         </div>
                     </motion.div>
                 </div>

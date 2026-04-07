@@ -11,8 +11,11 @@ const productLogic = () => ({
         sizes: [],
         price: 0,
         dropType: '',
-        isWaitlist: false
+        isWaitlist: false,
+        quality_prices: []
     },
+    qualityLevels: [],
+    selectedQuality: null,
     quantity: 1,
     selectedSize: "",
     selectedColor: "",
@@ -52,7 +55,6 @@ const productLogic = () => ({
             this.product = products.find(p => p.id == id);
         }
 
-        // Default to first product if not found or no ID
         if (!this.product) {
             this.product = products[0];
         }
@@ -61,7 +63,23 @@ const productLogic = () => ({
             this.selectedSize = this.product.sizes && this.product.sizes.length > 0 ? this.product.sizes[0] : "";
             this.selectedColor = this.product.colors && this.product.colors.length > 0 ? this.product.colors[0] : "";
 
-            // Find related items (same dropType, excluding current)
+            const explicitPrices = this.product.quality_prices || [];
+            if (explicitPrices.length > 0) {
+                // Use admin-configured per-product prices
+                this.qualityLevels = explicitPrices;
+            } else {
+                // Fallback: derive prices from base price using standard multipliers
+                const base = parseFloat(this.product.price) || 0;
+                this.qualityLevels = [
+                    { quality_level_id: 1, quality_name: 'Essential', quality_description: 'Everyday tees, solid quality, standard cotton. Focus on comfort and value.', price: base },
+                    { quality_level_id: 2, quality_name: 'Premium',   quality_description: 'Softer fabrics, better fit, stronger collar and seams. Emphasizes durability and shape retention.', price: Math.round(base * 1.3) },
+                    { quality_level_id: 3, quality_name: 'Luxe',      quality_description: 'High-end fabrics, very soft handfeel, best construction. Maximum comfort and longevity.', price: Math.round(base * 1.7) }
+                ];
+            }
+            if (this.qualityLevels.length > 0) {
+                this.selectedQuality = this.qualityLevels[0];
+            }
+
             this.relatedItems = products
                 .filter(p => p.dropType === this.product.dropType && p.id !== this.product.id)
                 .slice(0, 4);
@@ -76,7 +94,8 @@ const productLogic = () => ({
 
     get dynamicPrice() {
         if (!this.product) return 0;
-        return this.product.price * this.quantity;
+        const basePrice = this.selectedQuality ? parseFloat(this.selectedQuality.price) : this.product.price;
+        return basePrice * this.quantity;
     },
 
     addToCart() {
@@ -84,7 +103,7 @@ const productLogic = () => ({
 
         const shop = Alpine.$data(document.body);
         if (shop && typeof shop.addToCart === 'function') {
-            shop.addToCart(this.product, this.quantity, this.selectedSize);
+            shop.addToCart(this.product, this.quantity, this.selectedSize, this.selectedQuality);
         } else {
             console.error("shopLogic.addToCart not found");
         }
@@ -99,7 +118,7 @@ const productLogic = () => ({
         if (!this.product) return;
         const shop = Alpine.$data(document.body);
         if (shop && typeof shop.openMomoQuickPay === 'function') {
-            shop.openMomoQuickPay(this.product, this.quantity, this.selectedSize);
+            shop.openMomoQuickPay(this.product, this.quantity, this.selectedSize, this.selectedQuality);
         } else {
             console.error("shopLogic.openMomoQuickPay not found");
         }
@@ -109,7 +128,7 @@ const productLogic = () => ({
         if (!this.product) return;
         const shop = Alpine.$data(document.body);
         if (shop && typeof shop.initReservation === 'function') {
-            shop.initReservation(this.product, this.selectedSize);
+            shop.initReservation(this.product, this.selectedSize, this.selectedQuality);
         } else {
             console.error("shopLogic.initReservation not found");
         }

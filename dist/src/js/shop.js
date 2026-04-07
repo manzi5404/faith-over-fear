@@ -14,29 +14,50 @@ const shopLogic = () => ({
     showMomoModal: false,
     modalQuantity: 1,
     modalSize: "M",
-    paymentModalOpen: false,
-    momoCode: "123-456",
-    momoPhone: "0780000000",
-    copyFeedback: "",
-    senderName: "",
-    senderEmail: "",
-    senderPhone: "",
-    cartItems: [],
-    storeConfig: {
-        store_mode: 'live',
-        announcement_message: '',
-        banner_enabled: false
-    },
-    showAnnouncement: false,
+    modalQuality: null,
     reservationModalOpen: false,
     reservationData: {
-        fullName: 'Anonymous Customer', // Default value
+        fullName: '',
         email: '',
-        phone: 'Not provided', // Default value
+        phone: '',
         size: 'M',
-        color: 'Default', // Default value
-        quantity: 1,
-        productId: null
+        color: '',
+        quantity: 1
+    },
+
+    // User & Payment Information (missing in initial state)
+    senderPhone: "",
+    senderName: "",
+    senderEmail: "",
+    copyFeedback: "",
+    paymentModalOpen: false,
+
+    // Store Configuration & Loading State
+    configLoading: true,
+    storeConfig: {
+        store_mode: 'closed',
+        announcement: ''
+    },
+    cartItems: [],
+
+    resolveImage(product) {
+        if (!product) return '/placeholder.jpg';
+        
+        // Handle images stored as stringified JSON or raw arrays
+        let imgList = [];
+        try {
+            if (typeof product.image === 'string' && product.image.startsWith('[')) {
+                imgList = JSON.parse(product.image);
+            } else if (Array.isArray(product.images)) {
+                imgList = product.images;
+            } else if (product.image) {
+                imgList = [product.image];
+            }
+        } catch (e) {
+            console.error("Image resolution failed for product:", product.id, e);
+        }
+
+        return (imgList && imgList.length > 0) ? imgList[0] : '/placeholder.jpg';
     },
 
     async init() {
@@ -44,25 +65,35 @@ const shopLogic = () => ({
         if (!this.requireLoginForProductPages()) return;
 
         this.loading = true;
+        this.configLoading = true;
+        
         try {
+            // Fetch store config FIRST to ensure UI mode is correct
+            await this.fetchStoreConfig();
+            
             await Promise.all([
                 this.fetchProducts(),
-                this.fetchSettings(),
                 this.initCart()
             ]);
         } catch (error) {
             console.error("Initialization failed:", error);
         } finally {
             this.loading = false;
+            this.configLoading = false;
         }
         window.addEventListener('cart-updated', () => this.initCart());
-        window.addEventListener('store-config-loaded', (e) => {
-            this.storeConfig = e.detail;
-        });
+    },
 
-        // Check if global storeConfig is already loaded
-        if (window.storeConfig) {
-            this.storeConfig = window.storeConfig;
+    async fetchStoreConfig() {
+        try {
+            const res = await fetch('/api/store-config');
+            const data = await res.json();
+            if (data.success && data.config) {
+                this.storeConfig = data.config;
+                console.log('✅ Store Config Loaded:', this.storeConfig.store_mode);
+            }
+        } catch (err) {
+            console.error('❌ Failed to fetch store config:', err);
         }
     },
 
@@ -106,14 +137,15 @@ const shopLogic = () => ({
                         drop.products.forEach(p => {
                             allProducts.push({
                                 ...p,
-                                dropName: drop.name,
-                                dropType: drop.type,
+                                dropName: drop.title || drop.name || '',
+                                dropType: drop.type || 'new-drop',
                                 showDetails: false,
                                 uiQuantity: 1,
                                 uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
                                 images: p.image_urls || [],
-                                // If the drop is inactive or some other logic, we might mark as waitlist
-                                isWaitlist: !drop.is_active || p.stock === 0 // Basic waitlist logic
+                                quality_prices: p.quality_prices || [],
+                                // If the drop is inactive, mark as reservation-only
+                                status: drop.status || "live"
                             });
                         });
                     }
@@ -148,16 +180,24 @@ const shopLogic = () => ({
     },
 
     get newDrops() { return this.products.filter(r => r.dropType === "new-drop"); },
-    get recentDrops() { return this.products.filter(r => r.dropType === "recent-drop"); },
+    get recentDrops() {
+        const seenDrops = [];
+        return this.products.filter(p => {
+            if (!seenDrops.includes(p.dropName)) seenDrops.push(p.dropName);
+            return seenDrops.indexOf(p.dropName) < 2;
+        });
+    },
 
     get totalPrice() {
         if (!this.selectedProduct) return "0.00";
-        return (parseFloat(this.selectedProduct.price) * parseInt(this.modalQuantity)).toFixed(2);
+        const basePrice = this.modalQuality ? parseFloat(this.modalQuality.price) : parseFloat(this.selectedProduct.price);
+        return (basePrice * parseInt(this.modalQuantity)).toFixed(2);
     },
 
     get momoQuickPayAmount() {
         if (!this.activeProduct) return "0.00";
-        return (parseFloat(this.activeProduct.price) * parseInt(this.modalQuantity || 1)).toFixed(2);
+        const basePrice = this.modalQuality ? parseFloat(this.modalQuality.price) : parseFloat(this.activeProduct.price);
+        return (basePrice * parseInt(this.modalQuantity || 1)).toFixed(2);
     },
 
     toggleCategory(r) {
@@ -166,7 +206,7 @@ const shopLogic = () => ({
             : this.filters.category.push(r);
     },
 
-    initPayment(product, qty = 1, size = "M") {
+    initPayment(product, qty = 1, size = "M", qualityLevel = null) {
         console.log('MoMo Button Clicked', product ? product.id : 'cart');
         if (!this.ensureLoggedIn()) return;
         if (this.storeSettings.purchasingDisabled) {
@@ -178,12 +218,13 @@ const shopLogic = () => ({
         this.selectedProduct = product;
         this.modalQuantity = product ? (parseInt(qty) || 1) : 0;
         this.modalSize = product ? (size || product.uiSize || "M") : "";
+        this.modalQuality = qualityLevel;
         this.paymentModalOpen = true;
     },
 
     initCart() { this.cartItems = JSON.parse(localStorage.getItem("fof_cart")) || []; },
 
-    openMomoQuickPay(product, qty = 1, size = "M") {
+    openMomoQuickPay(product, qty = 1, size = "M", qualityLevel = null) {
         if (!this.ensureLoggedIn()) return;
         if (this.storeSettings.purchasingDisabled) {
             window.dispatchEvent(new CustomEvent("notify", {
@@ -195,6 +236,7 @@ const shopLogic = () => ({
         this.selectedProduct = product;
         this.modalQuantity = product ? (parseInt(qty) || 1) : 1;
         this.modalSize = product ? (size || product.uiSize || "M") : "M";
+        this.modalQuality = qualityLevel;
         this.showMomoModal = true;
     },
 
@@ -204,7 +246,11 @@ const shopLogic = () => ({
     },
 
     isValidMomoPhone(phone) {
-        const normalizedPhone = String(phone || "").replace(/\s+/g, "");
+        if (!phone) return false;
+        // Strip spaces, dashes, and ensure it's a string
+        const normalizedPhone = String(phone).replace(/[\s\-]/g, "");
+        // Support with or without 250 prefix, focusing on standard 10-digit RW numbers starting with 07...
+        // Supported 07 prefixes: 2, 3, 8, 9
         return /^07(?:2|3|8|9)\d{7}$/.test(normalizedPhone);
     },
 
@@ -269,61 +315,105 @@ const shopLogic = () => ({
         const checkoutProduct = this.activeProduct || this.selectedProduct;
         const isCartCheckout = !checkoutProduct;
         const total = isCartCheckout ? this.grandTotal : this.totalPrice;
-        const items = isCartCheckout
-            ? this.cartItems.map(i => ({ product_id: i.id, quantity: i.quantity, price: i.price, size: i.selectedSize }))
-            : [{ product_id: checkoutProduct.id, quantity: this.modalQuantity, price: checkoutProduct.price, size: this.modalSize }];
 
         this.loading = true;
 
+        const token = localStorage.getItem('fof_token');
+
         // Prepare WhatsApp message components
         let itemsList = isCartCheckout
-            ? this.cartItems.map(item => `- ${item.name} (${item.selectedSize}) x${item.quantity} [${(item.price * item.quantity).toLocaleString()} FRW]`).join("\n")
-            : `- ${checkoutProduct.name} (${this.modalSize}) x${this.modalQuantity} [${(checkoutProduct.price * this.modalQuantity).toLocaleString()} FRW]`;
+            ? this.cartItems.map(item => {
+                const qualityStr = item.selectedQuality ? ` (${item.selectedQuality})` : '';
+                return `- ${item.name}${qualityStr} (${item.selectedSize}) x${item.quantity} [${(item.price * item.quantity).toLocaleString()} FRW]`;
+            }).join("\n")
+            : (() => {
+                const qualityStr = this.modalQuality ? ` (${this.modalQuality.quality_name})` : '';
+                const basePrice = this.modalQuality ? parseFloat(this.modalQuality.price) : parseFloat(checkoutProduct.price);
+                return `- ${checkoutProduct.name}${qualityStr} (${this.modalSize}) x${this.modalQuantity} [${(basePrice * this.modalQuantity).toLocaleString()} FRW]`;
+            })();
+
+        let createdOrderIds = [];
 
         try {
-            const token = localStorage.getItem('fof_token');
-            const response = await fetch('/api/orders/order', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : ''
-                },
-                body: JSON.stringify({
-                    customer_name: this.senderName,
-                    customer_email: this.senderEmail || null,
-                    phone: this.senderPhone,
-                    totalAmount: parseFloat(total),
-                    items: items
-                })
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${result.orderId}\nCustomer: ${this.senderName}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
-
-                // Open WhatsApp in a new tab for WhatsApp Web users
-                window.open(`https://wa.me/250780000000?text=${encodeURIComponent(message)}`, "_blank");
-
-                if (isCartCheckout) {
-                    this.cartItems = [];
-                    this.persistCart();
+            if (isCartCheckout) {
+                // Create one order per cart item
+                for (const item of this.cartItems) {
+                    const effectivePrice = item.price;
+                    const response = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': token ? `Bearer ${token}` : ''
+                        },
+                        body: JSON.stringify({
+                            product_id: item.id,
+                            product_name: item.name,
+                            size: item.selectedSize,
+                            quantity: item.quantity,
+                            total_price: parseFloat(effectivePrice) * parseInt(item.quantity),
+                            quality_level_id: item.qualityLevelId || null,
+                            payment_method: 'momo',
+                            customer_name: this.senderName,
+                            customer_email: this.senderEmail || null,
+                            customer_phone: this.senderPhone
+                        })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        createdOrderIds.push(result.orderId);
+                    }
                 }
-                setTimeout(() => {
-                    this.paymentModalOpen = false;
-                    this.showMomoModal = false;
-                    this.activeProduct = null;
-                }, 500);
-                window.dispatchEvent(new CustomEvent("notify", { detail: { message: "WhatsApp Opened! Please verify your payment.", type: "success" } }));
             } else {
-                throw new Error(result.message || "Failed to place order");
+                const basePrice = this.modalQuality ? parseFloat(this.modalQuality.price) : parseFloat(checkoutProduct.price);
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    },
+                    body: JSON.stringify({
+                        product_id: checkoutProduct.id,
+                        product_name: checkoutProduct.name,
+                        size: this.modalSize,
+                        quantity: this.modalQuantity,
+                        total_price: parseFloat(basePrice) * parseInt(this.modalQuantity),
+                        quality_level_id: this.modalQuality ? this.modalQuality.quality_level_id : null,
+                        payment_method: 'momo',
+                        customer_name: this.senderName,
+                        customer_email: this.senderEmail || null,
+                        customer_phone: this.senderPhone
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    createdOrderIds.push(result.orderId);
+                } else {
+                    throw new Error(result.message || "Failed to create order");
+                }
             }
+
+            const orderIdStr = createdOrderIds.length > 0 ? createdOrderIds.join(', ') : 'N/A';
+            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
+
+            window.open(`https://wa.me/250791832523?text=${encodeURIComponent(message)}`, "_blank");
+
+            if (isCartCheckout) {
+                this.cartItems = [];
+                this.persistCart();
+            }
+            setTimeout(() => {
+                this.paymentModalOpen = false;
+                this.showMomoModal = false;
+                this.activeProduct = null;
+            }, 500);
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Order placed! Please verify your payment on WhatsApp.", type: "success" } }));
         } catch (err) {
             console.error("Order creation failed, using fallback:", err);
 
             // Fallback: Open WhatsApp even if API fails
             const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.`;
 
-            window.open(`https://wa.me/250780000000?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
+            window.open(`https://wa.me/250791832523?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
 
             window.dispatchEvent(new CustomEvent("notify", {
                 detail: {
@@ -357,10 +447,18 @@ const shopLogic = () => ({
         }
     },
 
-    addToCart(product, qty = 1, size = "M") {
+    addToCart(product, qty = 1, size = "M", qualityLevel = null) {
         if (this.storeSettings.purchasingDisabled) return;
 
-        const existingItemIndex = this.cartItems.findIndex(item => item.id === product.id && item.selectedSize === size);
+        const effectivePrice = qualityLevel ? parseFloat(qualityLevel.price) : parseFloat(product.price);
+        const qualityName = qualityLevel ? qualityLevel.quality_name : null;
+        const qualityLevelId = qualityLevel ? qualityLevel.quality_level_id : null;
+
+        const existingItemIndex = this.cartItems.findIndex(item =>
+            item.id === product.id &&
+            item.selectedSize === size &&
+            item.qualityLevelId === qualityLevelId
+        );
 
         if (existingItemIndex > -1) {
             this.cartItems[existingItemIndex].quantity += parseInt(qty);
@@ -369,8 +467,11 @@ const shopLogic = () => ({
             this.cartItems.push({
                 ...product,
                 selectedSize: size,
+                selectedQuality: qualityName,
+                qualityLevelId: qualityLevelId,
+                price: effectivePrice,
                 quantity: parseInt(qty),
-                totalPrice: product.price * parseInt(qty)
+                totalPrice: effectivePrice * parseInt(qty)
             });
         }
 
@@ -381,7 +482,7 @@ const shopLogic = () => ({
     incrementQty(product) { product.uiQuantity++; },
     decrementQty(product) { if (product.uiQuantity > 1) product.uiQuantity--; },
 
-    initReservation(product, size = "M") {
+    initReservation(product, size = "M", qualityLevel = null) {
         if (!this.ensureLoggedIn()) return;
         this.selectedProduct = product;
         this.reservationData = {
@@ -390,7 +491,9 @@ const shopLogic = () => ({
             phone: this.senderPhone || '',
             size: size || product.uiSize || "M",
             color: product.colors && product.colors.length > 0 ? product.colors[0] : '',
-            quantity: product.uiQuantity || 1
+            quantity: product.uiQuantity || 1,
+            selectedQuality: qualityLevel ? qualityLevel.quality_name : null,
+            qualityLevelId: qualityLevel ? qualityLevel.quality_level_id : null
         };
         this.reservationModalOpen = true;
     },
@@ -405,6 +508,7 @@ const shopLogic = () => ({
         this.loading = true;
 
         const user = JSON.parse(localStorage.getItem('fof_user'));
+        const token = localStorage.getItem('fof_token');
         const payload = {
             ...this.reservationData,
             productId: this.selectedProduct.id,
@@ -414,13 +518,28 @@ const shopLogic = () => ({
         console.log("Submitting Reservation Payload:", payload);
 
         try {
-            const response = await fetch('/api/reserve', {
+            // Submit to the DEDICATED reservations API
+            const response = await fetch('/api/reservations', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify({
+                    productId: this.selectedProduct.id,
+                    fullName: this.reservationData.fullName,
+                    email: this.reservationData.email,
+                    phone: this.reservationData.phone,
+                    size: this.reservationData.size,
+                    color: this.reservationData.color,
+                    quantity: this.reservationData.quantity,
+                    quality_level_id: this.reservationData.qualityLevelId || null,
+                    storeMode: this.storeConfig.store_mode || 'live'
+                })
             });
 
             const result = await response.json();
+
             if (result.success) {
                 window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Reservation confirmed! We'll contact you soon.", type: "success" } }));
                 this.reservationModalOpen = false;
