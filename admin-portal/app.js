@@ -135,7 +135,7 @@ const useFetch = (fetcher, deps = []) => {
 };
 
 const ProductsSection = ({ onToast }) => {
-  const { data, loading, error, reload } = useFetch(() => api.get("/api/products"), []);
+  const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/products"), []);
   const [qualityLevels, setQualityLevels] = useState([]);
   const [form, setForm] = useState({ 
     name: "", 
@@ -148,9 +148,9 @@ const ProductsSection = ({ onToast }) => {
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    api.get("/api/admin/quality-levels").then(res => {
-      setQualityLevels(res.data?.qualityLevels || []);
-    }).catch(() => {});
+    api.get("/api/admin/quality-levels")
+      .then(res => setQualityLevels(res.data?.qualityLevels || []))
+      .catch(() => onToast("Could not load quality levels"));
   }, []);
 
   const resetForm = () => {
@@ -301,7 +301,7 @@ const ProductsSection = ({ onToast }) => {
       {loading && <p className="mt-4 text-sm text-slate-400">Loading...</p>}
       {error && <p className="mt-4 text-sm text-rose-400">{error}</p>}
       <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {(data || []).map((product) => (
+        {(data?.products || []).map((product) => (
           <div key={product._id || product.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
             <div className="flex items-center justify-between">
               <div>

@@ -29,7 +29,11 @@ const protect = (req, res, next) => {
  * Verifies the user is logged in AND is on the whitelist.
  */
 const verifyAdmin = (req, res, next) => {
-    const token = req.cookies.auth_token;
+    const cookieToken = req.cookies.auth_token;
+    const headerToken = req.headers.authorization?.startsWith('Bearer ')
+        ? req.headers.authorization.slice(7)
+        : null;
+    const token = cookieToken || headerToken;
 
     if (!token) {
         return res.status(401).json({ success: false, message: 'No token provided' });
