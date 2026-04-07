@@ -32,6 +32,7 @@ async function initializeDatabase() {
                 image_url VARCHAR(255),
                 release_date DATETIME,
                 status ENUM('upcoming', 'reservation', 'live', 'closed') DEFAULT 'upcoming',
+                type ENUM('new-drop', 'recent-drop') DEFAULT 'new-drop',
                 collection_id INT DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -154,6 +155,12 @@ async function runMigrations(connection) {
         if (dropFields.includes('name') && !dropFields.includes('title')) {
             await connection.query('ALTER TABLE drops CHANGE COLUMN name title VARCHAR(255) NOT NULL');
             console.log('🔧 Migrated: Renamed drops.name to drops.title');
+        }
+
+        // Migration: Add type column to drops if missing
+        if (!dropFields.includes('type')) {
+            await connection.query("ALTER TABLE drops ADD COLUMN type ENUM('new-drop', 'recent-drop') DEFAULT 'new-drop' AFTER status");
+            console.log('🔧 Migrated: Added drops.type column');
         }
 
         // Migration: Add quality_level_id to orders if missing (legacy support)

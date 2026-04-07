@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS drops (
     image_url     VARCHAR(255),
     release_date  DATETIME,
     status        ENUM('upcoming', 'reservation', 'live', 'closed') DEFAULT 'upcoming',
+    type          ENUM('new-drop', 'recent-drop') DEFAULT 'new-drop',
     collection_id INT DEFAULT NULL,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

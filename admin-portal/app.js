@@ -330,7 +330,7 @@ const ProductsSection = ({ onToast }) => {
 
 const CollectionsSection = ({ onToast }) => {
   const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/drops"), []);
-  const [form, setForm] = useState({ title: "", description: "", image_url: "", status: "upcoming" });
+  const [form, setForm] = useState({ title: "", description: "", image_url: "", status: "upcoming", type: "new-drop" });
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
@@ -338,7 +338,7 @@ const CollectionsSection = ({ onToast }) => {
   }, [data]);
 
   const resetForm = () => {
-    setForm({ title: "", description: "", image_url: "", status: "upcoming" });
+    setForm({ title: "", description: "", image_url: "", status: "upcoming", type: "new-drop" });
     setEditingId(null);
   };
 
@@ -348,7 +348,8 @@ const CollectionsSection = ({ onToast }) => {
       title: form.title,
       description: form.description,
       image_url: form.image_url,
-      status: form.status
+      status: form.status,
+      type: form.type
     };
     try {
       if (editingId) {
@@ -371,7 +372,8 @@ const CollectionsSection = ({ onToast }) => {
       title: item.title || "",
       description: item.description || "",
       image_url: item.image_url || "",
-      status: item.status || "upcoming"
+      status: item.status || "upcoming",
+      type: item.type || "new-drop"
     });
   };
 
@@ -423,6 +425,14 @@ const CollectionsSection = ({ onToast }) => {
           <option value="closed">Closed (Unavailable)</option>
           <option value="reserve">Reserve (Reserve Now)</option>
           <option value="live">Live (MoMo Enabled)</option>
+        </select>
+        <select
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          value={form.type}
+          onChange={(event) => setForm({ ...form, type: event.target.value })}
+        >
+          <option value="new-drop">New Arrivals</option>
+          <option value="recent-drop">Recent Drops</option>
         </select>
         <textarea
           className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm md:col-span-2"

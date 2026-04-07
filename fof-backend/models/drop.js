@@ -2,16 +2,17 @@ const { pool } = require('../db/connection');
 const productService = require('./product');
 
 async function addDrop(drop) {
-  const { title, description, image_url, release_date, status, collection_id } = drop;
+  const { title, description, image_url, release_date, status, type, collection_id } = drop;
   const [result] = await pool.query(
-    `INSERT INTO drops (title, description, image_url, release_date, status, collection_id)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO drops (title, description, image_url, release_date, status, type, collection_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       title,
       description || null,
       image_url || null,
       release_date || null,
       status || 'upcoming',
+      type || 'new-drop',
       collection_id || null
     ]
   );
@@ -46,7 +47,7 @@ async function getDrops(statusFilter = null, includeProducts = false) {
 }
 
 async function editDrop(id, drop) {
-  const fields = ['title', 'description', 'image_url', 'release_date', 'status', 'collection_id'];
+  const fields = ['title', 'description', 'image_url', 'release_date', 'status', 'type', 'collection_id'];
   const updates = [];
   const params = [];
 
