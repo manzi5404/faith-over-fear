@@ -136,7 +136,7 @@ const useFetch = (fetcher, deps = []) => {
 
 const ProductsSection = ({ onToast }) => {
   const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/products"), []);
-  const [qualityLevels, setQualityLevels] = useState([]);
+  const [qualityLevels, setQualityLevels] = useState([{ id: 1, name: 'Essential' }, { id: 2, name: 'Premium' }, { id: 3, name: 'Luxe' }]);
   const [form, setForm] = useState({ 
     name: "", 
     sizes: "", 
@@ -148,8 +148,7 @@ const ProductsSection = ({ onToast }) => {
 
   useEffect(() => {
     api.get("/api/admin/quality-levels")
-      .then(res => setQualityLevels(res.data?.qualityLevels || []))
-      .catch(() => onToast("Could not load quality levels"));
+      .then(res => { if (res.data?.qualityLevels?.length) setQualityLevels(res.data.qualityLevels); }).catch(() => {});
   }, []);
 
   const resetForm = () => {

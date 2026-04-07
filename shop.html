@@ -216,7 +216,7 @@
                     <span class="text-fof-accent text-[10px] font-bold uppercase tracking-[0.3em] mb-4 block">Limited Production</span>
                     <h2 class="fof-modal-title">Reserve <span class="text-fof-accent">Now</span></h2>
                     <div class="w-12 h-1 bg-fof-accent mb-6"></div>
-                    <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-8" x-text="'Item: ' + selectedProduct?.name"></p>
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-8" x-text="'Item: ' + (selectedProduct ? selectedProduct.name : '')"></p>
 
                     <div class="space-y-6">
                         <div>
