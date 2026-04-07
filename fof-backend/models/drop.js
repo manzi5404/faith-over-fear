@@ -1,4 +1,5 @@
 const { pool } = require('../db/connection');
+const productService = require('./product');
 
 async function addDrop(drop) {
   const { title, description, image_url, release_date, status, collection_id } = drop;
@@ -17,7 +18,7 @@ async function addDrop(drop) {
   return result.insertId;
 }
 
-async function getDrops(statusFilter = null) {
+async function getDrops(statusFilter = null, includeProducts = false) {
   let sql = 'SELECT * FROM drops';
   let params = [];
   
@@ -33,6 +34,14 @@ async function getDrops(statusFilter = null) {
   sql += ' ORDER BY created_at DESC';
   
   const [rows] = await pool.query(sql, params);
+
+  if (includeProducts && rows.length > 0) {
+    const productsByDrop = await Promise.all(rows.map(row => productService.getProductsByDropId(row.id)));
+    rows.forEach((row, index) => {
+      row.products = productsByDrop[index] || [];
+    });
+  }
+
   return rows;
 }
 

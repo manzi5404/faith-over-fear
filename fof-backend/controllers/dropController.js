@@ -87,7 +87,9 @@ async function listDrops(req, res) {
     if (statusFilter === 'false' || statusFilter === 'all' || !statusFilter) {
       statusFilter = null;
     }
-    const drops = await getDrops(statusFilter);
+
+    const includeProducts = req.query.includeProducts === 'true' || req.query.includeProducts === '1';
+    const drops = await getDrops(statusFilter, includeProducts);
 
     console.log("RAW DROPS:", drops);
 
@@ -135,9 +137,12 @@ async function listDrops(req, res) {
     const normalizedDrops = drops.map(item => ({
       id: item.id,
       title: (item.title || item.name || '').trim() || 'Untitled Drop',
+      name: item.title || item.name || '',
+      type: item.type || 'new-drop',
       description: item.description || '',
       image: resolveImageUrl(item.image_url || item.images, item.products),
       status: item.status || (item.is_active ? 'live' : 'upcoming'),
+      products: item.products || [],
       price: item.price != null ? item.price : (item.products?.length ? Math.min(...item.products.map(p => parseFloat(p.price) || 0)) : 0)
     }));
 
