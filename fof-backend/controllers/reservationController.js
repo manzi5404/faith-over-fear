@@ -114,15 +114,22 @@ const getReservations = async (req, res) => {
     try {
         const { status, productId, startDate, endDate } = req.query;
         let query = `
-    SELECT
-        r.*,
-        p.name AS productName,
-        p.image_urls AS productImageUrls,
-        u.name AS userName,
-        u.email AS userEmail
-    FROM reservations AS r
-    LEFT JOIN products AS p ON r.product_id = p.id
-    LEFT JOIN users AS u ON r.user_id = u.id
+    SELECT 
+    r.id AS reservation_id,
+    r.full_name AS customer_name,
+    r.email AS customer_email,
+    r.phone AS customer_phone,
+    r.size,
+    r.color,
+    r.quantity,
+    r.store_mode,
+    r.status,
+    p.id AS product_id,
+    p.name AS product_name,
+    p.image_urls AS product_image_urls
+FROM reservations r
+LEFT JOIN products p ON r.product_id = p.id
+ORDER BY r.created_at DESC;
 `; 
         
         const whereClauses = [];
