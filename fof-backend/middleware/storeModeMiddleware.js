@@ -1,4 +1,5 @@
 const { pool } = require('../db/connection');
+const { normalizeStoreMode } = require('../utils/storeMode');
 
 const checkStoreMode = async (req, res, next) => {
     const restrictedPaths = ['/api/momo-pay'];
@@ -12,7 +13,8 @@ const checkStoreMode = async (req, res, next) => {
             const config = rows[0];
 
             if (config) {
-                if (config.store_mode === 'closed') {
+                const currentMode = normalizeStoreMode(config.store_mode);
+                if (currentMode === 'closed') {
                     return res.status(403).json({
                         success: false,
                         message: 'Store status: CLOSED. New transactions are currently disabled.',
@@ -20,7 +22,7 @@ const checkStoreMode = async (req, res, next) => {
                     });
                 }
 
-                if (config.store_mode === 'reserve' && isRestrictedPath) {
+                if (currentMode === 'reserve' && isRestrictedPath) {
                     return res.status(403).json({
                         success: false,
                         message: 'Store status: RESERVATION ONLY. Standard checkouts are disabled.',

@@ -29,7 +29,7 @@
     </style>
   <script type="module" crossorigin src="/assets/style-G6xZZ6g_.js"></script>
   <script type="module" crossorigin src="/assets/module.esm-CwKKyv8g.js"></script>
-  <script type="module" crossorigin src="/assets/main-CDZ3y_Dn.js"></script>
+  <script type="module" crossorigin src="/assets/main-Cprysuep.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/style-DdimkiTq.css">
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
@@ -191,14 +191,14 @@
                         <template x-if="!shop.configLoading">
                             <div class="flex flex-col space-y-4">
                                 <!-- Upcoming Mode -->
-                                <template x-if="shop.storeConfig.store_mode === 'closed'">
+                                <template x-if="shop.isClosedMode()">
                                     <button class="w-full bg-black border border-zinc-800 text-zinc-500 font-bold uppercase tracking-[0.2em] text-xs py-6 cursor-not-allowed" disabled>
                                         Drop Unavailable
                                     </button>
                                 </template>
 
                                 <!-- Reservation Mode -->
-                                <template x-if="shop.storeConfig.store_mode === 'reserve'">
+                                <template x-if="shop.isReservationMode()">
                                     <div class="space-y-6">
                                         <!-- How to Reserve Guide -->
                                         <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-sm space-y-4">
@@ -230,7 +230,7 @@
                                 </template>
 
                                 <!-- Live Mode -->
-                                <template x-if="shop.storeConfig.store_mode === 'live'">
+                                <template x-if="shop.isLiveMode()">
                                     <div class="flex flex-col space-y-4">
                                         <div class="flex items-center space-x-4 h-16">
                                             <div class="flex items-center border border-zinc-800 h-full">
@@ -337,12 +337,12 @@
 
             <div class="p-8 space-y-6">
                 <!-- Product Preview -->
-                <template x-if="product">
+                <template x-if="selectedProduct">
                     <div class="flex items-center space-x-4 bg-black/40 p-4 border border-zinc-800 rounded-sm">
-                        <img :src="mainImage" class="w-16 h-20 object-cover">
+                        <img :src="resolveImage(selectedProduct)" class="w-16 h-20 object-cover">
                         <div>
-                            <p class="text-[10px] uppercase font-bold tracking-widest text-fof-accent" x-text="product.category"></p>
-                            <h4 class="text-sm font-bold uppercase" x-text="product.name"></h4>
+                            <p class="text-[10px] uppercase font-bold tracking-widest text-fof-accent" x-text="selectedProduct.category"></p>
+                            <h4 class="text-sm font-bold uppercase" x-text="selectedProduct.name"></h4>
                             <p class="text-xs text-gray-400" x-text="'Size: ' + reservationData.size + ' | Qty: ' + reservationData.quantity"></p>
                         </div>
                     </div>
@@ -403,54 +403,6 @@
         </div>
     </div>
     
-    <!-- High-End Reservation Modal -->
-    <template x-if="reservationModalOpen">
-        <div class="fof-modal-backdrop" @click.self="reservationModalOpen = false">
-            <div class="fof-modal-content fof-modal-box">
-                <button @click="reservationModalOpen = false" class="fof-modal-close">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-
-                <div class="relative z-10">
-                    <span class="text-fof-accent text-[10px] font-bold uppercase tracking-[0.3em] mb-4 block">Limited Product</span>
-                    <h2 class="fof-modal-title">Reserve <span class="text-fof-accent">Now</span></h2>
-                    <div class="w-12 h-1 bg-fof-accent mb-6"></div>
-                    <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-8" x-text="'Item: ' + (product?.name || 'Loading...')"></p>
-
-                    <div class="space-y-6">
-                        <div>
-                            <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 mb-2">Email Address</label>
-                            <input type="email" x-model="reservationData.email" class="w-full bg-black border border-zinc-800 p-4 text-white text-sm focus:border-fof-accent outline-none transition-colors" placeholder="your@email.com">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 mb-2">Size</label>
-                                <select x-model="reservationData.size" class="w-full bg-black border border-zinc-800 p-4 text-white text-sm focus:border-fof-accent outline-none transition-colors uppercase">
-                                    <option value="S">Small (S)</option>
-                                    <option value="M">Medium (M)</option>
-                                    <option value="L">Large (L)</option>
-                                    <option value="XL">Extra Large (XL)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 mb-2">Quantity</label>
-                                <input type="number" x-model="reservationData.quantity" min="1" class="w-full bg-black border border-zinc-800 p-4 text-white text-sm focus:border-fof-accent outline-none transition-colors">
-                            </div>
-                        </div>
-
-                        <button @click="submitReservation()" :disabled="loading" class="btn-primary w-full py-5 flex items-center justify-center space-x-3">
-                            <span x-show="!loading">Confirm Reservation</span>
-                            <span x-show="loading">Processing...</span>
-                        </button>
-                        
-                        <p class="text-[9px] text-zinc-600 uppercase text-center tracking-widest leading-relaxed">By confirming, you express interest in this pre-production item. We will contact you once it's available for purchase.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </template>
-
     <!-- MomoQuickPay Universal Component -->
     <div x-show="showMomoModal"
          x-cloak

@@ -11,7 +11,7 @@
 
   <script type="module" crossorigin src="/assets/style-G6xZZ6g_.js"></script>
   <script type="module" crossorigin src="/assets/module.esm-CwKKyv8g.js"></script>
-  <script type="module" crossorigin src="/assets/main-CDZ3y_Dn.js"></script>
+  <script type="module" crossorigin src="/assets/main-Cprysuep.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/style-DdimkiTq.css">
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
@@ -190,7 +190,7 @@
                         </div>
 
                         <!-- Live Mode Checkout -->
-                        <template x-if="storeConfig.store_mode === 'live'">
+                        <template x-if="isLiveMode()">
                             <button @click="initPayment(null)" class="w-full bg-fof-white text-black font-bold uppercase py-4 tracking-widest hover:bg-fof-accent hover:text-white transition-colors flex items-center justify-center space-x-2">
                                 <span>Checkout with MoMo</span>
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -198,7 +198,7 @@
                         </template>
 
                         <!-- Reserve Mode Block -->
-                        <template x-if="storeConfig.store_mode === 'reserve'">
+                        <template x-if="isReservationMode()">
                             <div class="space-y-4">
                                 <div class="bg-fof-accent/10 border border-fof-accent/20 p-4 text-center">
                                     <p class="text-[10px] text-fof-accent font-bold uppercase tracking-widest">Store is in Reserve Mode</p>

@@ -36,9 +36,44 @@ const shopLogic = () => ({
     configLoading: true,
     storeConfig: {
         store_mode: 'closed',
-        announcement: ''
+        announcement: '',
+        reservation_enabled: false
     },
     cartItems: [],
+
+    normalizeStoreMode(mode) {
+        const normalized = String(mode || '').trim().toLowerCase();
+        if (normalized === 'reservation') return 'reserve';
+        if (['live', 'reserve', 'closed'].includes(normalized)) return normalized;
+        return 'closed';
+    },
+
+    applyStoreConfig(rawConfig = {}) {
+        const normalizedMode = this.normalizeStoreMode(
+            rawConfig.store_mode || rawConfig.mode || (rawConfig.reservation_enabled ? 'reserve' : '')
+        );
+
+        this.storeConfig = {
+            ...rawConfig,
+            store_mode: normalizedMode,
+            reservation_enabled: rawConfig.reservation_enabled === true || normalizedMode === 'reserve'
+        };
+
+        console.log('[Reservation Debug] store config API response:', rawConfig);
+        console.log('[Reservation Debug] normalized frontend mode:', this.storeConfig.store_mode);
+    },
+
+    isReservationMode() {
+        return this.storeConfig.reservation_enabled === true || this.normalizeStoreMode(this.storeConfig.store_mode) === 'reserve';
+    },
+
+    isLiveMode() {
+        return this.normalizeStoreMode(this.storeConfig.store_mode) === 'live';
+    },
+
+    isClosedMode() {
+        return this.normalizeStoreMode(this.storeConfig.store_mode) === 'closed';
+    },
 
     resolveImage(product) {
         if (!product) return '/placeholder.jpg';
@@ -89,8 +124,9 @@ const shopLogic = () => ({
             const res = await fetch('/api/store-config');
             const data = await res.json();
             if (data.success && data.config) {
-                this.storeConfig = data.config;
-                console.log('✅ Store Config Loaded:', this.storeConfig.store_mode);
+                this.applyStoreConfig(data.config);
+            } else {
+                console.warn('[Reservation Debug] unexpected store config payload:', data);
             }
         } catch (err) {
             console.error('❌ Failed to fetch store config:', err);
@@ -484,10 +520,11 @@ const shopLogic = () => ({
 
     initReservation(product, size = "M", qualityLevel = null) {
         if (!this.ensureLoggedIn()) return;
+        console.log('[Reservation Debug] frontend mode before opening form:', this.storeConfig.store_mode);
         this.selectedProduct = product;
         this.reservationData = {
             fullName: this.senderName || '',
-            email: '',
+            email: this.senderEmail || '',
             phone: this.senderPhone || '',
             size: size || product.uiSize || "M",
             color: product.colors && product.colors.length > 0 ? product.colors[0] : '',
@@ -539,6 +576,7 @@ const shopLogic = () => ({
             });
 
             const result = await response.json();
+            console.log('[Reservation Debug] reservation submit response:', result);
 
             if (result.success) {
                 window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Reservation confirmed! We'll contact you soon.", type: "success" } }));
