@@ -39,6 +39,7 @@
                       <div class="text-sm font-medium text-slate-300">{{ getProductName(res) }}</div>
                       <div class="flex gap-2 mt-1">
                         <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Size: {{ res.size }}</span>
+                        <span v-if="getProductQuality(res)" class="text-[9px] uppercase font-bold px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded">Quality: {{ getProductQuality(res) }}</span>
                         <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Qty: {{ res.quantity }}</span>
                       </div>
                     </div>
@@ -110,6 +111,7 @@ const getCustomerName = (reservation) => reservation.user?.name || reservation.f
 const getCustomerEmail = (reservation) => reservation.user?.email || reservation.email || reservation.userEmail || 'N/A';
 const getCustomerPhone = (reservation) => reservation.user?.phone || reservation.phone || '';
 const getProductName = (reservation) => reservation.product?.name || reservation.productName || 'Unknown Product';
+const getProductQuality = (reservation) => reservation.quality?.name || reservation.quality_name || '';
 
 const getProductImage = (reservation) => {
   const rawImages = reservation.product?.image_urls || reservation.productImageUrls;

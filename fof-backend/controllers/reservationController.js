@@ -120,11 +120,14 @@ SELECT
     r.*,
     p.name AS productName,
     p.image_urls AS productImageUrls,
+    p.price AS productBasePrice,
     u.name AS userName,
-    u.email AS userEmail
+    u.email AS userEmail,
+    ql.name AS qualityName
 FROM reservations r
 LEFT JOIN products p ON r.product_id = p.id
 LEFT JOIN users u ON r.user_id = u.id
+LEFT JOIN quality_levels ql ON r.quality_level_id = ql.id
 `;
         
         const whereClauses = [];
@@ -195,6 +198,13 @@ LEFT JOIN users u ON r.user_id = u.id
                 quantity: r.quantity,
                 size: r.size,
                 color: r.color,
+                quality: r.quality_level_id ? {
+                    id: r.quality_level_id,
+                    name: r.qualityName || `Quality #${r.quality_level_id}`
+                } : null,
+                quality_level_id: r.quality_level_id || null,
+                quality_name: r.qualityName || null,
+                price_at_purchase: r.price_at_purchase || Number(r.productBasePrice) || null,
                 store_mode: r.store_mode,
                 status: r.status,
                 created_at: r.created_at,
