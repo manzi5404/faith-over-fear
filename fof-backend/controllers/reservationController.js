@@ -113,8 +113,8 @@ const createReservation = async (req, res) => {
 const getReservations = async (req, res) => {
     try {
         const { status, productId, startDate, endDate } = req.query;
-        let query = `
-    SELECT 
+     let query = `
+SELECT 
     r.*,
     p.name AS productName,
     p.image_urls AS productImageUrls,
@@ -123,9 +123,10 @@ const getReservations = async (req, res) => {
 FROM reservations r
 LEFT JOIN products p ON r.product_id = p.id
 LEFT JOIN users u ON r.user_id = u.id
-ORDER BY r.created_at DESC;
-`; 
-        
+ORDER BY r.created_at DESC
+`;
+console.log('Raw query:', JSON.stringify(query));
+console.log('Query length:', query.length);
         const whereClauses = [];
         const params = [];
 
