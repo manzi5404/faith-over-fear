@@ -113,7 +113,9 @@ const createReservation = async (req, res) => {
 const getReservations = async (req, res) => {
     try {
         const { status, productId, startDate, endDate } = req.query;
-     let query = `
+        
+        // Base query - NO ORDER BY here
+        let query = `
 SELECT 
     r.*,
     p.name AS productName,
@@ -123,10 +125,8 @@ SELECT
 FROM reservations r
 LEFT JOIN products p ON r.product_id = p.id
 LEFT JOIN users u ON r.user_id = u.id
-ORDER BY r.created_at DESC
 `;
-console.log('Raw query:', JSON.stringify(query));
-console.log('Query length:', query.length);
+        
         const whereClauses = [];
         const params = [];
 
@@ -151,11 +151,14 @@ console.log('Query length:', query.length);
             query += ` WHERE ${whereClauses.join(' AND ')}`;
         }
 
+        // Add ORDER BY only once at the end
         query += ` ORDER BY r.created_at DESC`;
 
+        console.log('Executing query:', query);
+        
         const [rows] = await pool.query(query, params);
         
-        // Transform into structured JSON as requested
+        // Transform into structured JSON
         const structuredReservations = rows.map(r => {
             const rawImageUrls = r.productImageUrls;
             let imageUrls = [];
@@ -210,8 +213,8 @@ console.log('Query length:', query.length);
 const updateReservationStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
+    
     try {
-        // Enforce valid status ENUM values
         const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid reservation status' });
@@ -225,19 +228,24 @@ const updateReservationStatus = async (req, res) => {
 
         res.json({ success: true, message: `Reservation marked as ${status}` });
     } catch (error) {
+        console.error('❌ UPDATE_STATUS_ERROR:', error);
         res.status(500).json({ success: false, message: 'Failed to update status', error: error.message });
     }
 };
 
 const deleteReservation = async (req, res) => {
     const { id } = req.params;
+    
     try {
         const [result] = await pool.query('DELETE FROM reservations WHERE id = ?', [id]);
+        
         if (result.affectedRows === 0) {
             return res.status(404).json({ success: false, message: 'Reservation not found' });
         }
+        
         res.json({ success: true, message: 'Reservation deleted' });
     } catch (error) {
+        console.error('❌ DELETE_RESERVATION_ERROR:', error);
         res.status(500).json({ success: false, message: 'Failed to delete reservation', error: error.message });
     }
 };
