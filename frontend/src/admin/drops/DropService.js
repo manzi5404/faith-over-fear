@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://faith-over-fear-production.up.railway.app').replace(/\/$/, '');
 const API_URL = '/api/drops';
 
 // Base axios config for including cookies
+axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
 
 const DropService = {

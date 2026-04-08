@@ -1,6 +1,6 @@
 const { useEffect, useMemo, useState } = React;
 
-const BASE_URL = "/";
+const BASE_URL = "https://faith-over-fear-production.up.railway.app";
 
 const tokenStore = {
   get() {
