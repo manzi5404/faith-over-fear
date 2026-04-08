@@ -940,6 +940,52 @@ const ReservationsSection = ({ onToast }) => {
     fulfilled: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
   };
 
+  const resolveReservationProductImage = (product) => {
+    if (!product) return null;
+    if (Array.isArray(product.image_urls) && product.image_urls.length > 0) {
+      return product.image_urls[0];
+    }
+    if (typeof product.image_urls === 'string' && product.image_urls.trim() !== '') {
+      try {
+        const parsed = JSON.parse(product.image_urls);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+      } catch {
+        return product.image_urls;
+      }
+    }
+    if (typeof product.image_url === 'string' && product.image_url.trim() !== '') {
+      return product.image_url;
+    }
+    return null;
+  };
+
+  const getReservationProductName = (reservation) => {
+    return (
+      reservation.product?.name ||
+      reservation.productName ||
+      reservation.product?.productName ||
+      reservation.product_name ||
+      `Product #${reservation.product_id}`
+    );
+  };
+
+  const getReservationUserName = (reservation) => {
+    return (
+      reservation.user?.name ||
+      reservation.userName ||
+      reservation.full_name ||
+      (reservation.email ? reservation.email.split('@')[0] : 'Guest')
+    );
+  };
+
+  const getReservationUserEmail = (reservation) => {
+    return reservation.user?.email || reservation.userEmail || reservation.email || 'N/A';
+  };
+
+  const getReservationUserPhone = (reservation) => {
+    return reservation.user?.phone || reservation.phone || 'N/A';
+  };
+
   const handleStatusChange = async (id, newStatus) => {
     try {
       await api.patch(`/api/admin/reservations/${id}/status`, { status: newStatus });
@@ -1035,8 +1081,8 @@ const ReservationsSection = ({ onToast }) => {
             {/* Product Image */}
             <div className="aspect-square w-full bg-slate-900 overflow-hidden">
                 <img 
-                    src={res.product.image_urls?.[0] || res.product.image_url || "https://placehold.co/400x400?text=F%3EF"} 
-                    alt={res.product.name}
+                    src={resolveReservationProductImage(res.product) || "https://placehold.co/400x400?text=F%3EF"} 
+                    alt={getReservationProductName(res)}
                     className="h-full w-full object-cover transition-transform group-hover:scale-110"
                 />
             </div>
@@ -1045,7 +1091,7 @@ const ReservationsSection = ({ onToast }) => {
             <div className="flex flex-1 flex-col p-4">
               <div className="mb-2 flex items-start justify-between">
                 <div>
-                  <h4 className="font-semibold text-white line-clamp-1">{res.product.name}</h4>
+                  <h4 className="font-semibold text-white line-clamp-1">{getReservationProductName(res)}</h4>
                   <div className="flex gap-1.5 mt-0.5">
                     <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest bg-slate-900 border border-slate-800 px-1 rounded">{res.size}</span>
                     <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest bg-slate-900 border border-slate-800 px-1 rounded">QTY: {res.quantity}</span>
@@ -1062,9 +1108,9 @@ const ReservationsSection = ({ onToast }) => {
               </div>
               
               <div className="mt-2 space-y-1">
-                <p className="text-xs font-medium text-slate-300">{res.user.name}</p>
-                <p className="text-[10px] text-slate-500">{res.user.email}</p>
-                <p className="text-[10px] text-slate-500">{res.user.phone}</p>
+                <p className="text-xs font-medium text-slate-300">{getReservationUserName(res)}</p>
+                <p className="text-[10px] text-slate-500">{getReservationUserEmail(res)}</p>
+                <p className="text-[10px] text-slate-500">{getReservationUserPhone(res)}</p>
               </div>
 
               <div className="mt-auto pt-4 flex gap-2">
