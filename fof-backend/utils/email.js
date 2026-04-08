@@ -1,47 +1,32 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 465,
-    secure: process.env.SMTP_SECURE === 'true',
-    family: 4,
-    direct: false,
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
-    tls: {
-        // Reject only if certificate is truly invalid
-        rejectUnauthorized: false
-    },
-    auth: {
-        user: process.env.SMTP_USER || process.env.EMAIL_USER,
-        pass: process.env.SMTP_PASS || process.env.EMAIL_PASS
-    }
-});
+const resend = new Resend(process.env.RESEND_API_KEY || process.env.EMAIL_API_KEY);
+
+const RESEND_SENDER = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
 async function sendEmail({ email, subject, message, html }) {
-    const authUser = process.env.SMTP_USER || process.env.EMAIL_USER;
-    const authPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+    const apiKey = process.env.RESEND_API_KEY || process.env.EMAIL_API_KEY;
 
-    if (!authUser || !authPass) {
-        console.warn('⚠️  [EMAIL_SERVICE] NOT_CONFIGURED: Missing EMAIL_USER/PASS. Email suppressed.');
+    if (!apiKey) {
+        console.warn('⚠️  [EMAIL_SERVICE] NOT_CONFIGURED: Missing RESEND_API_KEY. Email suppressed.');
         console.log(`[STUB] To: ${email}\n[STUB] Subject: ${subject}`);
         return;
     }
 
     try {
         console.log(`📨 [EMAIL_SERVICE] Attempting delivery to: ${email}...`);
-        await transporter.sendMail({
-            from: `"Faith Over Fear" <${authUser}>`,
+        
+        const data = await resend.emails.send({
+            from: RESEND_SENDER,
             to: email,
             subject: subject,
-            text: message,
-            html: html
+            html: html || message
         });
-        console.log(`✅ [EMAIL_SERVICE] Success for ${email}`);
+
+        console.log(`✅ [EMAIL_SERVICE] Success for ${email}:`, data.data?.id);
     } catch (error) {
         console.error(`❌ [EMAIL_SERVICE] Delivery failed for ${email}:`, error.message);
-        throw error; // Re-throw to allow batch summary to track it
+        throw error;
     }
 }
 
@@ -159,10 +144,8 @@ async function notifyReservation(userEmail, reservationData, productData) {
         </div>
     `;
 
-    // 1. Send confirmation to customer
     await sendEmail({ email: userEmail, subject, html });
 
-    // 2. Send notification to admin (if configured)
     if (process.env.ADMIN_EMAIL) {
         await sendEmail({
             email: process.env.ADMIN_EMAIL,
