@@ -27,38 +27,12 @@ const timestamp = () => new Date().toISOString();
 const log = (...args) => console.log(`[${timestamp()}]`, ...args);
 const logError = (...args) => console.error(`[${timestamp()}]`, ...args);
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.ADMIN_PORTAL_URL,
-  'https://faith-over-fear-7euupaew0-manzi5404s-projects.vercel.app',
-  'https://faith-over-fear-production.up.railway.app',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173'
-].filter(Boolean);
-
-const corsOptions = {
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 204
-};
-
 log('🚀 server.js loaded');
 
 // Body Parsing Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.use(cors({ origin: true, credentials: true }));
 app.use(cookieParser);
 app.use(checkStoreMode);
 

@@ -5,11 +5,7 @@ const jwt = require('jsonwebtoken');
  * Simply ensures the user is logged in with a valid token.
  */
 const protect = (req, res, next) => {
-    const cookieToken = req.cookies.auth_token;
-    const headerToken = req.headers.authorization?.startsWith('Bearer ')
-        ? req.headers.authorization.slice(7)
-        : null;
-    const token = cookieToken || headerToken;
+    const token = req.cookies.auth_token;
 
     if (!token) {
         return res.status(401).json({ success: false, message: 'You must be logged in to access this resource' });
