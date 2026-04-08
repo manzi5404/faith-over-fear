@@ -27,10 +27,10 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/style-G6xZZ6g_.js"></script>
+  <script type="module" crossorigin src="/assets/style-BtyEKcRx.js"></script>
   <script type="module" crossorigin src="/assets/module.esm-CwKKyv8g.js"></script>
   <script type="module" crossorigin src="/assets/main-Cprysuep.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/style-DdimkiTq.css">
+  <link rel="stylesheet" crossorigin href="/assets/style-s1_AgFVV.css">
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
       x-data="shopLogic()"
@@ -344,6 +344,12 @@
                             <p class="text-[10px] uppercase font-bold tracking-widest text-fof-accent" x-text="selectedProduct.category"></p>
                             <h4 class="text-sm font-bold uppercase" x-text="selectedProduct.name"></h4>
                             <p class="text-xs text-gray-400" x-text="'Size: ' + reservationData.size + ' | Qty: ' + reservationData.quantity"></p>
+                            <template x-if="selectedQuality">
+                                <div class="mt-2">
+                                    <p class="text-[10px] uppercase tracking-widest text-fof-accent font-bold" x-text="selectedQuality.quality_name"></p>
+                                    <p class="text-[10px] text-gray-500 leading-relaxed mt-1" x-text="selectedQuality.quality_description"></p>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </template>
@@ -494,9 +500,17 @@
                     <div class="rounded-sm border border-zinc-800 bg-black/20 p-4">
                         <div class="space-y-3">
                             <template x-if="activeProduct">
-                                <div class="flex items-start justify-between text-sm">
-                                    <span class="max-w-[70%] text-zinc-300" x-text="activeProduct.name + ' (' + modalSize + ') x' + modalQuantity"></span>
-                                    <span class="font-mono font-bold text-fof-white" x-text="momoQuickPayAmount + ' FRW'"></span>
+                                <div class="space-y-2">
+                                    <div class="flex items-start justify-between text-sm">
+                                        <span class="max-w-[70%] text-zinc-300" x-text="activeProduct.name + ' (' + modalSize + ') x' + modalQuantity"></span>
+                                        <span class="font-mono font-bold text-fof-white" x-text="momoQuickPayAmount + ' FRW'"></span>
+                                    </div>
+                                    <template x-if="modalQuality">
+                                        <div class="rounded-sm border border-zinc-800 bg-zinc-900/60 p-3">
+                                            <p class="text-[10px] font-bold uppercase tracking-widest text-fof-accent" x-text="modalQuality.quality_name"></p>
+                                            <p class="mt-1 text-[10px] leading-relaxed text-zinc-400" x-text="modalQuality.quality_description"></p>
+                                        </div>
+                                    </template>
                                 </div>
                             </template>
                             <template x-if="!activeProduct">

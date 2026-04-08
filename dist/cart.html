@@ -9,10 +9,10 @@
     </style>
     <!-- Tailwind CSS (Using script specifically for styling consistency in this environment if needed, but linking style.css is preferred) -->
 
-  <script type="module" crossorigin src="/assets/style-G6xZZ6g_.js"></script>
+  <script type="module" crossorigin src="/assets/style-BtyEKcRx.js"></script>
   <script type="module" crossorigin src="/assets/module.esm-CwKKyv8g.js"></script>
   <script type="module" crossorigin src="/assets/main-Cprysuep.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/style-DdimkiTq.css">
+  <link rel="stylesheet" crossorigin href="/assets/style-s1_AgFVV.css">
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
       x-data="shopLogic()"
@@ -218,7 +218,7 @@
     <!-- Payment Modal (Reused) -->
     <!-- Payment Modal (Redesigned) -->
     <div x-show="paymentModalOpen" 
-         class="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6"
+         class="fixed inset-0 z-[10000] flex items-center justify-center p-4"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -228,7 +228,7 @@
          x-cloak>
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm z-[9998]" @click="paymentModalOpen = false"></div>
         
-        <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10001] bg-zinc-900 border border-fof-gray w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] animate-fade-in-up pointer-events-auto">
+        <div class="relative z-[10001] bg-zinc-900 border border-fof-gray w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] animate-fade-in-up pointer-events-auto rounded-lg">
             <!-- Modal Header -->
             <div class="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 z-10">
                 <h3 class="text-xl sm:text-2xl font-display font-bold uppercase tracking-tight">MoMo Checkout</h3>
@@ -241,7 +241,7 @@
                 <!-- User Details Section -->
                 <div class="space-y-4">
                     <h4 class="text-[10px] uppercase tracking-[0.2em] text-fof-accent font-bold">1. Your Information</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                         <div>
                             <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 font-bold">Full Name</label>
                             <input type="text" x-model="senderName" placeholder="Enter name" class="w-full bg-black border border-zinc-800 p-3 text-sm focus:border-fof-accent outline-none transition-colors rounded-sm">
@@ -250,9 +250,9 @@
                             <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 font-bold">From (MoMo Number)</label>
                             <input type="text" x-model="senderPhone" placeholder="078..." class="w-full bg-black border border-zinc-800 p-3 text-sm focus:border-fof-accent outline-none transition-colors rounded-sm">
                         </div>
-                        <div class="sm:col-span-2">
+                        <div class="sm:col-span-2 space-y-1">
                             <label class="block text-[10px] uppercase tracking-widest text-gray-500 mb-1.5 font-bold">Amount to Pay (FRW)</label>
-                            <div class="w-full bg-zinc-800 border border-zinc-700 p-3 text-sm text-fof-accent font-bold outline-none rounded-sm" x-text="(selectedProduct ? totalPrice : grandTotal) + ' FRW'"></div>
+                            <div class="w-full min-h-[48px] flex items-center bg-zinc-800 border border-zinc-700 px-3 py-3 text-sm text-fof-accent font-bold outline-none rounded-sm" x-text="(selectedProduct ? totalPrice : grandTotal) + ' FRW'"></div>
                         </div>
                     </div>
                 </div>
@@ -263,7 +263,7 @@
                     <div class="bg-black/40 border border-zinc-800 rounded-sm divide-y divide-zinc-800/50">
                         
                         <!-- Store Number -->
-                        <div class="p-4 flex items-center justify-between group cursor-pointer" @click="copyToClipboard('*182*1*1*0791832523#', 'Number')">
+                        <div class="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 group cursor-pointer" @click="copyToClipboard('*182*1*1*0791832523#', 'Number')">
                             <div>
                                 <span class="block text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">To (Store Number)</span>
                                 <span class="font-mono text-white text-lg font-bold tracking-wider" x-text="'*182*1*1*0791832523#'"></span>

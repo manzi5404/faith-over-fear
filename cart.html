@@ -215,7 +215,7 @@
     <!-- Payment Modal (Reused) -->
     <!-- Payment Modal (Redesigned) -->
     <div x-show="paymentModalOpen" 
-         class="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6"
+         class="fixed inset-0 z-[10000] flex items-center justify-center p-4"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -225,7 +225,7 @@
          x-cloak>
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm z-[9998]" @click="paymentModalOpen = false"></div>
         
-        <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10001] bg-zinc-900 border border-fof-gray w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] animate-fade-in-up pointer-events-auto">
+        <div class="relative z-[10001] bg-zinc-900 border border-fof-gray w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] animate-fade-in-up pointer-events-auto rounded-lg">
             <!-- Modal Header -->
             <div class="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 z-10">
                 <h3 class="text-xl sm:text-2xl font-display font-bold uppercase tracking-tight">MoMo Checkout</h3>

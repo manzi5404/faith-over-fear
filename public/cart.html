@@ -212,7 +212,7 @@
     <!-- Payment Modal (Reused) -->
     <!-- Payment Modal (Redesigned) -->
     <div x-show="paymentModalOpen" 
-         class="fixed inset-0 z-[10000] flex items-center justify-center px-4 py-6 sm:px-6 sm:py-8"
+         class="fixed inset-0 z-[10000] flex items-center justify-center p-4"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -222,17 +222,16 @@
          x-cloak>
         <div class="absolute inset-0 bg-black/90 backdrop-blur-sm z-[9998]" @click="paymentModalOpen = false"></div>
         
-        <div class="fixed top-1/2 left-1/2 z-[10001] flex w-full max-w-xl -translate-x-1/2 -translate-y-1/2 justify-center px-4 sm:px-0">
-            <div class="w-full bg-zinc-900 border border-fof-gray shadow-2xl overflow-y-auto max-h-[90vh] animate-fade-in-up pointer-events-auto">
-                <!-- Modal Header -->
-                <div class="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-800 bg-zinc-900 px-6 py-5 sm:px-8">
-                    <h3 class="text-xl sm:text-2xl font-display font-bold uppercase tracking-tight">MoMo Checkout</h3>
-                    <button @click="paymentModalOpen = false" class="text-gray-500 hover:text-white transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
+        <div class="relative z-[10001] bg-zinc-900 border border-fof-gray w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] animate-fade-in-up pointer-events-auto rounded-lg">
+            <!-- Modal Header -->
+            <div class="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-800 bg-zinc-900 px-6 py-5 sm:px-8">
+                <h3 class="text-xl sm:text-2xl font-display font-bold uppercase tracking-tight">MoMo Checkout</h3>
+                <button @click="paymentModalOpen = false" class="text-gray-500 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
 
-                <div class="mx-auto flex w-full max-w-2xl flex-col space-y-8 px-6 py-6 text-left sm:px-8 sm:py-8">
+            <div class="mx-auto flex w-full max-w-2xl flex-col space-y-8 px-6 py-6 text-left sm:px-8 sm:py-8">
                     <!-- User Details Section -->
                     <div class="space-y-4">
                         <h4 class="text-[10px] uppercase tracking-[0.2em] text-fof-accent font-bold">1. Your Information</h4>
