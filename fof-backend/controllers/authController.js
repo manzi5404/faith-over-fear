@@ -11,6 +11,14 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const timestamp = () => new Date().toISOString();
 const authLog = (...args) => console.log(`[${timestamp()}]`, ...args);
 const authError = (...args) => console.error(`[${timestamp()}]`, ...args);
+const isProduction = process.env.NODE_ENV === 'production';
+const authCookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    maxAge: 2 * 60 * 60 * 1000,
+    path: '/'
+};
 
 const signup = async (req, res) => {
     authLog('⚙️ authController.signup start', { email: req.body.email });
@@ -29,12 +37,7 @@ const signup = async (req, res) => {
         // but we'll follow the same JWT pattern if we did.
         const token = jwt.sign({ id: userId, email }, process.env.JWT_SECRET || 'fof_secret', { expiresIn: '2h' });
 
-        res.cookie('auth_token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 2 * 60 * 60 * 1000 // 2 hours
-        });
+        res.cookie('auth_token', token, authCookieOptions);
 
         res.status(201).json({ success: true, token, userId, name, email });
     } catch (error) {
@@ -66,12 +69,7 @@ const login = async (req, res) => {
 
         const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET || 'fof_secret', { expiresIn: '2h' });
 
-        res.cookie('auth_token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 2 * 60 * 60 * 1000 // 2 hours
-        });
+        res.cookie('auth_token', token, authCookieOptions);
 
         res.status(200).json({ success: true, token, userId: user.id, name: user.name, email: user.email });
     } catch (error) {
@@ -188,12 +186,7 @@ const googleLogin = async (req, res) => {
             { expiresIn: '2h' }
         );
 
-        res.cookie('auth_token', jwtToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 2 * 60 * 60 * 1000 // 2 hours
-        });
+        res.cookie('auth_token', jwtToken, authCookieOptions);
 
         res.status(200).json({ success: true, token: jwtToken, userId: user.id, name: user.name, email: user.email });
     } catch (error) {
@@ -203,7 +196,12 @@ const googleLogin = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-    res.clearCookie('auth_token');
+    res.clearCookie('auth_token', {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        path: '/'
+    });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 

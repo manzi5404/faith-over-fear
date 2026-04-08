@@ -2,10 +2,21 @@ import axios from 'axios';
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://faith-over-fear-production.up.railway.app').replace(/\/$/, '');
 const API_URL = '/api/drops';
+const getStoredToken = () => typeof window !== 'undefined' ? localStorage.getItem('fof_token') : null;
 
 // Base axios config for including cookies
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
+
+axios.interceptors.request.use((config) => {
+    const token = getStoredToken();
+    if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = config.headers.Authorization || `Bearer ${token}`;
+    }
+
+    return config;
+});
 
 const DropService = {
     verifySession: async () => {

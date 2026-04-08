@@ -20,7 +20,7 @@
         />
       </div>
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-400">Price ($)</label>
+        <label class="text-sm font-medium text-slate-400">Base Price ($)</label>
         <input 
           type="number"
           step="0.01"
@@ -28,6 +28,7 @@
           :class="['w-full bg-slate-900 border text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all', errors.price ? 'border-red-500' : 'border-slate-700']"
           placeholder="0.00"
         />
+        <p class="text-[10px] text-slate-500">Used as a fallback. The three quality inputs below are what the admin portal sends in <code>quality_prices</code>.</p>
       </div>
     </div>
 
@@ -105,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import SizeSelector from './SizeSelector.vue';
 import ImageUploader from './ImageUploader.vue';
 
@@ -153,17 +154,27 @@ const setQualityPrice = (levelId, value) => {
 
 const nameToId = { 'Essential': 1, 'Premium': 2, 'Luxe': 3 };
 
-onMounted(() => {
-  if (props.initialData) {
-    isEditing.value = !!props.initialData.id || !!props.initialData.tempId;
-    Object.assign(productData, { ...props.initialData });
-    colorsInput.value = Array.isArray(productData.colors) ? productData.colors.join(', ') : '';
-    qualityPrices.value = (props.initialData.quality_prices || []).map(q => ({
-      quality_level_id: q.quality_level_id || nameToId[q.quality_name],
-      price: parseFloat(q.price)
-    })).filter(q => q.quality_level_id);
-  }
-});
+const applyInitialData = (initialData) => {
+  Object.assign(productData, {
+    name: '',
+    price: 0,
+    description: '',
+    sizes: ['S', 'M', 'L', 'XL'],
+    colors: [],
+    image_urls: [],
+    is_active: true,
+    ...(initialData || {})
+  });
+
+  isEditing.value = !!initialData?.id || !!initialData?.tempId;
+  colorsInput.value = Array.isArray(productData.colors) ? productData.colors.join(', ') : '';
+  qualityPrices.value = (initialData?.quality_prices || []).map(q => ({
+    quality_level_id: q.quality_level_id || nameToId[q.quality_name],
+    price: parseFloat(q.price)
+  })).filter(q => q.quality_level_id && q.price > 0);
+};
+
+watch(() => props.initialData, applyInitialData, { immediate: true });
 
 const handleSave = () => {
   errors.name = !productData.name ? 'Required' : '';

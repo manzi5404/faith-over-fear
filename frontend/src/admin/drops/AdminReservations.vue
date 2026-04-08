@@ -25,18 +25,18 @@
             <template v-if="reservations.length > 0">
               <tr v-for="res in reservations" :key="res.id" class="hover:bg-slate-800/30 transition-colors group">
                 <td class="px-6 py-5">
-                  <div class="font-bold text-slate-100">{{ res.fullName }}</div>
-                  <div class="text-xs text-slate-500 mt-0.5">{{ res.email }}</div>
-                  <div class="text-[10px] text-slate-600 font-mono mt-1" v-if="res.phone">{{ res.phone }}</div>
+                  <div class="font-bold text-slate-100">{{ getCustomerName(res) }}</div>
+                  <div class="text-xs text-slate-500 mt-0.5">{{ getCustomerEmail(res) }}</div>
+                  <div class="text-[10px] text-slate-600 font-mono mt-1" v-if="getCustomerPhone(res)">{{ getCustomerPhone(res) }}</div>
                 </td>
                 <td class="px-6 py-5">
                   <div class="flex items-center gap-4">
                     <div class="w-10 h-12 bg-zinc-800 border border-slate-700 overflow-hidden flex-shrink-0">
-                      <img v-if="res.productImageUrls" :src="JSON.parse(res.productImageUrls)[0]" class="w-full h-full object-cover">
+                      <img v-if="getProductImage(res)" :src="getProductImage(res)" class="w-full h-full object-cover">
                       <div v-else class="w-full h-full flex items-center justify-center text-[8px] text-slate-600">NO IMG</div>
                     </div>
                     <div>
-                      <div class="text-sm font-medium text-slate-300">{{ res.productName || 'Unknown Product' }}</div>
+                      <div class="text-sm font-medium text-slate-300">{{ getProductName(res) }}</div>
                       <div class="flex gap-2 mt-1">
                         <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Size: {{ res.size }}</span>
                         <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Qty: {{ res.quantity }}</span>
@@ -48,15 +48,16 @@
                   <span :class="getStatusClass(res.status)">{{ res.status }}</span>
                 </td>
                 <td class="px-6 py-5 text-xs text-slate-500 font-mono">
-                  {{ formatDate(res.createdAt) }}
+                  {{ formatDate(res.created_at || res.createdAt) }}
                 </td>
                 <td class="px-6 py-5 text-right">
                   <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <select 
                       @change="updateStatus(res.id, $event.target.value)"
+                      :value="res.status"
                       class="bg-black border border-slate-800 text-[10px] uppercase tracking-widest px-2 py-1.5 focus:border-blue-500 outline-none rounded-lg"
                     >
-                      <option v-for="s in ['pending', 'contacted', 'converted', 'cancelled']" :value="s" :selected="res.status === s">{{ s }}</option>
+                      <option v-for="s in reservationStatuses" :key="s" :value="s">{{ s }}</option>
                     </select>
                   </div>
                 </td>
@@ -85,6 +86,7 @@ import DropService from './DropService';
 
 const reservations = ref([]);
 const emit = defineEmits(['updated']);
+const reservationStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
 
 const fetchReservations = async () => {
   try {
@@ -104,12 +106,38 @@ const updateStatus = async (id, status) => {
   }
 };
 
+const getCustomerName = (reservation) => reservation.user?.name || reservation.fullName || reservation.userName || 'Guest';
+const getCustomerEmail = (reservation) => reservation.user?.email || reservation.email || reservation.userEmail || 'N/A';
+const getCustomerPhone = (reservation) => reservation.user?.phone || reservation.phone || '';
+const getProductName = (reservation) => reservation.product?.name || reservation.productName || 'Unknown Product';
+
+const getProductImage = (reservation) => {
+  const rawImages = reservation.product?.image_urls || reservation.productImageUrls;
+
+  if (Array.isArray(rawImages) && rawImages.length > 0) {
+    return rawImages[0];
+  }
+
+  if (typeof rawImages === 'string' && rawImages.trim() !== '') {
+    try {
+      const parsed = JSON.parse(rawImages);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed[0];
+      }
+    } catch {
+      return rawImages;
+    }
+  }
+
+  return reservation.product?.image_url || null;
+};
+
 const getStatusClass = (status) => {
   const base = 'px-2 py-0.5 rounded-full font-bold uppercase tracking-widest text-[9px] ';
   switch (status) {
     case 'pending': return base + 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
-    case 'contacted': return base + 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
-    case 'converted': return base + 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
+    case 'confirmed': return base + 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
+    case 'completed': return base + 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
     case 'cancelled': return base + 'bg-red-500/10 text-red-500 border border-red-500/20';
     default: return base + 'bg-slate-800 text-slate-400';
   }

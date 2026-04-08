@@ -233,6 +233,17 @@ const adminAlerts = ref([]);
 const alertCount = ref(0);
 const showAlertPanel = ref(false);
 
+const persistSession = (data) => {
+    if (!data?.token) return;
+    localStorage.setItem('fof_token', data.token);
+    localStorage.setItem('fof_user', JSON.stringify({ id: data.userId, name: data.name, email: data.email }));
+};
+
+const clearSession = () => {
+    localStorage.removeItem('fof_token');
+    localStorage.removeItem('fof_user');
+};
+
 const checkAuth = async () => {
     try {
         const data = await DropService.verifySession();
@@ -253,6 +264,7 @@ const handleLogin = async () => {
     try {
         const data = await DropService.login(loginEmail.value, loginPassword.value);
         if (data.success) {
+            persistSession(data);
             isAuthenticated.value = true;
             user.value = { email: data.email, name: data.name };
             notify('Welcome back, Admin.', 'success');
@@ -281,10 +293,12 @@ const initiateGoogleLogin = () => {
                 try {
                     const data = await DropService.googleLogin(response.credential);
                     if (data.success) {
+                        persistSession(data);
                         isAuthenticated.value = true;
                         user.value = { email: data.email, name: data.name };
                         notify('Welcome back, Admin.', 'success');
                         await fetchDrops();
+                        await fetchNotifications();
                     }
                 } catch (error) {
                     const msg = error.response?.data?.message || 'Google login failed.';
@@ -300,6 +314,7 @@ const initiateGoogleLogin = () => {
 const handleLogout = async () => {
     try {
         await DropService.logout();
+        clearSession();
         isAuthenticated.value = false;
         user.value = null;
         notify('Logged out successfully.', 'success');
