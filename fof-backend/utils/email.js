@@ -31,37 +31,78 @@ async function sendEmail({ email, subject, message, html }) {
 }
 
 async function notifyNewDrop(userEmails, dropDetails) {
-    const { title, name, description, release_date, image_url } = dropDetails;
+    const { title, name, description, image_url } = dropDetails;
     const dropName = title || name || 'New Collection';
     const dropDesc = description || 'Our latest collection has arrived. Explore the spirit of resilience.';
-    const dropDate = release_date ? new Date(release_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Coming Soon';
-    const dropImage = image_url || 'https://placehold.co/600x400/000000/FFFFFF/png?text=F%3EF+NEW+DROP';
-    const shopUrl = process.env.CLIENT_URL || 'https://faithoverfear.rw';
+    const dropImage = image_url || 'https://placehold.co/600x400/000000/FFFFFF/png?text=F%3ef+NEW+DROP';
+    const shopUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://faithoverfear.rw';
 
     const subject = `NEW DROP: ${dropName} - Now Live`;
     const html = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #000; color: #fff; padding: 40px; text-align: center; border: 1px solid #222;">
-            <h1 style="letter-spacing: -2px; font-size: 48px; margin-bottom: 0; font-weight: 900;">F&gt;F</h1>
-            <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: #888; margin-top: 5px; font-weight: bold;">Faith Over Fear</p>
-            
-            <div style="margin: 40px 0; background: #111;">
-                <img src="${dropImage}" alt="${dropName}" style="width: 100%; max-height: 400px; object-fit: cover; border: 1px solid #333;">
-            </div>
-            
-            <div style="text-align: left; padding: 0 20px;">
-                <h2 style="text-transform: uppercase; font-size: 28px; margin-bottom: 15px; letter-spacing: -1px;">${dropName}</h2>
-                <p style="font-size: 14px; color: #aaa; line-height: 1.6; margin-bottom: 20px;">${dropDesc}</p>
-                <p style="font-size: 12px; font-weight: bold; color: #f33; text-transform: uppercase; letter-spacing: 1px;">Release Date: ${dropDate}</p>
-            </div>
-            
-            <div style="margin-top: 40px;">
-                <a href="${shopUrl}/shop.html" style="background: #fff; color: #000; text-decoration: none; padding: 18px 50px; font-weight: 900; text-transform: uppercase; font-size: 11px; letter-spacing: 3px; display: inline-block;">Explore Collection</a>
-            </div>
-            
-            <div style="margin-top: 60px; padding-top: 30px; border-top: 1px solid #111; font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 2px;">
-                &copy; 2026 Faith Over Fear. Movement Of Believers.
-            </div>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #000;">
+                <tr>
+                    <td align="center" style="padding: 40px 20px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #0a0a0a; border-radius: 16px; overflow: hidden;">
+                            <!-- Header -->
+                            <tr>
+                                <td align="center" style="padding: 40px 40px 20px;">
+                                    <h1 style="margin: 0; font-size: 42px; font-weight: 900; color: #fff; letter-spacing: -2px;">F<span style="color: #ff3b3b;">&gt;</span>F</h1>
+                                    <p style="margin: 8px 0 0; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 4px; font-weight: 600;">Faith Over Fear</p>
+                                </td>
+                            </tr>
+                            
+                            <!-- Image with hover effect -->
+                            <tr>
+                                <td align="center" style="padding: 20px 40px;">
+                                    <div style="display: inline-block; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+                                        <img src="${dropImage}" alt="${dropName}" width="520" style="display: block; max-width: 100%; height: auto; border-radius: 12px; transition: transform 0.3s ease;">
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <!-- Content -->
+                            <tr>
+                                <td align="center" style="padding: 20px 40px 30px;">
+                                    <h2 style="margin: 0 0 16px; font-size: 26px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: -0.5px;">${dropName}</h2>
+                                    <p style="margin: 0; font-size: 15px; color: #aaa; line-height: 1.6; max-width: 400px;">${dropDesc}</p>
+                                </td>
+                            </tr>
+                            
+                            <!-- CTA Button -->
+                            <tr>
+                                <td align="center" style="padding: 0 40px 40px;">
+                                    <a href="${shopUrl}/shop.html" style="display: inline-block; background: #fff; color: #000; text-decoration: none; padding: 18px 48px; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; border-radius: 6px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255,255,255,0.1);">Shop the Drop Now</a>
+                                </td>
+                            </tr>
+                            
+                            <!-- Footer -->
+                            <tr>
+                                <td align="center" style="padding: 30px 40px; border-top: 1px solid #222;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="https://instagram.com/faithoverfear.rw_" style="display: inline-block; margin: 0 12px; color: #888; text-decoration: none; font-size: 12px;">Instagram</a>
+                                                <span style="color: #444; margin: 0 8px;">|</span>
+                                                <a href="mailto:faithoverfearsupport@gmail.com" style="display: inline-block; margin: 0 12px; color: #888; text-decoration: none; font-size: 12px;">Support</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <p style="margin: 20px 0 0; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px;">&copy; 2026 Faith Over Fear. All Rights Reserved.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
     `;
 
     console.log(`[BATCH_NOTIFY] Initializing mailing for ${userEmails.length} subscribers...`);
