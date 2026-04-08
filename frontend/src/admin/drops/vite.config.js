@@ -21,17 +21,21 @@ export default defineConfig({
     outDir: outDir,
     emptyOutDir: true,
     rollupOptions: {
-      input: path.resolve(__dirname, 'index.html'),
-      output: {
-        entryFileNames: '[name].js',
-        chunkFileNames: '[name].js',
-        assetFileNames: '[name].[ext]'
-      }
+      input: path.resolve(__dirname, 'index.html')
     }
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './')
+    }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+        secure: false
+      }
     }
   }
 });

@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://faith-over-fear-production.up.railway.app').replace(/\/$/, '');
+// Always use same-origin `/api` so Vercel rewrites handle Railway proxying
+// and auth cookies stay on the admin portal origin.
+const API_BASE_URL = '';
 const API_URL = '/api/drops';
 
 // Base axios config for including cookies
