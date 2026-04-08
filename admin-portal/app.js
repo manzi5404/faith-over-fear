@@ -925,6 +925,12 @@ const ReservationsSection = ({ onToast }) => {
   const products = productsData?.products || [];
   const reservations = data?.reservations || [];
 
+  useEffect(() => {
+    if (data) {
+      console.debug('🔎 Admin reservations payload:', data);
+    }
+  }, [data]);
+
   const statusColors = {
     pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
     confirmed: "bg-blue-500/10 text-blue-400 border-blue-500/30",
@@ -1029,7 +1035,7 @@ const ReservationsSection = ({ onToast }) => {
             {/* Product Image */}
             <div className="aspect-square w-full bg-slate-900 overflow-hidden">
                 <img 
-                    src={res.product.image_urls[0] || "https://placehold.co/400x400?text=F%3EF"} 
+                    src={res.product.image_urls?.[0] || res.product.image_url || "https://placehold.co/400x400?text=F%3EF"} 
                     alt={res.product.name}
                     className="h-full w-full object-cover transition-transform group-hover:scale-110"
                 />

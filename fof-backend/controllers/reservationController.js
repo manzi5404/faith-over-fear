@@ -118,6 +118,7 @@ const getReservations = async (req, res) => {
                 r.*, 
                 p.name as productName, 
                 p.image_urls as productImageUrls,
+                p.image_url as productImageUrl,
                 u.name as userName,
                 u.email as userEmail
             FROM reservations r 
@@ -154,26 +155,50 @@ const getReservations = async (req, res) => {
         const [rows] = await pool.query(query, params);
         
         // Transform into structured JSON as requested
-        const structuredReservations = rows.map(r => ({
-            id: r.id,
-            user: {
-                name: r.full_name || r.userName || "Guest",
-                email: r.email || r.userEmail || "N/A",
-                phone: r.phone || "N/A"
-            },
-            product: {
-                name: r.productName || `Product #${r.product_id}`,
-                image_urls: typeof r.productImageUrls === 'string' ? JSON.parse(r.productImageUrls) : (r.productImageUrls || [])
-            },
-            quantity: r.quantity,
-            size: r.size,
-            color: r.color,
-            store_mode: r.store_mode,
-            status: r.status,
-            created_at: r.created_at,
-            updated_at: r.updated_at
-        }));
+        const structuredReservations = rows.map(r => {
+            const rawImageUrls = r.productImageUrls;
+            let imageUrls = [];
+            if (typeof rawImageUrls === 'string' && rawImageUrls.trim() !== '') {
+                try {
+                    imageUrls = JSON.parse(rawImageUrls);
+                } catch (err) {
+                    imageUrls = [rawImageUrls];
+                }
+            } else if (Array.isArray(rawImageUrls)) {
+                imageUrls = rawImageUrls;
+            } else if (rawImageUrls) {
+                imageUrls = [rawImageUrls];
+            }
+            if (imageUrls.length === 0 && r.productImageUrl) {
+                imageUrls = [r.productImageUrl];
+            }
 
+            const customerName = (r.full_name && r.full_name.trim()) || (r.userName && r.userName.trim()) ||
+                (r.email ? r.email.split('@')[0] : 'Guest');
+
+            return {
+                id: r.id,
+                user: {
+                    name: customerName,
+                    email: r.email || r.userEmail || "N/A",
+                    phone: r.phone || "N/A"
+                },
+                product: {
+                    name: r.productName || `Product #${r.product_id}`,
+                    image_urls: imageUrls,
+                    image_url: r.productImageUrl || imageUrls[0] || null
+                },
+                quantity: r.quantity,
+                size: r.size,
+                color: r.color,
+                store_mode: r.store_mode,
+                status: r.status,
+                created_at: r.created_at,
+                updated_at: r.updated_at
+            };
+        });
+
+        console.log('📦 RESERVATIONS_FETCH_RESULT:', structuredReservations);
         res.json({ success: true, reservations: structuredReservations });
     } catch (error) {
         console.error('❌ RESERVATION_FETCH_ERROR:', error);
