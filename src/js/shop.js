@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://mysql-production-f777.up.railway.app';
+const API_BASE_URL = 'https://fof-backend-production.up.railway.app';
 
 const shopLogic = () => ({
     products: [],

@@ -6,7 +6,7 @@ import productLogic from './product.js';
 import { initHeroAnimation } from './animations.js';
 import './announcement-entry.jsx';
 
-const API_BASE_URL = 'https://mysql-production-f777.up.railway.app';
+const API_BASE_URL = 'https://fof-backend-production.up.railway.app';
 
 window.Alpine = Alpine;
 window.gsap = gsap;
