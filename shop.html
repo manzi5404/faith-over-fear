@@ -179,7 +179,7 @@
                                  <div class="flex justify-between items-start mb-6">
                                      <div>
                                          <h3 class="text-xl font-bold uppercase leading-none mb-1 group-hover:text-fof-accent transition-colors" x-text="product.name"></h3>
-                                         <p class="text-gray-400 text-[10px] uppercase tracking-widest" x-text="product.category || product.dropName"></p>
+                                         <p class="text-gray-400 text-[10px] uppercase tracking-widest">New Arrivals: <span x-text="product.dropName"></span></p>
                                      </div>
 <div class="text-right">
                                           <template x-if="product.quality_prices && product.quality_prices.length > 0">
