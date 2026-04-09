@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-// Always use same-origin `/api` so Vercel rewrites handle Railway proxying
-// and auth cookies stay on the admin portal origin.
-const API_BASE_URL = '';
-const API_URL = '/api/drops';
+// Configure API base URL
+// Local dev: uses Vite proxy (empty string)
+// Netlify: use _redirects file OR set VITE_API_URL env var
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = `${API_BASE_URL}/api/drops`;
 
 // Base axios config for including cookies
 axios.defaults.baseURL = API_BASE_URL;

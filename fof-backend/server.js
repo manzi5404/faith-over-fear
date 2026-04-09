@@ -32,7 +32,27 @@ log('🚀 server.js loaded');
 // Body Parsing Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: true, credentials: true }));
+
+// CORS Configuration - Allow Netlify frontend + Railway backend + localhost
+const allowedOrigins = [
+    'https://faithoverfearrw.netlify.app',
+    'https://fof-backend-production.up.railway.app',
+    'http://localhost:3000',
+    'http://localhost:5173'
+].filter(Boolean);
+
+app.use(cors({
+    origin: function(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
+
 app.use(cookieParser);
 app.use(checkStoreMode);
 
@@ -78,7 +98,7 @@ app.use((req, res) => res.status(404).json({ success: false, error: 'Not Found',
 app.use(errorHandler);
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     await initializeDatabase();
