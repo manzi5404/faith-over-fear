@@ -183,9 +183,20 @@
                                          <h3 class="text-xl font-bold uppercase leading-none mb-1 group-hover:text-fof-accent transition-colors" x-text="product.name"></h3>
                                          <p class="text-gray-400 text-[10px] uppercase tracking-widest" x-text="product.category || product.dropName"></p>
                                      </div>
-                                     <div class="text-right">
-                                         <span class="text-xl font-mono text-fof-white" x-text="product.price.toLocaleString() + ' FRW'"></span>
-                                     </div>
+<div class="text-right">
+                                          <template x-if="product.quality_prices && product.quality_prices.length > 0">
+                                              <div class="space-y-1">
+                                                  <template x-for="qp in product.quality_prices" :key="qp.quality_level_id">
+                                                      <div class="text-xs font-mono text-fof-white">
+                                                          <span x-text="qp.quality_name"></span>: <span x-text="parseFloat(qp.price).toLocaleString()"></span> FRW
+                                                      </div>
+                                                  </template>
+                                              </div>
+                                          </template>
+                                          <template x-if="!product.quality_prices || product.quality_prices.length === 0">
+                                              <span class="text-xl font-mono text-fof-white" x-text="product.price.toLocaleString() + ' FRW'"></span>
+                                          </template>
+                                      </div>
                                  </div>
 
                                  <!-- Single Action CTA -->
