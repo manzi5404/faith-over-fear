@@ -217,14 +217,8 @@ const shopLogic = () => ({
         }).sort((r, t) => this.sortBy === "price-asc" ? r.price - t.price : this.sortBy === "price-desc" ? t.price - r.price : t.id > r.id ? 1 : -1);
     },
 
-    get newDrops() { return this.products.filter(r => r.dropType === "new-drop" || r.dropType === "recent-drop"); },
-    get recentDrops() {
-        const seenDrops = [];
-        return this.products.filter(p => {
-            if (!seenDrops.includes(p.dropName)) seenDrops.push(p.dropName);
-            return seenDrops.indexOf(p.dropName) < 2;
-        });
-    },
+    get newDrops() { return this.products.filter(r => r.dropType === "new-drop"); },
+    get recentDrops() { return this.products.filter(r => r.dropType === "recent-drop"); },
 
     get totalPrice() {
         if (!this.selectedProduct) return "0.00";
