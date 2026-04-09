@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://mysql-production-f777.up.railway.app';
+
 const shopLogic = () => ({
     products: [],
     loading: false,
@@ -121,7 +123,7 @@ const shopLogic = () => ({
 
     async fetchStoreConfig() {
         try {
-            const res = await fetch('/api/store-config');
+            const res = await fetch(`${API_BASE_URL}/api/store-config`);
             const data = await res.json();
             if (data.success && data.config) {
                 this.applyStoreConfig(data.config);
@@ -163,7 +165,7 @@ const shopLogic = () => ({
 
     async fetchProducts() {
         try {
-            const res = await fetch('/api/drops?includeProducts=true');
+            const res = await fetch(`${API_BASE_URL}/api/drops?includeProducts=true`);
             const data = await res.json();
             if (data.success) {
                 // We have drops (collections). For the shop grid, we want to show all products if active.
@@ -197,7 +199,7 @@ const shopLogic = () => ({
 
     async fetchSettings() {
         try {
-            const res = await fetch('/api/settings'); // Assuming this endpoint exists or will be added
+            const res = await fetch(`${API_BASE_URL}/api/settings`); // Assuming this endpoint exists or will be added
             const data = await res.json();
             if (data.success) {
                 this.storeSettings = data.settings;
@@ -375,7 +377,7 @@ const shopLogic = () => ({
                 // Create one order per cart item
                 for (const item of this.cartItems) {
                     const effectivePrice = item.price;
-                    const response = await fetch('/api/orders', {
+const response = await fetch(`${API_BASE_URL}/api/orders`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -401,7 +403,7 @@ const shopLogic = () => ({
                 }
             } else {
                 const basePrice = this.modalQuality ? parseFloat(this.modalQuality.price) : parseFloat(checkoutProduct.price);
-                const response = await fetch('/api/orders', {
+                const response = await fetch(`${API_BASE_URL}/api/orders`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -556,7 +558,7 @@ const shopLogic = () => ({
 
         try {
             // Submit to the DEDICATED reservations API
-            const response = await fetch('/api/reservations', {
+            const response = await fetch(`${API_BASE_URL}/api/reservations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

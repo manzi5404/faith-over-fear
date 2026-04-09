@@ -1,6 +1,0 @@
-# SPA redirect for admin portal (must be first)
-/admin/*  /admin/index.html  200
-
-# API redirect to Railway backend
-/api/*  https://fof-backend-production.up.railway.app/api/:splat  200
-/admin/api/*  https://fof-backend-production.up.railway.app/api/:splat  200

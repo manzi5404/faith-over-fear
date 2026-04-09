@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://mysql-production-f777.up.railway.app';
+
 const resLogic = () => ({
     reservations: [],
     loading: true,
@@ -20,8 +22,8 @@ const resLogic = () => ({
 
             // Fetch from both APIs in parallel
             const [ordersRes, reservationsRes] = await Promise.all([
-                fetch('/api/orders/my', { headers }).then(r => r.json()).catch(() => ({ success: false, orders: [] })),
-                fetch('/api/reservations/me', { headers }).then(r => r.json()).catch(() => ({ success: false, reservations: [] }))
+                fetch(`${API_BASE_URL}/api/orders/my`, { headers }).then(r => r.json()).catch(() => ({ success: false, orders: [] })),
+                fetch(`${API_BASE_URL}/api/reservations/me`, { headers }).then(r => r.json()).catch(() => ({ success: false, reservations: [] }))
             ]);
 
             let allReservations = [];
