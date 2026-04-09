@@ -65,16 +65,7 @@ const productLogic = () => ({
 
             const explicitPrices = this.product.quality_prices || [];
             if (explicitPrices.length > 0) {
-                // Use admin-configured per-product prices
                 this.qualityLevels = explicitPrices;
-            } else {
-                // Fallback: derive prices from base price using standard multipliers
-                const base = parseFloat(this.product.price) || 0;
-                this.qualityLevels = [
-                    { quality_level_id: 1, quality_name: 'Essential', quality_description: 'Everyday tees, solid quality, standard cotton. Focus on comfort and value.', price: base },
-                    { quality_level_id: 2, quality_name: 'Premium',   quality_description: 'Softer fabrics, better fit, stronger collar and seams. Emphasizes durability and shape retention.', price: Math.round(base * 1.3) },
-                    { quality_level_id: 3, quality_name: 'Luxe',      quality_description: 'High-end fabrics, very soft handfeel, best construction. Maximum comfort and longevity.', price: Math.round(base * 1.7) }
-                ];
             }
             if (this.qualityLevels.length > 0) {
                 this.selectedQuality = this.qualityLevels[0];
