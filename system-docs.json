@@ -1,0 +1,104 @@
+{
+  "brand": {
+    "name": "Faith Over Fear",
+    "tagline": "F>F - Streetwear for the bold, the believers, and the brave",
+    "domain": "faithoverfearrw.netlify.app",
+    "supportEmail": "faithoverfearsupport@gmail.com",
+    "social": {
+      "instagram": "https://www.instagram.com/faithoverfear.rw_/",
+      "tiktok": "https://tiktok.com/@faithoverfear_brand"
+    }
+  },
+  "faq": [
+    {
+      "id": 1,
+      "question": "How does the sizing work?",
+      "answer": "We aim for a modern, sized streetwear fit. If you like it baggy or medium we got you. If you want a more standard fit, size down one. Check our Size Guide on each product page for measurements."
+    },
+    {
+      "id": 2,
+      "question": "When will I get my order?",
+      "answer": "Orders are printed or sewed within 1-2 business days. Standard deliveries are done on both Wednesday and Sunday 24/7. You'll get a confirmation message the second your order leaves our warehouse."
+    },
+    {
+      "id": 3,
+      "question": "Can I return items?",
+      "answer": "Yes! We accept returns on unworn items within the same day of delivery. If it doesn't fit right, we'll swap it out. (Sale items are final sale)."
+    },
+    {
+      "id": 4,
+      "question": "How do I wash my F>F gear?",
+      "answer": "To keep the puff print popping and the fabric fresh: Wash cold, inside out. Hang dry is best, or tumble dry low. Do not iron directly on the graphics!"
+    },
+    {
+      "id": 5,
+      "question": "Do you restock items in the archive?",
+      "answer": "Some core items restock, but most Drops are limited edition. Once a collection is retired, it typically stays retired. Follow us on our social platforms to stay updated on new drops!"
+    }
+  ],
+  "termsAndConditions": {
+    "privacyPolicy": "We value your privacy like we value our own. We do not sell your data. We only use your info to ship your gear and tell you about cool stuff.",
+    "termsOfService": "By using this site, you agree to be cool. Creating an account means you are part of the family. We reserve the right to cancel orders if we suspect bot activity (we hate bots).",
+    "purchaseAgreement": "You buy it, we deliver it. If anything goes wrong, we fix it. Simple as that. All transactions are secure and encrypted."
+  },
+  "deliveries": {
+    "kigali": {
+      "schedule": "Wednesday and Sunday",
+      "fee": "Small transport fee",
+      "details": "All deliveries are done on Wednesday and Sunday"
+    },
+    "otherProvinces": {
+      "method": "Courier via public transport",
+      "risk": "On buyer's risk",
+      "details": "Deliveries may be done also in other provinces using courier in public transport but on buyer's risk"
+    },
+    "processing": "Orders are processed within 1-2 business days",
+    "packaging": "All orders are packed in our signature matte black poly mailers with exclusive F>F stickers included"
+  },
+  "returnsAndExchanges": {
+    "process": "Visit our Contact Page to start a return",
+    "conditions": [
+      "Items must be in original, unworn condition with tags attached"
+    ],
+    "exchanges": "Exchanges are free! We want to get you the right size.",
+    "refunds": "Returns for a full refund have a small 1000 FRW processing fee deducted to cover restocking.",
+    "finalSale": "Sale items are final sale."
+  },
+  "navigation": {
+    "mainNav": [
+      {"label": "Home", "url": "/index.html"},
+      {"label": "New Arrivals", "url": "/shop.html"},
+      {"label": "Recent Drops", "url": "/lookbook.html"},
+      {"label": "About", "url": "/about.html"},
+      {"label": "Contact", "url": "/contact.html"},
+      {"label": "Login", "url": "/login.html"},
+      {"label": "Cart", "url": "/cart.html"}
+    ],
+    "footerNav": [
+      {"label": "Home", "url": "/index.html"},
+      {"label": "New Arrivals", "url": "/shop.html"},
+      {"label": "Recent Drops", "url": "/lookbook.html"},
+      {"label": "About", "url": "/about.html"},
+      {"label": "Contact", "url": "/contact.html"}
+    ],
+    "supportNav": [
+      {"label": "FAQ", "url": "/faq.html"},
+      {"label": "Deliveries & Returns", "url": "/shipping.html"},
+      {"label": "Terms", "url": "/terms.html"}
+    ]
+  },
+  "auth": {
+    "pages": [
+      {"label": "Login", "url": "/login.html"},
+      {"label": "Sign Up", "url": "/signup.html"},
+      {"label": "Forgot Password", "url": "/forgot-password.html"},
+      {"label": "Reset Password", "url": "/reset-password.html"}
+    ]
+  },
+  "technical": {
+    "frontend": "Netlify - faithoverfearrw.netlify.app",
+    "backend": "Railway - fof-backend-production.up.railway.app",
+    "database": "MySQL on Railway",
+    "adminPortal": "/admin"
+  }
+}

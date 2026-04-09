@@ -203,6 +203,8 @@
     <!--End of Tawk.to Script-->
     <script type="module" src="/src/js/main.js"></script>
     <script>
+        const API_BASE_URL = 'https://mysql-production-f777.up.railway.app';
+        
         function contactForm() {
             return {
                 formData: {
@@ -217,7 +219,7 @@
                     this.isSubmitting = true;
 
                     try {
-                        const response = await fetch('/api/contact', {
+                        const response = await fetch(`${API_BASE_URL}/api/contact`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(this.formData)

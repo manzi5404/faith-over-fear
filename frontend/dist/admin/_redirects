@@ -1,5 +1,0 @@
-# Netlify redirects for API proxying
-/api/*  https://fof-backend-production.up.railway.app/api/:splat  200
-
-# SPA redirect for admin portal
-/admin/*  /admin/index.html  200

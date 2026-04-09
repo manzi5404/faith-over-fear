@@ -100,6 +100,8 @@
     <script type="module">
         import Alpine from 'alpinejs';
         
+        const API_BASE_URL = 'https://mysql-production-f777.up.railway.app';
+        
         window.authLogic = () => ({
             name: '',
             email: '',
@@ -109,7 +111,7 @@
             async signup() {
                 this.loading = true;
                 try {
-                    const response = await fetch('/api/auth/signup', {
+                    const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name: this.name, email: this.email, password: this.password })
@@ -137,7 +139,7 @@
                         callback: async (response) => {
                             this.loading = true;
                             try {
-                                const backendRes = await fetch('/api/auth/google', {
+                                const backendRes = await fetch(`${API_BASE_URL}/api/auth/google`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ token: response.credential })

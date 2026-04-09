@@ -6,6 +6,8 @@ import productLogic from './product.js';
 import { initHeroAnimation } from './animations.js';
 import './announcement-entry.jsx';
 
+const API_BASE_URL = 'https://mysql-production-f777.up.railway.app';
+
 window.Alpine = Alpine;
 window.gsap = gsap;
 Alpine.plugin(collapse);
@@ -67,8 +69,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const fetchGlobalData = async () => {
         try {
             const [settingsRes, storeConfigRes] = await Promise.all([
-                fetch('/api/settings').then(r => r.json()).catch(() => ({ success: false })),
-                fetch('/api/store-config').then(r => r.json()).catch(() => ({ success: false }))
+                fetch(`${API_BASE_URL}/api/settings`).then(r => r.json()).catch(() => ({ success: false })),
+                fetch(`${API_BASE_URL}/api/store-config`).then(r => r.json()).catch(() => ({ success: false }))
             ]);
 
             if (settingsRes.success) {
