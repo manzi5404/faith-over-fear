@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Recent Drops | F>F</title>
+    <title>Recent Drops | Faith Over Fear Streetwear Kigali</title>
+    <meta name="description" content="Browse Faith Over Fear recent drops. View our latest streetwear collections from Kigali, Rwanda. Limited edition hoodies and tees." />
+    <meta name="keywords" content="Faith Over Fear drops, streetwear Rwanda, Kigali clothing brand, recent drops, limited edition hoodies" />
+    <meta property="og:title" content="Recent Drops | Faith Over Fear" />
+    <meta property="og:description" content="Explore our latest streetwear drops from Kigali, Rwanda." />
+    <meta property="og:type" content="website" />
+    <link rel="canonical" href="https://faithoverfearrw.netlify.app/lookbook.html" />
     <link rel="stylesheet" href="/src/css/style.css">
     <style>
         [x-cloak] { display: none !important; }
@@ -127,9 +133,12 @@
 
     <main class="pt-24 min-h-screen pb-20">
         <div class="container mx-auto px-6 py-12">
-            <h1 class="text-4xl md:text-6xl font-display font-bold text-center mb-16 tracking-tighter">
+            <h1 class="text-4xl md:text-6xl font-display font-bold text-center mb-8 tracking-tighter">
                 Recent <span class="text-fof-accent">Drops</span>
             </h1>
+            <p class="text-gray-400 text-lg text-center max-w-2xl mb-12 mx-auto">
+                Explore our recent drops from Faith Over Fear. Each collection represents a limited streetwear drop from Kigali, Rwanda. Browse our past drops and shop F>F streetwear.
+            </p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Loop over Recent Drops -->
@@ -146,14 +155,14 @@
                              
                              <div class="flip-card-inner h-full w-full">
                                  <!-- Front Face (with hover crossfade) -->
-                                 <div class="flip-card-front hover-crossfade">
-                                     <img :src="product.images[0]" :alt="product.name" class="w-full h-full object-cover">
-                                     <img x-show="product.images.length > 1" :src="product.images[1]" :alt="product.name" class="w-full h-full object-cover opacity-0">
-                                 </div>
-                                 
-                                 <!-- Back Face (for mobile flip) -->
-                                 <div class="flip-card-back">
-                                     <img :src="product.images[1] || product.images[0]" :alt="product.name" class="w-full h-full object-cover">
+<div class="flip-card-front hover-crossfade">
+                                      <img :src="product.images[0]" :alt="product.name + ' - Faith Over Fear streetwear Rwanda'" class="w-full h-full object-cover">
+                                      <img x-show="product.images.length > 1" :src="product.images[1]" :alt="product.name + ' - Faith Over Fear limited streetwear drop'" class="w-full h-full object-cover opacity-0">
+                                  </div>
+                                  
+                                  <!-- Back Face (for mobile flip) -->
+                                  <div class="flip-card-back">
+                                      <img :src="product.images[1] || product.images[0]" :alt="product.name + ' - Faith Over Fear hoodie Kigali'" class="w-full h-full object-cover">
                                  </div>
                              </div>
                              

@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shop | F>F</title>
+    <title>Shop New Arrivals | Faith Over Fear Streetwear Rwanda</title>
+    <meta name="description" content="Shop Faith Over Fear streetwear in Kigali, Rwanda. Browse new arrivals, limited edition hoodies, tees, and exclusive drops. Free delivery in Rwanda." />
+    <meta name="keywords" content="Faith Over Fear shop, streetwear Rwanda, Kigali clothing brand, hoodies Rwanda, limited streetwear drops, F>F streetwear" />
+    <meta property="og:title" content="Shop New Arrivals | Faith Over Fear" />
+    <meta property="og:description" content="Browse our latest streetwear drops. Limited edition hoodies and tees from Rwanda's boldest brand." />
+    <meta property="og:type" content="website" />
+    <link rel="canonical" href="https://faithoverfearrw.netlify.app/shop.html" />
     <link rel="stylesheet" href="/src/css/style.css">
     <style>
         [x-cloak] { display: none !important; }
@@ -131,9 +137,12 @@
             
             <!-- NEW ARRIVALS SECTION -->
             <section class="mb-24">
-                <div class="flex flex-col md:flex-row md:items-center justify-between mb-12">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-8">
                     <h1 class="text-4xl md:text-5xl font-display font-bold tracking-tight">New <span class="text-fof-accent">Arrivals</span></h1>
                 </div>
+                <p class="text-gray-400 text-lg max-w-2xl mb-12">
+                    Faith Over Fear is a streetwear brand based in Kigali, Rwanda. Our new arrivals feature limited edition hoodies, tees, and exclusive drops. Each piece is designed with conviction and crafted for the bold. Shop F>F streetwear in Rwanda.
+                </p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                      <template x-for="product in newDrops" :key="product.id">
@@ -149,14 +158,14 @@
                                  
                                  <div class="flip-card-inner h-full w-full">
                                      <!-- Front Face (with hover crossfade) -->
-                                     <div class="flip-card-front hover-crossfade">
-                                         <img :src="product.images[0]" :alt="product.name" class="w-full h-full object-cover">
-                                         <img x-show="product.images.length > 1" :src="product.images[1]" :alt="product.name" class="w-full h-full object-cover opacity-0">
-                                     </div>
-                                     
-                                     <!-- Back Face (for mobile flip) -->
-                                     <div class="flip-card-back">
-                                         <img :src="product.images[1] || product.images[0]" :alt="product.name" class="w-full h-full object-cover">
+<div class="flip-card-front hover-crossfade">
+                                          <img :src="product.images[0]" :alt="product.name + ' - Faith Over Fear streetwear Rwanda'" class="w-full h-full object-cover">
+                                          <img x-show="product.images.length > 1" :src="product.images[1]" :alt="product.name + ' - Faith Over Fear hoodie collection'" class="w-full h-full object-cover opacity-0">
+                                      </div>
+                                      
+                                      <!-- Back Face (for mobile flip) -->
+                                      <div class="flip-card-back">
+                                          <img :src="product.images[1] || product.images[0]" :alt="product.name + ' - Faith Over Fear limited edition'" class="w-full h-full object-cover">
                                      </div>
                                  </div>
                                  
@@ -434,11 +443,11 @@
                 <div>
                     <h3 class="text-white font-bold mb-4">Navigate</h3>
                     <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="/" class="hover:text-fof-accent transition-colors">Home</a></li>
-                        <li><a href="/shop.html" class="hover:text-fof-accent transition-colors">New Arrivals</a></li>
+                        <li><a href="/index.html" class="hover:text-fof-accent transition-colors">Home</a></li>
+                        <li><a href="/shop.html" class="hover:text-fof-accent transition-colors">Shop New Arrivals</a></li>
                         <li><a href="/lookbook.html" class="hover:text-fof-accent transition-colors">Recent Drops</a></li>
-                        <li><a href="/about.html" class="hover:text-fof-accent transition-colors">About</a></li>
-                        <li><a href="/contact.html" class="hover:text-fof-accent transition-colors">Contact</a></li>
+                        <li><a href="/about.html" class="hover:text-fof-accent transition-colors">Our Story</a></li>
+                        <li><a href="/contact.html" class="hover:text-fof-accent transition-colors">Contact Us</a></li>
                     </ul>
                 </div>
 
@@ -446,9 +455,9 @@
                 <div>
                     <h3 class="text-white font-bold mb-4">Support</h3>
                     <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="/faq.html" class="hover:text-fof-accent transition-colors">FAQ</a></li>
-                        <li><a href="/shipping.html" class="hover:text-fof-accent transition-colors">Deliveries & Returns</a></li>
-                        <li><a href="/terms.html" class="hover:text-fof-accent transition-colors">Terms</a></li>
+                        <li><a href="/faq.html" class="hover:text-fof-accent transition-colors">FAQ & Help</a></li>
+                        <li><a href="/shipping.html" class="hover:text-fof-accent transition-colors">Delivery Info</a></li>
+                        <li><a href="/terms.html" class="hover:text-fof-accent transition-colors">Terms of Service</a></li>
                     </ul>
                 </div>
             </div>

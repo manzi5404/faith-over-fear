@@ -92,13 +92,14 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24">
                 <!-- Image Gallery -->
                 <div class="space-y-6" x-data="{ zooming: false, mouseX: 50, mouseY: 50 }">
-                    <div class="zoom-container aspect-[4/5] bg-fof-dark overflow-hidden"
-                         :class="{ 'zooming': zooming }"
-                         @mouseenter="zooming = true"
-                         @mouseleave="zooming = false; mouseX = 50; mouseY = 50"
-                         @mousemove="if(zooming) { const rect = $el.getBoundingClientRect(); mouseX = (($event.clientX - rect.left) / rect.width) * 100; mouseY = (($event.clientY - rect.top) / rect.height) * 100; }"
-                         @click="zooming = !zooming">
+<div class="zoom-container aspect-[4/5] bg-fof-dark overflow-hidden"
+                          :class="{ 'zooming': zooming }"
+                          @mouseenter="zooming = true"
+                          @mouseleave="zooming = false; mouseX = 50; mouseY = 50"
+                          @mousemove="if(zooming) { const rect = $el.getBoundingClientRect(); mouseX = (($event.clientX - rect.left) / rect.width) * 100; mouseY = (($event.clientY - rect.top) / rect.height) * 100; }"
+                          @click="zooming = !zooming">
                         <img :src="mainImage"
+                             :alt="product.name + ' - Faith Over Fear streetwear hoodie Rwanda'"
                              class="w-full h-full object-cover transition-transform duration-300"
                              :style="zooming ? `transform-origin: ${mouseX}% ${mouseY}%; transform: scale(1.5);` : ''">
                     </div>
@@ -107,7 +108,7 @@
                             <div class="aspect-[4/5] bg-fof-dark overflow-hidden cursor-pointer border-2 transition-all"
                                  :class="currentImage === index ? 'border-fof-accent' : 'border-transparent hover:border-zinc-700'"
                                  @click="currentImage = index; zooming = false;">
-                                <img :src="img" class="w-full h-full object-cover">
+                                <img :src="img" :alt="product.name + ' view ' + (index + 1) + ' - Faith Over Fear'" class="w-full h-full object-cover">
                             </div>
                         </template>
                     </div>
@@ -280,7 +281,7 @@
                     <template x-for="item in relatedItems" :key="item.id">
                         <a :href="'/product.html?id=' + item.id" class="group block">
                             <div class="aspect-[4/5] bg-fof-dark overflow-hidden mb-4">
-                                <img :src="item.images[0]" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                                <img :src="item.images[0]" :alt="item.name + ' - Faith Over Fear related product'" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                             </div>
                             <h3 class="text-sm font-bold uppercase tracking-wider mb-1 group-hover:text-fof-accent transition-colors" x-text="item.name"></h3>
                             <p class="text-xs text-gray-500 font-mono" x-text="item.price.toLocaleString() + ' FRW'"></p>
