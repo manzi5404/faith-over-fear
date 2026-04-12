@@ -88,7 +88,7 @@ async function notifyNewDrop(userEmails, dropDetails) {
                                     <table role="presentation" cellpadding="0" cellspacing="0">
                                         <tr>
                                             <td align="center">
-                                                <a href="https://instagram.com/faithoverfear.rw_" style="display: inline-block; margin: 0 12px; color: #888; text-decoration: none; font-size: 12px;">Instagram</a>
+                                                <a href="https://instagram.com/faithoverfear.rw__" style="display: inline-block; margin: 0 12px; color: #888; text-decoration: none; font-size: 12px;">Instagram</a>
                                                 <span style="color: #444; margin: 0 8px;">|</span>
                                                 <a href="mailto:faithoverfearsupport@gmail.com" style="display: inline-block; margin: 0 12px; color: #888; text-decoration: none; font-size: 12px;">Support</a>
                                             </td>
