@@ -15,19 +15,31 @@ function handleServiceError(res, err) {
 
 async function verifyPayment(req, res) {
   try {
-    const { orderId, paymentReference, paymentMethod, proofUrl } = req.body;
+    const { orderId, paymentReference, paymentMethod, proofUrl, notes } = req.body;
 
-    const order = await paymentService.verifyPayment(orderId, paymentReference, paymentMethod);
+    const result = await paymentService.verifyPayment(
+      orderId,
+      paymentReference,
+      paymentMethod,
+      req.user.id,
+      proofUrl,
+      notes
+    );
 
     return res.status(200).json({
       success: true,
       order: {
-        id: order.id,
-        status: order.status,
-        payment_reference: order.payment_reference,
-        payment_method: order.payment_method,
-        updated_at: order.updated_at,
+        id: result.order.id,
+        status: result.order.status,
+        payment_reference: result.order.payment_reference,
+        payment_method: result.order.payment_method,
+        updated_at: result.order.updated_at,
       },
+      verification: result.verification ? {
+        id: result.verification.id,
+        verified_at: result.verification.verified_at,
+        status: result.verification.status,
+      } : null,
     });
   } catch (err) {
     return handleServiceError(res, err);

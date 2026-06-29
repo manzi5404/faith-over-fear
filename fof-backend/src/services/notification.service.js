@@ -1,5 +1,6 @@
 const notificationRepo = require('../repositories/notification.repository');
 const userRepo = require('../repositories/user.repository');
+const { events } = require('../events');
 const { ValidationError } = require('../utils/errors');
 
 async function createForUser(userId, type, message) {
@@ -10,7 +11,9 @@ async function createForUser(userId, type, message) {
     throw new ValidationError('message is required');
   }
 
-  return notificationRepo.create(userId, type, message);
+  const notification = await notificationRepo.create(userId, type, message);
+  events.emit(events.NOTIFICATION_CREATED, { notification });
+  return notification;
 }
 
 async function createForAdmins(type, message) {
@@ -20,7 +23,8 @@ async function createForAdmins(type, message) {
 
   const admins = await userRepo.findAdmins();
   for (const admin of admins) {
-    await notificationRepo.create(admin.id, type, message);
+    const notification = await notificationRepo.create(admin.id, type, message);
+    events.emit(events.NOTIFICATION_CREATED, { notification });
   }
 
   return admins.length;

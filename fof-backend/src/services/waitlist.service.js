@@ -1,6 +1,7 @@
 const { supabase } = require('../config/supabase');
 const waitlistRepo = require('../repositories/waitlist.repository');
 const notificationService = require('./notification.service');
+const { events } = require('../events');
 const { ValidationError } = require('../utils/errors');
 
 async function addToWaitlist({ name, email, phone, source }) {
@@ -19,6 +20,8 @@ async function addToWaitlist({ name, email, phone, source }) {
     phone: phone || null,
     source: source || 'web',
   });
+
+  events.emit(events.WAITLIST_JOINED, { entry });
 
   return {
     id: entry.id,

@@ -1,4 +1,5 @@
 const variantRepo = require('../repositories/variant.repository');
+const { events } = require('../events');
 const { NotFoundError, ValidationError, ConflictError } = require('../utils/errors');
 
 async function createVariants(productId, variants) {
@@ -69,7 +70,19 @@ async function validateAndReserve(variantId, quantity) {
   }
 
   const reserved = await variantRepo.reserveStock(variantId, quantity);
+  events.emit(events.INVENTORY_RESERVED, { variantId, quantity });
   return reserved;
+}
+
+async function recordInventoryAdjustment(variantId, orderId, changeAmount, previousStock, newStock, reason) {
+  events.emit(events.INVENTORY_ADJUSTED, {
+    variantId,
+    orderId,
+    changeAmount,
+    previousStock,
+    newStock,
+    reason,
+  });
 }
 
 module.exports = {

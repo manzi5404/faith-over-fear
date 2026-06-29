@@ -1,6 +1,7 @@
 const productRepo = require('../repositories/product.repository');
 const variantRepo = require('../repositories/variant.repository');
 const dropService = require('./drop.service');
+const { events } = require('../events');
 const { NotFoundError, ConflictError, ValidationError } = require('../utils/errors');
 
 function generateSlug(name) {
@@ -79,6 +80,8 @@ async function createProduct(data) {
     is_active: data.is_active !== false,
   });
 
+  events.emit(events.PRODUCT_CREATED, { product });
+
   if (data.variants && Array.isArray(data.variants) && data.variants.length > 0) {
     const variantsService = require('./variant.service');
     await variantsService.createVariants(product.id, data.variants);
@@ -130,6 +133,7 @@ async function updateProduct(id, data) {
   }
 
   const updated = await productRepo.update(id, updateData);
+  events.emit(events.PRODUCT_UPDATED, { product: updated, changes: updateData });
   return updated;
 }
 
@@ -139,6 +143,7 @@ async function softDelete(id) {
     throw new NotFoundError('Product not found');
   }
   await productRepo.softDelete(id);
+  events.emit(events.PRODUCT_DELETED, { product });
   return true;
 }
 

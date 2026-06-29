@@ -46,6 +46,9 @@ async function register(email, password, name) {
     throw err;
   }
 
+  const { events } = require('../events');
+  events.emit(events.USER_REGISTERED, { user });
+
   return {
     id: user.id,
     email: user.email,

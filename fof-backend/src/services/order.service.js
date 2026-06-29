@@ -79,8 +79,9 @@ async function createFromCart(userId, customerData) {
   const reservedVariants = [];
   try {
     for (const item of enrichedItems) {
-      await variantRepo.reserveStock(item.variantId, item.quantity);
+      await variantRepo.reserveStock(item.variantId, item.quantity, order.id);
       reservedVariants.push({ variantId: item.variantId, quantity: item.quantity });
+      events.emit(events.INVENTORY_RESERVED, { variantId: item.variantId, orderId: order.id, quantity: item.quantity });
 
       await orderRepo.createOrderItem(order.id, {
         product_variant_id: item.variantId,
@@ -95,7 +96,7 @@ async function createFromCart(userId, customerData) {
   } catch (err) {
     for (const rv of reservedVariants) {
       try {
-        await variantRepo.returnStock(rv.variantId, rv.quantity);
+         await variantRepo.returnStock(rv.variantId, rv.quantity, order.id);
       } catch (returnErr) {
         console.error('Failed to return stock during rollback:', returnErr);
       }
@@ -173,7 +174,7 @@ async function createDirect(userId, customerData, items) {
   });
 
   for (const item of enrichedItems) {
-    await variantRepo.reserveStock(item.variantId, item.quantity);
+    await variantRepo.reserveStock(item.variantId, item.quantity, order.id);
     await orderRepo.createOrderItem(order.id, item);
   }
 
@@ -200,7 +201,8 @@ async function transitionStatus(orderId, newStatus) {
   if (newStatus === 'cancelled' && ['pending_payment', 'paid'].includes(order.status)) {
     for (const item of order.order_items || []) {
       try {
-        await variantRepo.returnStock(item.product_variant_id, item.quantity);
+        await variantRepo.returnStock(item.product_variant_id, item.quantity, orderId);
+        events.emit(events.INVENTORY_RELEASED, { variantId: item.product_variant_id, orderId, quantity: item.quantity });
       } catch (err) {
         console.error('Failed to return stock on cancel:', err);
       }
@@ -254,7 +256,8 @@ async function cancelOrder(orderId) {
   if (['pending_payment', 'paid'].includes(order.status)) {
     for (const item of order.order_items || []) {
       try {
-        await variantRepo.returnStock(item.product_variant_id, item.quantity);
+        await variantRepo.returnStock(item.product_variant_id, item.quantity, orderId);
+        events.emit(events.INVENTORY_RELEASED, { variantId: item.product_variant_id, orderId, quantity: item.quantity });
       } catch (err) {
         console.error('Failed to return stock on cancel:', err);
       }

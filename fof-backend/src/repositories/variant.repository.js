@@ -55,20 +55,22 @@ async function createBatch(variants) {
   return data || [];
 }
 
-async function reserveStock(variantId, quantity) {
+async function reserveStock(variantId, quantity, orderId = null) {
   const { data, error } = await supabaseAdmin.rpc('reserve_stock', {
     p_variant_id: variantId,
     p_quantity: quantity,
+    p_order_id: orderId,
   });
 
   if (error) throw error;
   return data;
 }
 
-async function returnStock(variantId, quantity) {
+async function returnStock(variantId, quantity, orderId = null) {
   const { data, error } = await supabaseAdmin.rpc('return_stock', {
     p_variant_id: variantId,
     p_quantity: quantity,
+    p_order_id: orderId,
   });
 
   if (error) throw error;

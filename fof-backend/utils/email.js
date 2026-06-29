@@ -1,13 +1,16 @@
-const { Resend } = require('resend');
+let resendClient = null;
 
-const resend = new Resend(process.env.RESEND_API_KEY || process.env.EMAIL_API_KEY);
-
-const RESEND_SENDER = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+function getResendClient() {
+    if (resendClient) return resendClient;
+    const apiKey = process.env.RESEND_API_KEY || process.env.EMAIL_API_KEY;
+    if (!apiKey) return null;
+    resendClient = new Resend(apiKey);
+    return resendClient;
+}
 
 async function sendEmail({ email, subject, message, html }) {
-    const apiKey = process.env.RESEND_API_KEY || process.env.EMAIL_API_KEY;
-
-    if (!apiKey) {
+    const client = getResendClient();
+    if (!client) {
         console.warn('⚠️  [EMAIL_SERVICE] NOT_CONFIGURED: Missing RESEND_API_KEY. Email suppressed.');
         console.log(`[STUB] To: ${email}\n[STUB] Subject: ${subject}`);
         return;
@@ -16,8 +19,8 @@ async function sendEmail({ email, subject, message, html }) {
     try {
         console.log(`📨 [EMAIL_SERVICE] Attempting delivery to: ${email}...`);
         
-        const data = await resend.emails.send({
-            from: RESEND_SENDER,
+        const data = await getResendClient().emails.send({
+            from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
             to: email,
             subject: subject,
             html: html || message
@@ -187,7 +190,7 @@ async function notifyReservation(userEmail, reservationData, productData) {
 
     await sendEmail({ email: userEmail, subject, html });
 
-    if (process.env.ADMIN_EMAIL) {
+    if (process.env.ADMIN_EMAIL && process.env.ADMIN_EMAIL.trim() !== '') {
         await sendEmail({
             email: process.env.ADMIN_EMAIL,
             subject: `🚨 NEW RESERVATION ALERT: ${fullName}`,

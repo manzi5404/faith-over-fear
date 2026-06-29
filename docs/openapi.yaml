@@ -1,0 +1,765 @@
+openapi: 3.0.3
+info:
+  title: Faith Over Fear (F>F) Backend API
+  description: Production-grade ecommerce backend for the F>F drop store. Built on Supabase PostgreSQL with atomic inventory management.
+  version: 2.0.0
+  contact:
+    name: F>F Engineering
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://fof-backend.onrender.com
+    description: Production
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Supabase JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        name: { type: string }
+        role: { type: string, enum: [admin, user] }
+
+    Drop:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        theme_scripture: { type: string, nullable: true }
+        hero_video: { type: string, nullable: true }
+        hero_image: { type: string, nullable: true }
+        image_url: { type: string, nullable: true }
+        release_date: { type: string, format: date-time, nullable: true }
+        close_date: { type: string, format: date-time, nullable: true }
+        status: { type: string, enum: [upcoming, reservation, live, closed] }
+        created_at: { type: string, format: date-time }
+
+    Product:
+      type: object
+      properties:
+        id: { type: integer }
+        drop_id: { type: integer }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string, nullable: true }
+        base_price: { type: number, format: float }
+        images: { type: array, items: { type: string } }
+        is_active: { type: boolean }
+        product_variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Variant'
+
+    Variant:
+      type: object
+      properties:
+        id: { type: integer }
+        product_id: { type: integer }
+        color: { type: string }
+        size: { type: string }
+        sku: { type: string }
+        stock: { type: integer }
+        price_override: { type: number, format: float, nullable: true }
+
+    CartItem:
+      type: object
+      properties:
+        cartItemId: { type: integer }
+        variantId: { type: integer }
+        productId: { type: integer }
+        productName: { type: string }
+        color: { type: string }
+        size: { type: string }
+        stock: { type: integer }
+        unitPrice: { type: number }
+        quantity: { type: integer }
+        subtotal: { type: number }
+        images: { type: array, items: { type: string } }
+
+    Cart:
+      type: object
+      properties:
+        cartId: { type: integer }
+        items: { type: array, items: { $ref: '#/components/schemas/CartItem' } }
+        total: { type: number }
+        itemCount: { type: integer }
+
+    OrderItem:
+      type: object
+      properties:
+        id: { type: integer }
+        product_variant_id: { type: integer }
+        product_name: { type: string }
+        size: { type: string, nullable: true }
+        color: { type: string, nullable: true }
+        unit_price: { type: number }
+        quantity: { type: integer }
+        subtotal: { type: number }
+
+    Order:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: string }
+        status: { type: string, enum: [pending_payment, paid, processing, shipped, completed, cancelled] }
+        customer_name: { type: string, nullable: true }
+        customer_email: { type: string, nullable: true }
+        customer_phone: { type: string, nullable: true }
+        shipping_address: { type: string, nullable: true }
+        total_amount: { type: number }
+        payment_method: { type: string }
+        payment_reference: { type: string, nullable: true }
+        order_items: { type: array, items: { $ref: '#/components/schemas/OrderItem' } }
+        created_at: { type: string, format: date-time }
+
+    Notification:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: string }
+        type: { type: string, nullable: true }
+        message: { type: string }
+        is_read: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    WaitlistEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string, nullable: true }
+        email: { type: string }
+        phone: { type: string, nullable: true }
+        source: { type: string, nullable: true }
+        notified: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    Error:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error: { type: string }
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                name: { type: string }
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  user: { $ref: '#/components/schemas/User' }
+        '400':
+          $ref: '#/components/schemas/Error'
+        '409':
+          $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  access_token: { type: string }
+                  refresh_token: { type: string }
+                  user: { $ref: '#/components/schemas/User' }
+        '401':
+          $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  user: { $ref: '#/components/schemas/User' }
+        '401':
+          $ref: '#/components/schemas/Error'
+
+  /drops/active:
+    get:
+      tags: [Drops]
+      summary: Get the currently active drop
+      security: []
+      responses:
+        '200':
+          description: Active drop or null
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  drop: { $ref: '#/components/schemas/Drop' }
+
+  /drops:
+    get:
+      tags: [Drops]
+      summary: List drops (public: upcoming + live; admin: all)
+      security: []
+      responses:
+        '200':
+          description: List of drops
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  drops:
+                    type: array
+                    items: { $ref: '#/components/schemas/Drop' }
+
+  /drops/{slug}:
+    get:
+      tags: [Drops]
+      summary: Get drop by slug
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Drop details
+        '404':
+          $ref: '#/components/schemas/Error'
+
+  /products:
+    get:
+      tags: [Products]
+      summary: List products in active drop
+      security: []
+      parameters:
+        - name: dropId
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: List of products with variants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  products:
+                    type: array
+                    items: { $ref: '#/components/schemas/Product' }
+
+  /products/{slug}:
+    get:
+      tags: [Products]
+      summary: Get product by slug
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Product with variants
+        '404':
+          $ref: '#/components/schemas/Error'
+
+  /cart:
+    get:
+      tags: [Cart]
+      summary: Get current user's cart
+      responses:
+        '200':
+          description: Cart with items
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+
+    post:
+      tags: [Cart]
+      summary: Add item to cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [variantId]
+              properties:
+                variantId: { type: integer }
+                quantity: { type: integer, minimum: 1, maximum: 99, default: 1 }
+      responses:
+        '200':
+          description: Updated cart
+          content: { $ref: '#/components/schemas/Cart' }
+        '400':
+          $ref: '#/components/schemas/Error'
+
+  /cart/items/{variantId}:
+    put:
+      tags: [Cart]
+      summary: Update cart item quantity
+      parameters:
+        - name: variantId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity: { type: integer, minimum: 1, maximum: 99 }
+      responses:
+        '200':
+          description: Updated cart
+
+    delete:
+      tags: [Cart]
+      summary: Remove item from cart
+      parameters:
+        - name: variantId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Updated cart
+
+  /cart:
+    delete:
+      tags: [Cart]
+      summary: Clear all cart items
+      responses:
+        '200':
+          description: Cart cleared
+
+  /orders:
+    post:
+      tags: [Orders]
+      summary: Create order from cart or direct items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_name: { type: string }
+                customer_email: { type: string, format: email }
+                customer_phone: { type: string }
+                shipping_address: { type: string }
+                payment_method: { type: string, enum: [reservation, momo, cash], default: reservation }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      variantId: { type: integer }
+                      quantity: { type: integer }
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  order: { $ref: '#/components/schemas/Order' }
+        '400':
+          $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/schemas/Error'
+
+    get:
+      tags: [Orders]
+      summary: List current user's orders
+      responses:
+        '200':
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  orders:
+                    type: array
+                    items: { $ref: '#/components/schemas/Order' }
+
+  /orders/my:
+    get:
+      tags: [Orders]
+      summary: Get current user's orders
+      responses:
+        '200':
+          description: List of user's orders
+
+  /orders/{id}:
+    get:
+      tags: [Orders]
+      summary: Get order by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Order details
+        '404':
+          $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/schemas/Error'
+
+  /waitlist:
+    post:
+      tags: [Waitlist]
+      summary: Join the waitlist
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                phone: { type: string }
+                source: { type: string }
+      responses:
+        '201':
+          description: Added to waitlist
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get current user's notifications
+      responses:
+        '200':
+          description: Paginated notifications
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Get unread notification count
+      responses:
+        '200':
+          description: Unread count
+
+  /notifications/read-all:
+    put:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      responses:
+        '200':
+          description: All marked as read
+
+  /notifications/{id}/read:
+    put:
+      tags: [Notifications]
+      summary: Mark single notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Marked as read
+        '404':
+          $ref: '#/components/schemas/Error'
+
+  /admin/drops:
+    post:
+      tags: [Admin - Drops]
+      summary: Create a new drop
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string }
+                slug: { type: string }
+                description: { type: string }
+                status: { type: string, enum: [upcoming, reservation, live, closed] }
+                release_date: { type: string, format: date-time }
+                close_date: { type: string, format: date-time, nullable: true }
+                products: { type: array }
+      responses:
+        '201':
+          description: Drop created
+
+  /admin/drops/{id}:
+    put:
+      tags: [Admin - Drops]
+      summary: Update a drop
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                status: { type: string }
+      responses:
+        '200':
+          description: Drop updated
+
+    post:
+      tags: [Admin - Drops]
+      summary: Activate a drop (close all others, open this one)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Drop activated
+
+  /admin/products:
+    post:
+      tags: [Admin - Products]
+      summary: Create a product with variants
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, drop_id, base_price]
+              properties:
+                name: { type: string }
+                drop_id: { type: integer }
+                base_price: { type: number }
+                description: { type: string }
+                images: { type: array, items: { type: string } }
+                variants:
+                  type: array
+                  items:
+                    type: object
+                    required: [color, size]
+                    properties:
+                      color: { type: string }
+                      size: { type: string }
+                      stock: { type: integer, minimum: 0 }
+                      price_override: { type: number, nullable: true }
+                      sku: { type: string }
+      responses:
+        '201':
+          description: Product created
+
+  /admin/products/{id}:
+    put:
+      tags: [Admin - Products]
+      summary: Update a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Product updated
+
+    delete:
+      tags: [Admin - Products]
+      summary: Soft-delete a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Product deleted
+
+  /admin/orders:
+    get:
+      tags: [Admin - Orders]
+      summary: List all orders (admin)
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: startDate
+          in: query
+          schema: { type: string, format: date }
+        - name: endDate
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: List of all orders
+
+  /admin/orders/{id}/status:
+    put:
+      tags: [Admin - Orders]
+      summary: Update order status (validated state machine)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [paid, processing, shipped, completed, cancelled] }
+      responses:
+        '200':
+          description: Status updated
+        '400':
+          $ref: '#/components/schemas/Error'
+
+  /admin/orders/{id}/cancel:
+    post:
+      tags: [Admin - Orders]
+      summary: Cancel an order and return stock
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Order cancelled
+
+  /admin/payments/verify:
+    post:
+      tags: [Admin - Payments]
+      summary: Verify manual payment (idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId, paymentReference]
+              properties:
+                orderId: { type: integer }
+                paymentReference: { type: string }
+                paymentMethod: { type: string, default: manual }
+                proofUrl: { type: string, nullable: true }
+                notes: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Payment verified
+        '409':
+          $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/schemas/Error'
+
+  /waitlist:
+    post:
+      tags: [Waitlist]
+      summary: Join waitlist (public)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                phone: { type: string }
+                source: { type: string }
+      responses:
+        '201':
+          description: Added to waitlist
+
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  timestamp: { type: string, format: date-time }

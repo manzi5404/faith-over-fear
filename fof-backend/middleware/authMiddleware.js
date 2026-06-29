@@ -12,7 +12,7 @@ const protect = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fof_secret');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
     } catch (error) {
@@ -40,7 +40,7 @@ const verifyAdmin = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fof_secret');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Exact list of admin emails
         const adminEmails = [
