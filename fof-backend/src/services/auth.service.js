@@ -80,17 +80,25 @@ async function login(email, password) {
     throw new AuthError('Invalid email or password');
   }
 
-  if (!data.user.id) {
+  if (!data.session.access_token) {
+    throw new AuthError('Missing access token');
+  }
+
+  if (!data.session.refresh_token) {
+    throw new AuthError('Missing refresh token');
+  }
+
+  const authUser = data.user ?? data.session?.user;
+  if (!authUser?.id) {
     throw new AuthError('Authentication returned no user ID');
   }
 
-  let user = await userRepo.findById(data.user.id);
-
+  let user = await userRepo.findById(authUser.id);
   if (!user) {
-    user = await userRepo.create(data.user.id, {
-      email: data.user.email,
-      name: data.user.user_metadata?.name || data.user.user_metadata?.full_name || null,
-      role: resolveRole(data.user.email),
+    user = await userRepo.create(authUser.id, {
+      email: authUser.email,
+      name: authUser.user_metadata?.name || authUser.user_metadata?.full_name || null,
+      role: resolveRole(authUser.email),
     });
   }
 

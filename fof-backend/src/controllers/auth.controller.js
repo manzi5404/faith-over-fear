@@ -39,6 +39,11 @@ const googleSchema = {
 };
 
 async function sendAuthResponse(res, tokenData) {
+  if (!tokenData || !tokenData.access_token) {
+    const error = new Error('Invalid authentication response: missing access_token');
+    error.statusCode = 500;
+    throw error;
+  }
   return res.status(200).json({
     success: true,
     access_token: tokenData.access_token,
