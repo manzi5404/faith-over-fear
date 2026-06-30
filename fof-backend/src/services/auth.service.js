@@ -33,12 +33,12 @@ async function register(email, password, name) {
   }
 
   let user;
-  try {
-    user = await userRepo.create(authData.user.id, {
-      name: name || null,
-      email,
-      role: 'user',
-    });
+    try {
+      user = await userRepo.create(authData.user.id, {
+        name: name || null,
+        email,
+        role: 'customer',
+      });
   } catch (err) {
     if (err.code === '23505') {
       throw new ConflictError('Email already registered');
@@ -113,7 +113,7 @@ async function googleOAuth(idToken) {
     existingUser = await userRepo.create(data.user.id, {
       name,
       email,
-      role: 'user',
+      role: 'customer',
       googleId,
     });
   }

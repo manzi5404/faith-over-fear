@@ -23,7 +23,7 @@ async function findByEmail(email) {
   return data;
 }
 
-async function create(authUserId, { name, email, role = 'user', googleId = null }) {
+async function create(authUserId, { name, email, role = 'customer', googleId = null }) {
   const { data, error } = await supabase
     .from('users')
     .insert({
