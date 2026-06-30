@@ -43,6 +43,7 @@ function removeAllListeners(event) {
 }
 
 module.exports = {
+  events: emitter,
   emitter,
   on,
   off,
