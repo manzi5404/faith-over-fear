@@ -1,6 +1,11 @@
 const { supabase } = require('../config/supabase');
 const userRepo = require('../repositories/user.repository');
 const { AuthError, ValidationError, ConflictError } = require('../utils/errors');
+const { isAdminEmail } = require('../utils/env');
+
+function resolveRole(email) {
+  return isAdminEmail(email) ? 'admin' : 'customer';
+}
 
 async function register(email, password, name) {
   if (!email || !password) {
@@ -37,7 +42,7 @@ async function register(email, password, name) {
       user = await userRepo.create(authData.user.id, {
         name: name || null,
         email,
-        role: 'customer',
+        role: resolveRole(email),
       });
   } catch (err) {
     if (err.code === '23505') {
@@ -113,7 +118,7 @@ async function googleOAuth(idToken) {
     existingUser = await userRepo.create(data.user.id, {
       name,
       email,
-      role: 'customer',
+      role: resolveRole(email),
       googleId,
     });
   }

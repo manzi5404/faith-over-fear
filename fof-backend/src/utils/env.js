@@ -9,7 +9,23 @@ const optionalEnvVars = [
   'NODE_ENV',
   'RESEND_API_KEY',
   'FROM_EMAIL',
+  'ADMIN_EMAILS',
 ];
+
+const adminEmails = new Set();
+if (process.env.ADMIN_EMAILS) {
+  process.env.ADMIN_EMAILS
+    .split(',')
+    .forEach((e) => {
+      const trimmed = e.trim().toLowerCase();
+      if (trimmed) adminEmails.add(trimmed);
+    });
+}
+
+function isAdminEmail(email) {
+  if (!email || typeof email !== 'string') return false;
+  return adminEmails.has(email.trim().toLowerCase());
+}
 
 function validateEnv() {
   const missing = [];
@@ -53,4 +69,4 @@ function getEnv() {
   };
 }
 
-module.exports = { validateEnv, getEnv };
+module.exports = { validateEnv, getEnv, isAdminEmail };
