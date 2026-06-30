@@ -1,17 +1,6 @@
 const { requireAuth } = require('../middleware/auth');
-const { requireAdmin } = require('../middleware/admin');
 const notificationService = require('../services/notification.service');
-
-function handleServiceError(res, err) {
-  const statusCode = err.statusCode || 500;
-  if (statusCode === 404) {
-    return res.status(404).json({ success: false, error: 'Not found' });
-  }
-  if (statusCode === 400 || statusCode === 403) {
-    return res.status(statusCode).json({ success: false, error: err.message });
-  }
-  return res.status(500).json({ success: false, error: 'Internal Server Error' });
-}
+const { handleServiceError } = require('../utils/responseHandler');
 
 async function getNotifications(req, res) {
   try {
@@ -26,7 +15,7 @@ async function getNotifications(req, res) {
       unreadCount,
     });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -35,7 +24,7 @@ async function getUnreadCount(req, res) {
     const count = await notificationService.getUnreadCount(req.user.id);
     return res.status(200).json({ success: true, count });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -47,7 +36,7 @@ async function markAllRead(req, res) {
       message: `Marked ${count} notifications as read`,
     });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -59,7 +48,7 @@ async function markRead(req, res) {
     }
     return res.status(200).json({ success: true, message: 'Marked as read' });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 

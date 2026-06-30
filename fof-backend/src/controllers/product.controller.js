@@ -1,15 +1,5 @@
 const productService = require('../services/product.service');
-
-function handleServiceError(res, err) {
-  const statusCode = err.statusCode || 500;
-  if (statusCode === 404) {
-    return res.status(404).json({ success: false, error: 'Not found' });
-  }
-  if (statusCode === 400 || statusCode === 409) {
-    return res.status(statusCode).json({ success: false, error: err.message });
-  }
-  return res.status(500).json({ success: false, error: 'Internal Server Error' });
-}
+const { handleServiceError } = require('../utils/responseHandler');
 
 async function getProducts(req, res) {
   try {
@@ -27,7 +17,7 @@ async function getProducts(req, res) {
     }
     return res.status(200).json({ success: true, products });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -36,7 +26,7 @@ async function getProductBySlug(req, res) {
     const product = await productService.getProductBySlug(req.params.slug);
     return res.status(200).json({ success: true, product });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -45,7 +35,7 @@ async function createProduct(req, res) {
     const product = await productService.createProduct(req.body);
     return res.status(201).json({ success: true, product });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -54,7 +44,7 @@ async function updateProduct(req, res) {
     const product = await productService.updateProduct(req.params.id, req.body);
     return res.status(200).json({ success: true, product });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -63,7 +53,7 @@ async function deleteProduct(req, res) {
     await productService.softDelete(req.params.id);
     return res.status(200).json({ success: true, message: 'Product deleted' });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 

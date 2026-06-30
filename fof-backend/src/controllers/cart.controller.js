@@ -1,17 +1,6 @@
 const { requireAuth } = require('../middleware/auth');
-const { requireAdmin } = require('../middleware/admin');
 const cartService = require('../services/cart.service');
-
-function handleServiceError(res, err) {
-  const statusCode = err.statusCode || 500;
-  if (statusCode === 404) {
-    return res.status(404).json({ success: false, error: 'Not found' });
-  }
-  if (statusCode === 400) {
-    return res.status(400).json({ success: false, error: err.message });
-  }
-  return res.status(500).json({ success: false, error: 'Internal Server Error' });
-}
+const { handleServiceError } = require('../utils/responseHandler');
 
 async function getCart(req, res) {
   try {
@@ -19,7 +8,7 @@ async function getCart(req, res) {
     const cart = await cartService.getCart(req.user.id, sessionId);
     return res.status(200).json({ success: true, ...cart });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -30,7 +19,7 @@ async function addItem(req, res) {
     const cart = await cartService.addToCart(req.user.id, sessionId, variantId, quantity);
     return res.status(200).json({ success: true, ...cart });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -41,7 +30,7 @@ async function updateItem(req, res) {
     const cart = await cartService.updateCartItem(req.user.id, sessionId, req.params.variantId, quantity);
     return res.status(200).json({ success: true, ...cart });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -51,7 +40,7 @@ async function removeItem(req, res) {
     const cart = await cartService.removeCartItem(req.user.id, sessionId, req.params.variantId);
     return res.status(200).json({ success: true, ...cart });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -61,7 +50,7 @@ async function clearCartItems(req, res) {
     const result = await cartService.clearCart(req.user.id, sessionId);
     return res.status(200).json({ success: true, ...result });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 

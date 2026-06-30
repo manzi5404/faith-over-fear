@@ -1,17 +1,7 @@
 const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
 const paymentService = require('../services/payment.service');
-
-function handleServiceError(res, err) {
-  const statusCode = err.statusCode || 500;
-  if (statusCode === 404) {
-    return res.status(404).json({ success: false, error: 'Not found' });
-  }
-  if (statusCode === 400) {
-    return res.status(400).json({ success: false, error: err.message });
-  }
-  return res.status(500).json({ success: false, error: 'Internal Server Error' });
-}
+const { handleServiceError } = require('../utils/responseHandler');
 
 async function verifyPayment(req, res) {
   try {
@@ -42,7 +32,7 @@ async function verifyPayment(req, res) {
       } : null,
     });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 

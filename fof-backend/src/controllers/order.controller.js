@@ -1,20 +1,7 @@
 const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
 const orderService = require('../services/order.service');
-
-function handleServiceError(res, err) {
-  const statusCode = err.statusCode || 500;
-  if (statusCode === 404) {
-    return res.status(404).json({ success: false, error: 'Not found' });
-  }
-  if (statusCode === 400) {
-    return res.status(400).json({ success: false, error: err.message });
-  }
-  if (statusCode === 403) {
-    return res.status(403).json({ success: false, error: err.message });
-  }
-  return res.status(500).json({ success: false, error: 'Internal Server Error' });
-}
+const { handleServiceError } = require('../utils/responseHandler');
 
 async function createOrder(req, res) {
   try {
@@ -51,7 +38,7 @@ async function createOrder(req, res) {
       },
     });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -60,7 +47,7 @@ async function getMyOrders(req, res) {
     const orders = await orderService.getMyOrders(req.user.id);
     return res.status(200).json({ success: true, orders });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -69,7 +56,7 @@ async function getOrderById(req, res) {
     const order = await orderService.getOrderById(req.params.id, req.user.id);
     return res.status(200).json({ success: true, order });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -83,7 +70,7 @@ async function getAllOrders(req, res) {
     const orders = await orderService.getAllOrders(filters);
     return res.status(200).json({ success: true, orders });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -93,7 +80,7 @@ async function updateOrderStatus(req, res) {
     const order = await orderService.transitionStatus(req.params.id, status);
     return res.status(200).json({ success: true, order });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -102,7 +89,7 @@ async function cancelOrder(req, res) {
     const order = await orderService.cancelOrder(req.params.id);
     return res.status(200).json({ success: true, order });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 

@@ -2,6 +2,7 @@ const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
 const { validate } = require('../middleware/validate');
 const authService = require('../services/auth.service');
+const { handleServiceError } = require('../utils/responseHandler');
 const { events } = require('../events');
 
 const registerSchema = {
@@ -37,18 +38,7 @@ const googleSchema = {
   },
 };
 
-function handleServiceError(res, err) {
-  const statusCode = err.statusCode || 500;
-  if (statusCode === 404) {
-    return res.status(404).json({ success: false, error: 'Not found' });
-  }
-  if (statusCode === 400 || statusCode === 401 || statusCode === 403) {
-    return res.status(statusCode).json({ success: false, error: err.message });
-  }
-  return res.status(500).json({ success: false, error: 'Internal Server Error' });
-}
-
-function sendAuthResponse(res, tokenData) {
+async function sendAuthResponse(res, tokenData) {
   return res.status(200).json({
     success: true,
     access_token: tokenData.access_token,
@@ -63,7 +53,7 @@ async function register(req, res) {
     const user = await authService.register(email, password, name);
     return res.status(201).json({ success: true, user });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -73,7 +63,7 @@ async function login(req, res) {
     const tokenData = await authService.login(email, password);
     return sendAuthResponse(res, tokenData);
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -83,7 +73,7 @@ async function googleAuth(req, res) {
     const tokenData = await authService.googleOAuth(id_token);
     return sendAuthResponse(res, tokenData);
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
@@ -92,7 +82,7 @@ async function me(req, res) {
     const user = await authService.getProfile(req.user.id);
     return res.status(200).json({ success: true, user });
   } catch (err) {
-    return handleServiceError(res, err);
+    return handleServiceError(res, err, req);
   }
 }
 
