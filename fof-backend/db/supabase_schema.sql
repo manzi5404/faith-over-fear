@@ -2,6 +2,8 @@
 -- FAITH OVER FEAR — PRODUCTION-READY SUPABASE/POSTGRESQL SCHEMA
 -- ============================================================
 -- Generated: 2026-05-15
+-- Updated:  2026-06-30 — fixed users.id to UUID matching auth.users,
+--            added role + updated_at columns, aligned FK types.
 -- Source of truth: models/*.js + controllers/*.js (runtime code behavior)
 -- IGNORED: schema.sql, migrations, db/init.js (inconsistent/corrupted)
 -- 
@@ -56,12 +58,14 @@ CREATE TYPE announcement_status_type AS ENUM ('live', 'draft', 'archived');
 -- ============================================================
 
 CREATE TABLE users (
-    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id              UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email           VARCHAR(255) NOT NULL UNIQUE,
     password_hash   VARCHAR(255),
     name            VARCHAR(255),
     google_id       VARCHAR(255) UNIQUE,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    role            VARCHAR(50) NOT NULL DEFAULT 'customer',
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_users_email ON users (email);
@@ -71,8 +75,8 @@ CREATE INDEX idx_users_email ON users (email);
 -- ============================================================
 
 CREATE TABLE password_resets (
-    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id     BIGINT NOT NULL,
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token       VARCHAR(255) NOT NULL,
     expires_at  TIMESTAMPTZ NOT NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -179,8 +183,8 @@ CREATE TABLE product_quality_prices (
 -- ============================================================
 
 CREATE TABLE orders (
-    id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id             BIGINT,
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id             UUID REFERENCES users(id) ON DELETE SET NULL,
     product_id          BIGINT,
     drop_id             BIGINT,
     product_name        VARCHAR(255),
@@ -220,8 +224,8 @@ CREATE INDEX idx_orders_created ON orders (created_at DESC);
 -- ============================================================
 
 CREATE TABLE order_items (
-    id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    order_id            BIGINT NOT NULL,
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id            UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     product_id          BIGINT,
     product_name        VARCHAR(255),
     quantity            INTEGER NOT NULL DEFAULT 1,
@@ -247,8 +251,8 @@ CREATE TABLE order_items (
 -- ============================================================
 
 CREATE TABLE reservations (
-    id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id             BIGINT,
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id             UUID REFERENCES users(id) ON DELETE SET NULL,
     full_name           VARCHAR(255),
     email               VARCHAR(255),
     phone               VARCHAR(50),

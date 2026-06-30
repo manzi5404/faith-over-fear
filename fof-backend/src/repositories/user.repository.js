@@ -24,6 +24,10 @@ async function findByEmail(email) {
 }
 
 async function create(authUserId, { name, email, role = 'customer', googleId = null }) {
+  if (!authUserId || typeof authUserId !== 'string' || authUserId.trim() === '') {
+    throw new AuthError('Auth user ID is required and must not be null or empty');
+  }
+
   const { data, error } = await supabase
     .from('users')
     .insert({

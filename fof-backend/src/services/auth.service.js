@@ -37,6 +37,10 @@ async function register(email, password, name) {
     throw new AuthError('Registration failed: no user returned');
   }
 
+  if (!authData.user.id) {
+    throw new AuthError('Registration failed: no user ID returned from auth provider');
+  }
+
   let user;
     try {
       user = await userRepo.create(authData.user.id, {
@@ -76,7 +80,19 @@ async function login(email, password) {
     throw new AuthError('Invalid email or password');
   }
 
-  const user = await userRepo.findById(data.user.id);
+  if (!data.user.id) {
+    throw new AuthError('Authentication returned no user ID');
+  }
+
+  let user = await userRepo.findById(data.user.id);
+
+  if (!user) {
+    user = await userRepo.create(data.user.id, {
+      email: data.user.email,
+      name: data.user.user_metadata?.name || data.user.user_metadata?.full_name || null,
+      role: resolveRole(data.user.email),
+    });
+  }
 
   return {
     access_token: data.session.access_token,
@@ -104,7 +120,11 @@ async function googleOAuth(idToken) {
     throw new AuthError('Google authentication failed');
   }
 
-  const googleId = data.user.user_metadata?.sub || data.user.id;
+  if (!data.user.id) {
+    throw new AuthError('Google authentication returned no user ID');
+  }
+
+  const googleId = data.user.id;
   const email = data.user.email;
   const name = data.user.user_metadata?.full_name || data.user.user_metadata?.name || null;
 
