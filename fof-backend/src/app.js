@@ -71,4 +71,82 @@ app.use('/api/admin/payments', requireAuth, requireAdmin, paymentRoutes);
 // 404 handler
 app.use((req, res) => res.status(404).json({ success: false, error: 'Not Found', path: req.path }));
 
+// Error handler (placed after routes)
+app.use(errorHandler);
+
+// Debug: manual route listing (Express 5 removed app._router)
+app.get('/__routes', (req, res) => {
+  const routes = [];
+  // We collect routes from the registered middleware stack
+  app._router?.stack?.forEach((layer) => {
+    if (layer.route) {
+      const methods = Object.keys(layer.route.methods)
+        .filter((m) => m !== '_constructor')
+        .map((m) => m.toUpperCase());
+      routes.push({
+        method: methods.join(','),
+        path: layer.route.path,
+      });
+    } else if (layer.name === 'router' && layer.handle?.stack) {
+      layer.handle.stack.forEach((sub) => {
+        if (sub.route) {
+          const methods = Object.keys(sub.route.methods)
+            .filter((m) => m !== '_constructor')
+            .map((m) => m.toUpperCase());
+          routes.push({
+            method: methods.join(','),
+            path: layer.handle?.url || '' + sub.route.path,
+          });
+        }
+      });
+    }
+  });
+
+  // Fallback: if _router is undefined (Express 5), we return our known routes
+  if (!app._router) {
+    return res.status(200).json({
+      express_version: require('express/package.json').version,
+      note: 'Express 5 removed app._router. Showing registered routes from known route files.',
+      routes: [
+        { method: 'GET', path: '/health' },
+        { method: 'POST', path: '/api/auth/register' },
+        { method: 'POST', path: '/api/auth/login' },
+        { method: 'POST', path: '/api/auth/google' },
+        { method: 'GET', path: '/api/auth/me' },
+        { method: 'GET', path: '/api/drops/active' },
+        { method: 'GET', path: '/api/drops' },
+        { method: 'GET', path: '/api/drops/:slug' },
+        { method: 'POST', path: '/api/admin/drops' },
+        { method: 'PUT', path: '/api/admin/drops/:id' },
+        { method: 'POST', path: '/api/admin/drops/:id/activate' },
+        { method: 'GET', path: '/api/products' },
+        { method: 'GET', path: '/api/products/:slug' },
+        { method: 'POST', path: '/api/admin/products' },
+        { method: 'PUT', path: '/api/admin/products/:id' },
+        { method: 'DELETE', path: '/api/admin/products/:id' },
+        { method: 'GET', path: '/api/cart' },
+        { method: 'POST', path: '/api/cart/items' },
+        { method: 'PUT', path: '/api/cart/items/:variantId' },
+        { method: 'DELETE', path: '/api/cart/items/:variantId' },
+        { method: 'DELETE', path: '/api/cart' },
+        { method: 'POST', path: '/api/orders' },
+        { method: 'GET', path: '/api/orders/my' },
+        { method: 'GET', path: '/api/orders/:id' },
+        { method: 'GET', path: '/api/admin/orders' },
+        { method: 'PUT', path: '/api/admin/orders/:id/status' },
+        { method: 'POST', path: '/api/admin/orders/:id/cancel' },
+        { method: 'POST', path: '/api/admin/payments/verify' },
+        { method: 'GET', path: '/api/notifications' },
+        { method: 'GET', path: '/api/notifications/unread-count' },
+        { method: 'PUT', path: '/api/notifications/read-all' },
+        { method: 'PUT', path: '/api/notifications/:id/read' },
+        { method: 'POST', path: '/api/waitlist' },
+        { method: 'GET', path: '/api/waitlist' },
+      ],
+    });
+  }
+
+  res.status(200).json({ express_version: require('express/package.json').version, routes });
+});
+
 module.exports = { app };

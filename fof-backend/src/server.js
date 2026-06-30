@@ -4,6 +4,15 @@ const { validateEnv } = require('./utils/env');
 validateEnv();
 
 const { app } = require('./app');
+const listEndpoints = require('express-list-endpoints');
+
+console.log('\n=== REGISTERED ROUTES ===');
+console.table(
+  listEndpoints(app).map(route => ({
+    methods: route.methods.join(', '),
+    path: route.path
+  }))
+);
 const { on, ORDER_CREATED, PAYMENT_VERIFIED, ORDER_CANCELLED, DROP_CREATED, DROP_ACTIVATED, PRODUCT_CREATED, USER_REGISTERED, WAITLIST_JOINED, INVENTORY_RESERVED, INVENTORY_RELEASED } = require('./events');
 const notificationService = require('./services/notification.service');
 const waitlistService = require('./services/waitlist.service');
