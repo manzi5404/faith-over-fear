@@ -33,22 +33,28 @@ async function createFromCart(userId, customerData) {
   }
 
   const enrichedItems = [];
+  const invalidItems = [];
+  const seenDropIds = new Set();
+
   for (const item of cartItems) {
     const v = item.product_variants;
     const p = item.products;
 
     if (!v || !p) {
-      throw new ValidationError(`Cart contains invalid items. Please update your cart.`);
-    }
-
-    const dropValid = await dropService.validateDropWindow(p.drop_id);
-    if (!dropValid) {
-      throw new ValidationError(`Product "${p.name}" is no longer available`);
+      invalidItems.push({ cartItemId: item.id, error: 'Variant or product no longer exists' });
+      continue;
     }
 
     if (v.stock < item.quantity) {
-      throw new ValidationError(`Insufficient stock for ${v.color}/${v.size}. Available: ${v.stock}`);
+      invalidItems.push({
+        cartItemId: item.id,
+        variantId: v.id,
+        error: `Insufficient stock for ${v.color}/${v.size}. Available: ${v.stock}, in cart: ${item.quantity}`,
+      });
+      continue;
     }
+
+    seenDropIds.add(p.drop_id);
 
     const unitPrice = v.price_override || p.base_price;
     enrichedItems.push({
@@ -60,6 +66,17 @@ async function createFromCart(userId, customerData) {
       quantity: item.quantity,
       subtotal: Number((unitPrice * item.quantity).toFixed(2)),
     });
+  }
+
+  if (invalidItems.length > 0) {
+    throw new ValidationError(JSON.stringify({ message: 'Cart contains invalid items', issues: invalidItems }));
+  }
+
+  for (const dropId of seenDropIds) {
+    const dropValid = await dropService.validateDropWindow(dropId);
+    if (!dropValid) {
+      throw new ValidationError('One or more products are no longer available. Please update your cart.');
+    }
   }
 
   const totalAmount = enrichedItems.reduce((sum, item) => sum + item.subtotal, 0);
