@@ -47,7 +47,7 @@ DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 
 CREATE TYPE drop_status_type AS ENUM ('upcoming', 'reservation', 'live', 'closed');
 CREATE TYPE drop_type_type AS ENUM ('new-drop', 'recent-drop');
-CREATE TYPE order_status_type AS ENUM ('pending', 'confirmed', 'completed', 'cancelled');
+CREATE TYPE order_status_type AS ENUM ('pending_payment', 'paid', 'processing', 'shipped', 'completed', 'cancelled');
 CREATE TYPE reservation_status_type AS ENUM ('pending', 'confirmed', 'completed', 'cancelled');
 CREATE TYPE store_mode_type AS ENUM ('live', 'reserve', 'closed');
 CREATE TYPE contact_status_type AS ENUM ('unread', 'read', 'replied');
