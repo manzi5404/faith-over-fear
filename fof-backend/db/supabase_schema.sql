@@ -146,7 +146,7 @@ CREATE TABLE products (
     sizes           JSONB,
     colors          JSONB,
     image_urls      JSONB,
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    status          VARCHAR(50) NOT NULL DEFAULT 'draft',
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_products_drop
@@ -154,7 +154,7 @@ CREATE TABLE products (
 );
 
 CREATE INDEX idx_products_drop ON products (drop_id);
-CREATE INDEX idx_products_active ON products (is_active) WHERE is_active = TRUE;
+CREATE INDEX idx_products_active ON products (status) WHERE status = 'live';
 
 -- ============================================================
 -- 7. PRODUCT_QUALITY_PRICES

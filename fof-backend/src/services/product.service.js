@@ -77,7 +77,7 @@ async function createProduct(data) {
     description: data.description || null,
     base_price: Number(data.base_price),
     images: data.images || [],
-    is_active: data.is_active !== false,
+    status: data.status || 'live',
   });
 
   events.emit(events.PRODUCT_CREATED, { product });
@@ -112,7 +112,7 @@ async function updateProduct(id, data) {
   }
 
   const allowedFields = [
-    'name', 'slug', 'description', 'base_price', 'images', 'is_active', 'drop_id',
+    'name', 'slug', 'description', 'base_price', 'images', 'status', 'drop_id',
   ];
 
   const updateData = {};

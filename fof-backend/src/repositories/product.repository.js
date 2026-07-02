@@ -7,7 +7,7 @@ async function findByDropId(dropId) {
     .from('products')
     .select('*, product_variants(*)')
     .eq('drop_id', dropId)
-    .eq('is_active', true)
+    .eq('status', 'live')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -74,7 +74,7 @@ async function update(id, data) {
 async function softDelete(id) {
   const { data, error } = await supabase
     .from('products')
-    .update({ is_active: false })
+    .update({ status: 'draft' })
     .eq('id', id)
     .select('id')
     .single();
