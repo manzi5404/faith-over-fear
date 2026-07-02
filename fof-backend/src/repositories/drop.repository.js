@@ -1,9 +1,8 @@
-const { supabase } = require('../config/supabase');
 const { supabaseAdmin } = require('../config/supabaseAdmin');
 const { NotFoundError } = require('../utils/errors');
 
 async function findActive() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('drops')
     .select('*')
     .eq('status', 'live')
@@ -18,7 +17,7 @@ async function findActive() {
 }
 
 async function findAll(includeAll = false) {
-  let query = supabase.from('drops').select('*').order('created_at', { ascending: false });
+  let query = supabaseAdmin.from('drops').select('*').order('created_at', { ascending: false });
 
   if (!includeAll) {
     query = query.or('status.eq.live,status.eq.upcoming');
@@ -30,7 +29,7 @@ async function findAll(includeAll = false) {
 }
 
 async function findById(id) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('drops')
     .select('*')
     .eq('id', id)
@@ -41,7 +40,7 @@ async function findById(id) {
 }
 
 async function findBySlug(slug) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('drops')
     .select('*')
     .eq('slug', slug)
@@ -52,7 +51,7 @@ async function findBySlug(slug) {
 }
 
 async function findSlugConflict(slug, excludeId = null) {
-  let query = supabase.from('drops').select('id').eq('slug', slug);
+  let query = supabaseAdmin.from('drops').select('id').eq('slug', slug);
 
   if (excludeId) {
     query = query.neq('id', excludeId);
@@ -64,7 +63,7 @@ async function findSlugConflict(slug, excludeId = null) {
 }
 
 async function create(data) {
-  const { data: row, error } = await supabase
+  const { data: row, error } = await supabaseAdmin
     .from('drops')
     .insert(data)
     .select('*')
@@ -75,7 +74,7 @@ async function create(data) {
 }
 
 async function update(id, data) {
-  const { data: row, error } = await supabase
+  const { data: row, error } = await supabaseAdmin
     .from('drops')
     .update(data)
     .eq('id', id)
