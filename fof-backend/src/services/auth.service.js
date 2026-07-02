@@ -2,6 +2,7 @@ const { supabase } = require('../config/supabase');
 const userRepo = require('../repositories/user.repository');
 const { AuthError, ValidationError, ConflictError } = require('../utils/errors');
 const { isAdminEmail } = require('../utils/env');
+const { logError } = require('../utils/logger');
 
 function resolveRole(email) {
   return isAdminEmail(email) ? 'admin' : 'customer';
@@ -76,7 +77,26 @@ async function login(email, password) {
     password,
   });
 
-  if (error || !data?.session) {
+  if (error) {
+    logError(error, { statusCode: 401, context: { email } });
+
+    if (error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('credentials')) {
+      throw new AuthError('Invalid email or password');
+    }
+    if (error.message?.toLowerCase().includes('confirm') || error.message?.toLowerCase().includes('not confirmed')) {
+      throw new AuthError('Please confirm your email before logging in. Check your inbox for the confirmation link.');
+    }
+    if (error.message?.toLowerCase().includes('disabled') || error.message?.toLowerCase().includes('not allowed')) {
+      throw new AuthError('Authentication is disabled for this user. Contact support if you believe this is an error.');
+    }
+    throw new AuthError(`Authentication failed: ${error.message || 'Unknown error'}`);
+  }
+
+  if (!data?.session) {
+    logError(
+      new Error('Supabase returned no error but also no session — possible email confirmation required or auth misconfiguration'),
+      { statusCode: 401, context: { email, dataKeys: data ? Object.keys(data) : 'null', hasUser: !!data?.user } }
+    );
     throw new AuthError('Invalid email or password');
   }
 
@@ -95,11 +115,14 @@ async function login(email, password) {
 
   let user = await userRepo.findById(authUser.id);
   if (!user) {
-    user = await userRepo.create(authUser.id, {
-      email: authUser.email,
-      name: authUser.user_metadata?.name || authUser.user_metadata?.full_name || null,
-      role: resolveRole(authUser.email),
-    });
+    user = await userRepo.findByEmail(authUser.email);
+    if (!user) {
+      user = await userRepo.create(authUser.id, {
+        email: authUser.email,
+        name: authUser.user_metadata?.name || authUser.user_metadata?.full_name || null,
+        role: resolveRole(authUser.email),
+      });
+    }
   }
 
   return {
