@@ -88,8 +88,7 @@ async function getCartWithItems(cartId) {
     .from('cart_items')
     .select(`
       *,
-      product_variants(*),
-      products!inner(id, name, slug, images, base_price, status, drop_id)
+      product_variants(*)
     `)
     .eq('cart_id', cartId)
     .order('created_at', { ascending: false });

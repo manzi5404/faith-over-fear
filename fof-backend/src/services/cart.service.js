@@ -8,9 +8,18 @@ async function getCart(userId, sessionId) {
   const cart = await cartRepo.findOrCreate(userId, sessionId);
   const items = await cartRepo.getCartWithItems(cart.id);
 
+  const productIds = [...new Set(items.filter(i => i.product_variants).map(i => i.product_variants.product_id))];
+  const productPromises = productIds.map(id => productRepo.findById(id));
+  const products = await Promise.all(productPromises);
+  const productMap = {};
+  products.forEach((p, idx) => {
+    if (p) productMap[productIds[idx]] = p;
+  });
+
   const enrichedItems = items.map((item) => {
     const v = item.product_variants;
-    const p = item.products;
+    const p = v ? productMap[v.product_id] : null;
+    if (!v || !p) return null;
     const unitPrice = v.price_override || p.base_price;
     return {
       cartItemId: item.id,
@@ -27,7 +36,7 @@ async function getCart(userId, sessionId) {
       subtotal: Number((unitPrice * item.quantity).toFixed(2)),
       images: p.images || [],
     };
-  });
+  }).filter(Boolean);
 
   const total = enrichedItems.reduce((sum, item) => sum + item.subtotal, 0);
 
