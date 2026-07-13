@@ -29,22 +29,55 @@ const productLogic = () => ({
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
 
+        // Prefer using already-loaded products from shopLogic (fast path)
         const shop = Alpine.$data(document.body);
         if (shop && shop.products && shop.products.length > 0) {
             this.loadProductData(id, shop.products);
             this.loadingPDP = false;
-        } else {
-            window.addEventListener('products-loaded', () => {
-                const updatedShop = Alpine.$data(document.body);
-                if (updatedShop && updatedShop.products && updatedShop.products.length > 0) {
-                    this.loadProductData(id, updatedShop.products);
-                    this.loadingPDP = false;
-                } else {
-                    console.error("Failed to load products from shopLogic");
-                    this.loadingPDP = false;
-                }
-            }, { once: true });
+            return;
         }
+
+        // Fallback: if shopLogic never finished, fetch product directly by id
+        // This prevents infinite loading and fixes PDP details not displaying.
+        if (id) {
+            try {
+                const res = await fetch(`${window.API_BASE_URL || ''}/api/products/id/${id}`);
+                const data = await res.json();
+
+                if (data && data.success && data.product) {
+                    const p = data.product;
+                    const mapped = {
+                        ...p,
+                        dropType: p.dropType || p.drop?.type || 'new-drop',
+                        images: p.images || p.image_urls || [],
+                        product_quality_prices: p.product_quality_prices || p.quality_prices || [],
+                        quality_prices: p.product_quality_prices || p.quality_prices || [],
+                        dropName: p.dropName || p.drop?.title || '',
+                        product_variants: p.product_variants || p.variants || [],
+                        base_price: p.base_price || p.price
+                    };
+
+                    this.loadProductData(id, [mapped]);
+                    this.loadingPDP = false;
+                    return;
+                }
+
+                console.error('Failed to fetch product by id:', data);
+            } catch (err) {
+                console.error('PDP fetch by id failed:', err);
+            }
+        }
+
+        // Last resort: keep previous event-based approach, but stop showing loader
+        window.addEventListener('products-loaded', () => {
+            const updatedShop = Alpine.$data(document.body);
+            if (updatedShop && updatedShop.products && updatedShop.products.length > 0) {
+                this.loadProductData(id, updatedShop.products);
+            } else {
+                console.error('Failed to load products from shopLogic');
+            }
+            this.loadingPDP = false;
+        }, { once: true });
     },
 
     loadProductData(id, products) {

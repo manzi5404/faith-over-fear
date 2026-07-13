@@ -14,15 +14,19 @@ async function findByDropId(dropId) {
 }
 
 async function findById(id) {
+  // Important: do not select broken relationships here.
+  // The frontend PDP fallback relies on this endpoint; selecting `collections(*)`
+  // can fail when the relationship is missing from the schema cache.
   const { data, error } = await supabase
     .from('products')
-    .select('*, product_variants(*), product_quality_prices(*), drops(*), collections(*)')
+    .select('*, product_variants(*), product_quality_prices(*)')
     .eq('id', id)
     .maybeSingle();
 
   if (error) throw error;
   return data;
 }
+
 
 async function findBySlug(slug) {
   const { data, error } = await supabase
