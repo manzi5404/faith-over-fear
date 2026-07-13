@@ -6,7 +6,7 @@ async function getProducts(req, res) {
     const { dropId } = req.query;
     let products;
     if (dropId) {
-      products = await productService.getProductsByDrop(Number(dropId));
+      products = await productService.getProductsByDrop(dropId);
     } else {
       const activeDrop = await require('../services/drop.service').getActiveDrop();
       if (activeDrop) {
@@ -24,6 +24,15 @@ async function getProducts(req, res) {
 async function getProductBySlug(req, res) {
   try {
     const product = await productService.getProductBySlug(req.params.slug);
+    return res.status(200).json({ success: true, product });
+  } catch (err) {
+    return handleServiceError(res, err, req);
+  }
+}
+
+async function getProductById(req, res) {
+  try {
+    const product = await productService.getProductById(req.params.id);
     return res.status(200).json({ success: true, product });
   } catch (err) {
     return handleServiceError(res, err, req);
@@ -60,6 +69,7 @@ async function deleteProduct(req, res) {
 module.exports = {
   getProducts,
   getProductBySlug,
+  getProductById,
   createProduct,
   updateProduct,
   deleteProduct,

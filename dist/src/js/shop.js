@@ -2,7 +2,10 @@ const API_BASE_URL = 'https://fof-backend-production.up.railway.app';
 
 const shopLogic = () => ({
     products: [],
+    drops: [],
     loading: false,
+    activeDrop: null,
+    selectedDrop: null,
     storeSettings: {
         purchasingDisabled: false,
         isRestocking: false
@@ -16,6 +19,7 @@ const shopLogic = () => ({
     showMomoModal: false,
     modalQuantity: 1,
     modalSize: "M",
+    modalColor: null,
     modalQuality: null,
     reservationModalOpen: false,
     reservationData: {
@@ -26,22 +30,74 @@ const shopLogic = () => ({
         color: '',
         quantity: 1
     },
-
-    // User & Payment Information (missing in initial state)
     senderPhone: "",
     senderName: "",
     senderEmail: "",
     copyFeedback: "",
     paymentModalOpen: false,
-
-    // Store Configuration & Loading State
     configLoading: true,
     storeConfig: {
-        store_mode: 'closed',
+        store_mode: 'live',
         announcement: '',
         reservation_enabled: false
     },
     cartItems: [],
+
+    contactName: '',
+    contactEmail: '',
+    contactPhone: '',
+    contactSubject: '',
+    contactMessage: '',
+
+    async submitContact() {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/contact`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: this.contactName,
+                    email: this.contactEmail,
+                    phone: this.contactPhone,
+                    subject: this.contactSubject,
+                    message: this.contactMessage
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                this.contactName = '';
+                this.contactEmail = '';
+                this.contactPhone = '';
+                this.contactSubject = '';
+                this.contactMessage = '';
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Message sent successfully!', type: 'success' } }));
+            } else {
+                window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.error || 'Failed to send message', type: 'error' } }));
+            }
+        } catch (err) {
+            window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Failed to send message', type: 'error' } }));
+        }
+    },
+
+    selectDrop(drop) {
+        this.selectedDrop = drop;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    clearSelection() {
+        this.selectedDrop = null;
+    },
+
+    get selectedDropProducts() {
+        if (!this.selectedDrop) return [];
+        return this.selectedDrop.products || [];
+    },
+    get currentDropTitle() {
+        const params = new URLSearchParams(window.location.search);
+        const dropSlug = params.get('drop');
+        if (!dropSlug) return null;
+        const drop = this.drops.find(d => d.slug === dropSlug);
+        return drop ? drop.title : null;
+    },
 
     normalizeStoreMode(mode) {
         const normalized = String(mode || '').trim().toLowerCase();
@@ -140,7 +196,7 @@ const shopLogic = () => ({
         if (!token) {
             window.dispatchEvent(new CustomEvent('notify', {
                 detail: {
-                    message: 'Please login or sign up before reserving or buying.',
+                    message: 'Please login or sign up before reserving.',
                     type: 'error'
                 }
             }));
@@ -148,6 +204,15 @@ const shopLogic = () => ({
             return false;
         }
         return true;
+    },
+
+    getSessionId() {
+        let sessionId = localStorage.getItem('fof_session_id');
+        if (!sessionId) {
+            sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('fof_session_id', sessionId);
+        }
+        return sessionId;
     },
 
     requireLoginForProductPages() {
@@ -165,10 +230,16 @@ const shopLogic = () => ({
 
     async fetchProducts() {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/drops?includeProducts=true`);
+            const isLookbook = window.location.pathname === '/lookbook.html';
+            const typeFilter = isLookbook ? 'recent-drop' : 'new-drop';
+            const res = await fetch(`${API_BASE_URL}/api/drops?includeProducts=true&type=${typeFilter}`);
             const data = await res.json();
             if (data.success) {
-                // We have drops (collections). For the shop grid, we want to show all products if active.
+                this.drops = (data.drops || []).map(drop => ({
+                    ...drop,
+                    image: this.resolveDropImage(drop)
+                }));
+
                 let allProducts = [];
                 data.drops.forEach(drop => {
                     if (drop.products && Array.isArray(drop.products)) {
@@ -177,12 +248,12 @@ const shopLogic = () => ({
                                 ...p,
                                 dropName: drop.title || drop.name || '',
                                 dropType: drop.type || 'new-drop',
+                                dropSlug: drop.slug || '',
                                 showDetails: false,
                                 uiQuantity: 1,
                                 uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
-                                images: p.image_urls || [],
-                                quality_prices: p.quality_prices || [],
-                                // If the drop is inactive, mark as reservation-only
+                                images: p.images || p.image_urls || [],
+                                quality_prices: p.product_quality_prices || p.quality_prices || [],
                                 status: drop.status || "live"
                             });
                         });
@@ -192,9 +263,20 @@ const shopLogic = () => ({
             }
         } catch (err) {
             console.error("Failed to fetch products:", err);
-            // Set empty products on error - actual products come from API only
             this.products = [];
+            this.drops = [];
         }
+    },
+
+    resolveDropImage(drop) {
+        if (!drop) return '/placeholder.jpg';
+        if (drop.image_url) return drop.image_url;
+        if (drop.products && drop.products.length > 0) {
+            const firstProduct = drop.products[0];
+            if (firstProduct.images && firstProduct.images.length > 0) return firstProduct.images[0];
+            if (firstProduct.image_urls && firstProduct.image_urls.length > 0) return firstProduct.image_urls[0];
+        }
+        return '/placeholder.jpg';
     },
 
     async fetchSettings() {
@@ -217,8 +299,17 @@ const shopLogic = () => ({
         }).sort((r, t) => this.sortBy === "price-asc" ? r.price - t.price : this.sortBy === "price-desc" ? t.price - r.price : t.id > r.id ? 1 : -1);
     },
 
-    get newDrops() { return this.products.filter(r => r.dropType === "new-drop"); },
+    get newDrops() { 
+        const params = new URLSearchParams(window.location.search);
+        const dropSlug = params.get('drop');
+        if (dropSlug) {
+            return this.products.filter(r => r.dropType === "new-drop" && r.dropSlug === dropSlug);
+        }
+        return this.products.filter(r => r.dropType === "new-drop"); 
+    },
     get recentDrops() { return this.products.filter(r => r.dropType === "recent-drop"); },
+    get newDropObjects() { return this.drops.filter(d => d.type === "new-drop"); },
+    get recentDropObjects() { return this.drops.filter(d => d.type === "recent-drop"); },
 
     get totalPrice() {
         if (!this.selectedProduct) return "0.00";
@@ -240,7 +331,6 @@ const shopLogic = () => ({
 
     initPayment(product, qty = 1, size = "M", qualityLevel = null) {
         console.log('MoMo Button Clicked', product ? product.id : 'cart');
-        if (!this.ensureLoggedIn()) return;
         if (this.storeSettings.purchasingDisabled) {
             window.dispatchEvent(new CustomEvent("notify", {
                 detail: { message: "Purchasing is currently disabled.", type: "error" }
@@ -257,7 +347,6 @@ const shopLogic = () => ({
     initCart() { this.cartItems = JSON.parse(localStorage.getItem("fof_cart")) || []; },
 
     openMomoQuickPay(product, qty = 1, size = "M", qualityLevel = null) {
-        if (!this.ensureLoggedIn()) return;
         if (this.storeSettings.purchasingDisabled) {
             window.dispatchEvent(new CustomEvent("notify", {
                 detail: { message: "Purchasing is currently disabled.", type: "error" }
@@ -324,14 +413,14 @@ const shopLogic = () => ({
 
     removeFromCart(index) {
         if (this.cartItems[index]) {
+            const itemName = this.cartItems[index].name;
             this.cartItems.splice(index, 1);
             this.persistCart();
-            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Item removed from cart", type: "success" } }));
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: `${itemName} removed from cart`, type: "success" } }));
         }
     },
 
     async verifyPayment() {
-        if (!this.ensureLoggedIn()) return;
         if (!this.senderName || !this.senderPhone) {
             window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Please fill in your name and phone.", type: "error" } }));
             return;
@@ -351,6 +440,7 @@ const shopLogic = () => ({
         this.loading = true;
 
         const token = localStorage.getItem('fof_token');
+        const sessionId = this.getSessionId();
 
         // Prepare WhatsApp message components
         let itemsList = isCartCheckout
@@ -371,11 +461,12 @@ const shopLogic = () => ({
                 // Create one order per cart item
                 for (const item of this.cartItems) {
                     const effectivePrice = item.price;
-const response = await fetch(`${API_BASE_URL}/api/orders`, {
+                    const response = await fetch(`${API_BASE_URL}/api/orders`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': token ? `Bearer ${token}` : ''
+                            'Authorization': token ? `Bearer ${token}` : '',
+                            'X-Session-Id': sessionId
                         },
                         body: JSON.stringify({
                             product_id: item.id,
@@ -401,7 +492,8 @@ const response = await fetch(`${API_BASE_URL}/api/orders`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': token ? `Bearer ${token}` : ''
+                        'Authorization': token ? `Bearer ${token}` : '',
+                        'X-Session-Id': sessionId
                     },
                     body: JSON.stringify({
                         product_id: checkoutProduct.id,
@@ -480,7 +572,10 @@ const response = await fetch(`${API_BASE_URL}/api/orders`, {
     },
 
     addToCart(product, qty = 1, size = "M", qualityLevel = null) {
-        if (this.storeSettings.purchasingDisabled) return;
+        if (this.storeSettings.purchasingDisabled) {
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Purchasing is currently disabled.", type: "error" } }));
+            return;
+        }
 
         const effectivePrice = qualityLevel ? parseFloat(qualityLevel.price) : parseFloat(product.price);
         const qualityName = qualityLevel ? qualityLevel.quality_name : null;
@@ -508,7 +603,7 @@ const response = await fetch(`${API_BASE_URL}/api/orders`, {
         }
 
         this.persistCart();
-        window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Added to Cart", type: "success" } }));
+        window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Added to cart successfully", type: "success" } }));
     },
 
     incrementQty(product) { product.uiQuantity++; },
@@ -551,7 +646,6 @@ const response = await fetch(`${API_BASE_URL}/api/orders`, {
         console.log("Submitting Reservation Payload:", payload);
 
         try {
-            // Submit to the DEDICATED reservations API
             const response = await fetch(`${API_BASE_URL}/api/reservations`, {
                 method: 'POST',
                 headers: {

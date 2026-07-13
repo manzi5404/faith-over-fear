@@ -30,6 +30,8 @@ DROP TABLE IF EXISTS contact_messages CASCADE;
 DROP TABLE IF EXISTS store_config CASCADE;
 DROP TABLE IF EXISTS settings CASCADE;
 DROP TABLE IF EXISTS announcements CASCADE;
+DROP TABLE IF EXISTS collection_products CASCADE;
+DROP TABLE IF EXISTS collections CASCADE;
 
 DROP TYPE IF EXISTS drop_status_type CASCADE;
 DROP TYPE IF EXISTS drop_type_type CASCADE;
@@ -369,6 +371,51 @@ CREATE TABLE contact_messages (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ============================================================
+-- 15b. COLLECTIONS
+-- ============================================================
+
+CREATE TABLE collections (
+    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    slug         VARCHAR(255) NOT NULL UNIQUE,
+    title        VARCHAR(255) NOT NULL,
+    description  TEXT,
+    image_url    VARCHAR(512),
+    status       VARCHAR(50) NOT NULL DEFAULT 'draft',
+    sort_order   INTEGER NOT NULL DEFAULT 0,
+    featured     BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_collections_status ON collections (status);
+CREATE INDEX idx_collections_sort ON collections (sort_order);
+CREATE INDEX idx_collections_featured ON collections (featured) WHERE featured = TRUE;
+
+-- ============================================================
+-- 15c. COLLECTION_PRODUCTS (many-to-many join)
+-- ============================================================
+
+CREATE TABLE collection_products (
+    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    collection_id  BIGINT NOT NULL,
+    product_id     BIGINT NOT NULL,
+    sort_order     INTEGER NOT NULL DEFAULT 0,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_collection_products_collection
+        FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE CASCADE,
+    CONSTRAINT fk_collection_products_product
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    CONSTRAINT uq_collection_product UNIQUE (collection_id, product_id)
+);
+
+CREATE INDEX idx_collection_products_collection ON collection_products (collection_id);
+CREATE INDEX idx_collection_products_product ON collection_products (product_id);
+
+CREATE TRIGGER trg_collections_updated_at
+    BEFORE UPDATE ON collections
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================
 -- TRIGGER FUNCTION: auto-update updated_at

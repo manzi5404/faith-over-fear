@@ -10,6 +10,7 @@ const DROP_CREATED = 'drop.created';
 const DROP_ACTIVATED = 'drop.activated';
 const DROP_CLOSED = 'drop.closed';
 const DROP_SOLD_OUT = 'drop.sold_out';
+const DROP_DELETED = 'drop.deleted';
 const PRODUCT_CREATED = 'product.created';
 const PRODUCT_UPDATED = 'product.updated';
 const PRODUCT_DELETED = 'product.deleted';
@@ -21,6 +22,9 @@ const NOTIFICATION_CREATED = 'notification.created';
 const INVENTORY_RESERVED = 'inventory.reserved';
 const INVENTORY_RELEASED = 'inventory.released';
 const INVENTORY_ADJUSTED = 'inventory.adjusted';
+const COLLECTION_CREATED = 'collection.created';
+const COLLECTION_UPDATED = 'collection.updated';
+const COLLECTION_DELETED = 'collection.deleted';
 
 function on(event, listener) {
   emitter.on(event, listener);
@@ -57,6 +61,7 @@ module.exports = {
   DROP_ACTIVATED,
   DROP_CLOSED,
   DROP_SOLD_OUT,
+  DROP_DELETED,
   PRODUCT_CREATED,
   PRODUCT_UPDATED,
   PRODUCT_DELETED,
@@ -68,4 +73,7 @@ module.exports = {
   INVENTORY_RESERVED,
   INVENTORY_RELEASED,
   INVENTORY_ADJUSTED,
+  COLLECTION_CREATED,
+  COLLECTION_UPDATED,
+  COLLECTION_DELETED,
 };

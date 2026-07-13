@@ -13,11 +13,14 @@ async function createOrder(req, res) {
       payment_method: req.body.payment_method || 'reservation',
     };
 
+    const userId = req.user ? req.user.id : null;
+    const sessionId = req.headers['x-session-id'] || req.cookies?.sessionId || null;
+
     let order;
     if (req.body.items && Array.isArray(req.body.items) && req.body.items.length > 0) {
-      order = await orderService.createDirect(req.user.id, customerData, req.body.items);
+      order = await orderService.createDirect(userId, customerData, req.body.items, sessionId);
     } else {
-      order = await orderService.createFromCart(req.user.id, customerData);
+      order = await orderService.createFromCart(userId, customerData, sessionId);
     }
 
     return res.status(201).json({
@@ -44,6 +47,9 @@ async function createOrder(req, res) {
 
 async function getMyOrders(req, res) {
   try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const orders = await orderService.getMyOrders(req.user.id);
     return res.status(200).json({ success: true, orders });
   } catch (err) {
@@ -53,7 +59,8 @@ async function getMyOrders(req, res) {
 
 async function getOrderById(req, res) {
   try {
-    const order = await orderService.getOrderById(req.params.id, req.user.id);
+    const userId = req.user ? req.user.id : null;
+    const order = await orderService.getOrderById(req.params.id, userId);
     return res.status(200).json({ success: true, order });
   } catch (err) {
     return handleServiceError(res, err, req);

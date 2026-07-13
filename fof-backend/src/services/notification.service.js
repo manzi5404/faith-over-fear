@@ -42,6 +42,10 @@ async function getUnreadCount(userId) {
   return notificationRepo.unreadCount(userId);
 }
 
+async function getUnreadNotificationsForAdmin(userId, limit = 50, offset = 0) {
+  return notificationRepo.findByUserIdAndUnread(userId, limit, offset);
+}
+
 async function getUserNotifications(userId, limit = 50, offset = 0) {
   return notificationRepo.findByUserId(userId, limit, offset);
 }
@@ -52,5 +56,6 @@ module.exports = {
   markAsRead,
   markAllAsRead,
   getUnreadCount,
+  getUnreadNotificationsForAdmin,
   getUserNotifications,
 };

@@ -9,7 +9,43 @@
         </div>
 
         <form @submit.prevent="handleLogin" class="space-y-6">
-          <!-- ... (existing form content) ... -->
+          <div v-if="loginError" class="bg-red-900/20 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-xl">
+            {{ loginError }}
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-slate-400">Email</label>
+            <input 
+              type="email"
+              v-model="loginEmail"
+              required
+              class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              placeholder="admin@example.com"
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-slate-400">Password</label>
+            <input 
+              type="password"
+              v-model="loginPassword"
+              required
+              class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              placeholder="••••••••"
+            />
+          </div>
+          <button 
+            type="submit"
+            :disabled="isLoggingIn"
+            class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-14 rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-600/20 disabled:opacity-50"
+          >
+            <span v-if="isLoggingIn" class="flex items-center justify-center gap-2">
+              <svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Signing in...
+            </span>
+            <span v-else>Sign In</span>
+          </button>
         </form>
 
         <div class="relative py-4">
@@ -46,6 +82,12 @@
           <div class="flex items-center gap-8">
             <span class="text-xl font-black tracking-tighter text-white">F<span class="text-blue-500">></span>F <span class="text-xs uppercase tracking-widest text-slate-500 ml-2 font-bold opacity-50">Admin</span></span>
             <div class="hidden md:flex items-center gap-1">
+              <button 
+                @click="currentTab = 'collections'"
+                :class="['px-4 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'collections' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-500 hover:text-white hover:bg-slate-800']"
+              >
+                Collections
+              </button>
               <button 
                 @click="currentTab = 'drops'"
                 :class="['px-4 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'drops' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-500 hover:text-white hover:bg-slate-800']"
@@ -134,14 +176,14 @@
               </div>
             </div>
 
-            <button
-              @click="showForm = true; editingDrop = null" 
+            <button 
+              @click="currentTab === 'collections' ? showCollectionForm() : showForm = true; editingDrop = null" 
               class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center gap-2"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
-              New Drop
+              {{ currentTab === 'collections' ? 'New Collection' : 'New Drop' }}
             </button>
             <button 
               @click="handleLogout" 
@@ -164,11 +206,30 @@
         </section>
 
         <!-- Form Transition -->
-        <section v-if="showForm" id="drop-form">
+        <section v-if="showForm && currentTab === 'collections'" id="collection-form">
           <AdminDropForm 
+            mode="collection"
+            :initialData="editingDrop" 
+            @submit="handleCollectionFormSubmit" 
+            @cancel="showForm = false" 
+          />
+        </section>
+
+        <section v-if="showForm && currentTab === 'drops'" id="drop-form">
+          <AdminDropForm 
+            mode="drop"
             :initialData="editingDrop" 
             @submit="handleFormSubmit" 
             @cancel="showForm = false" 
+          />
+        </section>
+
+        <!-- Collections List -->
+        <section v-if="currentTab === 'collections'">
+          <AdminDropList 
+            :drops="collections" 
+            @edit="handleEdit" 
+            @delete="handleDelete" 
           />
         </section>
 
@@ -229,9 +290,11 @@ import AdminReservations from './AdminReservations.vue';
 import AdminMessages from './AdminMessages.vue';
 import AdminOrders from './AdminOrders.vue';
 import DropService from './DropService';
+import axios from 'axios';
 
 const currentTab = ref('drops');
 const drops = ref([]);
+const collections = ref([]);
 const showForm = ref(false);
 const editingDrop = ref(null);
 const notifications = ref([]);
@@ -241,6 +304,7 @@ const isLoggingIn = ref(false);
 const user = ref(null);
 const loginEmail = ref('');
 const loginPassword = ref('');
+const loginError = ref('');
 const adminAlerts = ref([]);
 const alertCount = ref(0);
 const showAlertPanel = ref(false);
@@ -252,6 +316,7 @@ const checkAuth = async () => {
             isAuthenticated.value = true;
             user.value = data.user;
             await fetchDrops();
+            await fetchCollections();
             await fetchNotifications();
         }
     } catch (error) {
@@ -261,6 +326,7 @@ const checkAuth = async () => {
 };
 
 const handleLogin = async () => {
+    loginError.value = '';
     isLoggingIn.value = true;
     try {
         const data = await DropService.login(loginEmail.value, loginPassword.value);
@@ -272,7 +338,8 @@ const handleLogin = async () => {
             await fetchNotifications();
         }
     } catch (error) {
-        const msg = error.response?.data?.message || 'Login failed.';
+        const msg = error.response?.data?.error || error.message || 'Login failed.';
+        loginError.value = msg;
         notify(msg, 'error');
     } finally {
         isLoggingIn.value = false;
@@ -338,12 +405,11 @@ const parseImage = (imageField) => {
 const fetchDrops = async () => {
   try {
     const raw = await DropService.getDrops(false, true);
-    // Client-side safety normalization — ensures no undefined fields reach templates
     drops.value = (Array.isArray(raw) ? raw : []).map(drop => ({
       ...drop,
       title: (drop.title || '').trim() || 'Untitled Drop',
       description: drop.description || '',
-      image: parseImage(drop.image),
+      image: parseImage(drop.image_url),
       status: drop.status || 'upcoming',
       price: drop.price != null ? drop.price : 0
     }));
@@ -355,20 +421,107 @@ const fetchDrops = async () => {
   }
 };
 
+const fetchCollections = async () => {
+  try {
+    const response = await axios.get('/api/collections', { params: { includeDrops: true } });
+    if (response.data.success) {
+      collections.value = response.data.collections.map(c => ({
+        ...c,
+        title: (c.title || '').trim() || 'Untitled Collection',
+        description: c.description || '',
+        image: parseImage(c.image_url),
+        status: c.status || 'draft',
+        drop_count: c.drop_count || 0
+      }));
+    }
+  } catch (error) {
+    console.error('Error fetching collections:', error);
+    notify('Failed to load collections.', 'error');
+  }
+};
+
 const handleFormSubmit = async (formData) => {
   try {
+    if (currentTab.value === 'collections') {
+      await handleCollectionFormSubmit(formData);
+      return;
+    }
+
+    const dropPayload = {
+      title: formData.name || formData.title || '',
+      description: formData.description || '',
+      status: formData.status || 'upcoming',
+      type: formData.type || 'recent-drop',
+      image_url: formData.image_url || '',
+      release_date: formData.release_date ? formData.release_date.slice(0, 16) : new Date().toISOString().slice(0, 16),
+      close_date: formData.close_date ? formData.close_date.slice(0, 16) : null,
+      products: formData.products || [],
+    };
+    console.log('[admin] dropPayload:', dropPayload);
+
     if (editingDrop.value) {
-      await DropService.updateDrop(editingDrop.value.id, formData);
+      await DropService.updateDrop(editingDrop.value.id, dropPayload);
       notify('Drop updated successfully!', 'success');
     } else {
-      await DropService.createDrop(formData);
-      notify('Drop created and notifications sent!', 'success');
+      await DropService.createDrop(dropPayload);
+      notify('Drop created successfully!', 'success');
     }
     showForm.value = false;
-    await fetchDrops();
+    editingDrop.value = null;
+    setTimeout(async () => {
+      try {
+        await fetchDrops();
+      } catch (e) {
+        console.error('Failed to refresh drops after create:', e);
+      }
+    }, 500);
   } catch (error) {
-    notify('Failed to save drop.', 'error');
+    console.error('Failed to save drop:', error);
+    notify(error.response?.data?.error || error.message || 'Failed to save drop.', 'error');
   }
+};
+
+const handleCollectionFormSubmit = async (formData) => {
+  try {
+    const collectionPayload = {
+      title: formData.name || formData.title || '',
+      description: formData.description || '',
+      status: formData.status || 'upcoming',
+    };
+
+    let collectionId;
+    if (editingDrop.value) {
+      const response = await axios.put(`/api/admin/collections/${editingDrop.value.id}`, collectionPayload);
+      collectionId = editingDrop.value.id;
+      notify('Collection updated successfully!', 'success');
+    } else {
+      const response = await axios.post('/api/admin/collections', collectionPayload);
+      collectionId = response.data.collection.id;
+      notify('Collection created successfully!', 'success');
+    }
+
+    if (formData.drops && formData.drops.length > 0) {
+      for (const drop of formData.drops) {
+        await axios.post(`/api/admin/collections/${collectionId}/drops`, {
+          dropId: drop.id,
+          sortOrder: 0
+        });
+      }
+    }
+
+    showForm.value = false;
+    editingDrop.value = null;
+    await fetchCollections();
+  } catch (error) {
+    console.error('Failed to save collection:', error);
+    notify(error.response?.data?.error || error.message || 'Failed to save collection.', 'error');
+  }
+};
+
+const showCollectionForm = () => {
+  editingDrop.value = null;
+  showForm.value = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 const handleEdit = (drop) => {
@@ -378,14 +531,22 @@ const handleEdit = (drop) => {
 };
 
 const handleDelete = async (id) => {
-  if (confirm('Are you sure you want to delete this drop? This action cannot be undone.')) {
-    try {
+  if (!confirm('Are you sure you want to delete this? This action cannot be undone.')) return;
+  
+  try {
+    if (currentTab.value === 'collections') {
+      await axios.delete(`/api/admin/collections/${id}`);
+      notify('Collection deleted successfully.', 'success');
+      await fetchCollections();
+    } else {
       await DropService.deleteDrop(id);
       notify('Drop deleted successfully.', 'success');
       await fetchDrops();
-    } catch (error) {
-      notify('Failed to delete drop.', 'error');
     }
+  } catch (error) {
+    const errorMessage = error.response?.data?.error || error.message || 'Failed to delete.';
+    notify(errorMessage, 'error');
+    console.error('Delete error:', error);
   }
 };
 

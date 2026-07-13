@@ -62,33 +62,55 @@ async function findSlugConflict(slug, excludeId = null) {
   return data && data.length > 0;
 }
 
-async function create(data) {
-  const { data: row, error } = await supabaseAdmin
-    .from('drops')
-    .insert(data)
-    .select('*')
-    .single();
+async function demotePreviousNewDrops(excludeId) {
+    const { data, error } = await supabaseAdmin
+        .from('drops')
+        .update({ type: 'recent-drop' })
+        .neq('id', excludeId)
+        .eq('type', 'new-drop')
+        .select('id');
 
-  if (error) throw error;
-  return row;
+    if (error) throw error;
+    return data || [];
+}
+
+async function create(data) {
+    const { data: row, error } = await supabaseAdmin
+        .from('drops')
+        .insert(data)
+        .select('*')
+        .single();
+
+    if (error) throw error;
+    return row;
 }
 
 async function update(id, data) {
-  const { data: row, error } = await supabaseAdmin
-    .from('drops')
-    .update(data)
-    .eq('id', id)
-    .select('*')
-    .single();
+    const { data: row, error } = await supabaseAdmin
+        .from('drops')
+        .update(data)
+        .eq('id', id)
+        .select('*')
+        .single();
 
-  if (error) throw error;
-  return row;
+    if (error) throw error;
+    return row;
 }
 
 async function activate(id) {
-  const { data, error } = await supabaseAdmin.rpc('activate_drop', { p_drop_id: id });
-  if (error) throw error;
-  return data;
+    const { data, error } = await supabaseAdmin.rpc('activate_drop', { p_drop_id: id });
+    if (error) throw error;
+    return data;
+}
+
+async function remove(id) {
+    const { error } = await supabaseAdmin
+        .from('drops')
+        .delete()
+        .eq('id', id);
+
+    if (error) throw error;
+    return true;
 }
 
 module.exports = {
@@ -100,4 +122,6 @@ module.exports = {
   create,
   update,
   activate,
+  demotePreviousNewDrops,
+  remove,
 };

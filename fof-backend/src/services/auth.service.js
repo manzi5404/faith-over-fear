@@ -72,6 +72,11 @@ async function login(email, password) {
     throw new ValidationError('Email and password are required');
   }
 
+  const existingUser = await userRepo.findByEmail(email);
+  if (!existingUser) {
+    throw new AuthError('Incorrect email/username');
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -81,7 +86,7 @@ async function login(email, password) {
     logError(error, { statusCode: 401, context: { email } });
 
     if (error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('credentials')) {
-      throw new AuthError('Invalid email or password');
+      throw new AuthError('Incorrect password');
     }
     if (error.message?.toLowerCase().includes('confirm') || error.message?.toLowerCase().includes('not confirmed')) {
       throw new AuthError('Please confirm your email before logging in. Check your inbox for the confirmation link.');
@@ -97,7 +102,7 @@ async function login(email, password) {
       new Error('Supabase returned no error but also no session — possible email confirmation required or auth misconfiguration'),
       { statusCode: 401, context: { email, dataKeys: data ? Object.keys(data) : 'null', hasUser: !!data?.user } }
     );
-    throw new AuthError('Invalid email or password');
+    throw new AuthError('Incorrect password');
   }
 
   if (!data.session.access_token) {
@@ -147,26 +152,23 @@ async function googleOAuth(idToken) {
     token: idToken,
   });
 
-  if (error || !data?.user) {
+  if (error || !data?.session || !data?.user) {
     throw new AuthError('Google authentication failed');
   }
 
-  if (!data.user.id) {
-    throw new AuthError('Google authentication returned no user ID');
+  if (!data.session.access_token) {
+    throw new AuthError('Missing access token from Google authentication');
   }
 
-  const googleId = data.user.id;
-  const email = data.user.email;
-  const name = data.user.user_metadata?.full_name || data.user.user_metadata?.name || null;
+  const authUser = data.user;
+  const googleId = authUser.id;
+  const email = authUser.email;
+  const name = authUser.user_metadata?.full_name || authUser.user_metadata?.name || null;
 
   let existingUser = await userRepo.findByEmail(email);
 
-  if (existingUser) {
-    if (!existingUser.google_id) {
-      await userRepo.updateRole(existingUser.id, existingUser.role);
-    }
-  } else {
-    existingUser = await userRepo.create(data.user.id, {
+  if (!existingUser) {
+    existingUser = await userRepo.create(authUser.id, {
       name,
       email,
       role: resolveRole(email),
@@ -175,10 +177,14 @@ async function googleOAuth(idToken) {
   }
 
   return {
-    id: existingUser.id,
-    email: existingUser.email,
-    name: existingUser.name,
-    role: existingUser.role,
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+    user: {
+      id: existingUser.id,
+      email: existingUser.email,
+      name: existingUser.name,
+      role: existingUser.role,
+    },
   };
 }
 

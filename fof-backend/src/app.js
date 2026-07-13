@@ -13,12 +13,15 @@ const dropRoutes = require('./routes/drop.routes');
 const dropAdminRoutes = require('./routes/drop.admin.routes');
 const productRoutes = require('./routes/product.routes');
 const productAdminRoutes = require('./routes/product.admin.routes');
+const collectionRoutes = require('./routes/collection.routes');
+const collectionAdminRoutes = require('./routes/collection.admin.routes');
 const cartRoutes = require('./routes/cart.routes');
 const orderRoutes = require('./routes/order.routes');
 const orderAdminRoutes = require('./routes/order.admin.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const waitlistRoutes = require('./routes/waitlist.routes');
+const messageRoutes = require('./routes/message.routes');
 
 const app = express();
 
@@ -31,7 +34,11 @@ const allowedOrigins = [
   'https://faithoverfearrw.netlify.app',
   'http://localhost:3000',
   'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
   'http://localhost:8080',
+  ...(process.env.CORS_ORIGIN ? String(process.env.CORS_ORIGIN).split(',').map(s => s.trim()).filter(Boolean) : []),
 ].filter(Boolean);
 
 app.use(cors({
@@ -49,19 +56,34 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // Health
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
+const uploadRoutes = require('./routes/upload.routes');
+
 // Public routes
 app.use('/api/auth', authRoutes);
 app.use('/api/drops', dropRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/collections', collectionRoutes);
 app.use('/api/waitlist', waitlistRoutes);
+app.use('/api/contact', messageRoutes);
+
+// Upload routes (admin only)
+app.use('/api/upload', requireAuth, requireAdmin, uploadRoutes);
 
 // Admin routes for drops and products
 app.use('/api/admin/drops', requireAuth, requireAdmin, dropAdminRoutes);
 app.use('/api/admin/products', requireAuth, requireAdmin, productAdminRoutes);
+app.use('/api/admin/collections', requireAuth, requireAdmin, collectionAdminRoutes);
+
+// Admin notification routes
+const notificationAdminRoutes = require('./routes/notification.admin.routes');
+app.use('/api/admin/notifications', requireAuth, requireAdmin, notificationAdminRoutes);
+
+// Admin message routes
+app.use('/api/admin/messages', requireAuth, requireAdmin, messageRoutes);
 
 // Authenticated routes
-app.use('/api/cart', requireAuth, cartRoutes);
-app.use('/api/orders', requireAuth, orderRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', requireAuth, notificationRoutes);
 
 // Admin-only routes
@@ -121,6 +143,13 @@ app.get('/__routes', (req, res) => {
         { method: 'POST', path: '/api/admin/drops/:id/activate' },
         { method: 'GET', path: '/api/products' },
         { method: 'GET', path: '/api/products/:slug' },
+        { method: 'GET', path: '/api/collections' },
+        { method: 'GET', path: '/api/collections/:slug' },
+        { method: 'POST', path: '/api/admin/collections' },
+        { method: 'PUT', path: '/api/admin/collections/:id' },
+        { method: 'DELETE', path: '/api/admin/collections/:id' },
+        { method: 'POST', path: '/api/admin/collections/:id/products' },
+        { method: 'DELETE', path: '/api/admin/collections/:id/products/:productId' },
         { method: 'POST', path: '/api/admin/products' },
         { method: 'PUT', path: '/api/admin/products/:id' },
         { method: 'DELETE', path: '/api/admin/products/:id' },

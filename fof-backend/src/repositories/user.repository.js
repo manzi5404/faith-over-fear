@@ -1,5 +1,5 @@
 const { supabase } = require('../config/supabase');
-const { NotFoundError } = require('../utils/errors');
+const { NotFoundError, AuthError } = require('../utils/errors');
 
 async function findById(id) {
   const { data, error } = await supabase

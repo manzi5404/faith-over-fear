@@ -42,10 +42,27 @@ const requireAuth = async (req, res, next) => {
   }
 
   if (!userRow) {
-    return res.status(401).json({
-      success: false,
-      error: 'User profile not found',
-    });
+    const { data: emailRow } = await supabase
+      .from('users')
+      .select('id, email, role, name')
+      .eq('email', data.user.email)
+      .maybeSingle();
+
+    if (!emailRow) {
+      return res.status(401).json({
+        success: false,
+        error: 'User profile not found',
+      });
+    }
+
+    req.user = {
+      id: emailRow.id,
+      email: emailRow.email,
+      role: emailRow.role,
+      name: emailRow.name,
+    };
+
+    return next();
   }
 
   req.user = {
@@ -58,4 +75,39 @@ const requireAuth = async (req, res, next) => {
   return next();
 };
 
-module.exports = { requireAuth };
+const optionalAuth = async (req, res, next) => {
+  const token = extractBearerToken(req.headers.authorization);
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+
+    if (error || !data?.user) {
+      return next();
+    }
+
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('id, email, role, name')
+      .eq('id', data.user.id)
+      .maybeSingle();
+
+    if (userRow) {
+      req.user = {
+        id: userRow.id,
+        email: userRow.email,
+        role: userRow.role,
+        name: userRow.name,
+      };
+    }
+  } catch (err) {
+    // ignore auth errors for optional auth
+  }
+
+  return next();
+};
+
+module.exports = { requireAuth, optionalAuth };

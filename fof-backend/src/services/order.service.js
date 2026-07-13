@@ -19,8 +19,8 @@ function canTransition(from, to) {
   return TRANSITIONS[from] && TRANSITIONS[from].includes(to);
 }
 
-async function createFromCart(userId, customerData) {
-  const cart = await cartRepo.findOrCreateByUserId(userId);
+async function createFromCart(userId, customerData, sessionId = null) {
+  const cart = await cartRepo.findOrCreate(userId, sessionId);
   const cartItems = await cartRepo.getCartWithItems(cart.id);
 
   if (cartItems.length === 0) {
@@ -129,7 +129,7 @@ async function createFromCart(userId, customerData) {
   return fullOrder;
 }
 
-async function createDirect(userId, customerData, items) {
+async function createDirect(userId, customerData, items, sessionId = null) {
   if (!Array.isArray(items) || items.length === 0) {
     throw new AppError('At least one item is required', 400);
   }

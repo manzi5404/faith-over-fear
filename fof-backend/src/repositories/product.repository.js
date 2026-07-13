@@ -7,7 +7,6 @@ async function findByDropId(dropId) {
     .from('products')
     .select('*, product_variants(*)')
     .eq('drop_id', dropId)
-    .eq('status', 'live')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -17,7 +16,7 @@ async function findByDropId(dropId) {
 async function findById(id) {
   const { data, error } = await supabase
     .from('products')
-    .select('*, product_variants(*)')
+    .select('*, product_variants(*), product_quality_prices(*), drops(*), collections(*)')
     .eq('id', id)
     .maybeSingle();
 

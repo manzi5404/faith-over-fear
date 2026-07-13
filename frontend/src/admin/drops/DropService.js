@@ -4,16 +4,27 @@ import axios from 'axios';
 // Local dev: uses Vite proxy (empty string)
 // Netlify: use _redirects file OR set VITE_API_URL env var
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-const API_URL = `${API_BASE_URL}/api/drops`;
+const ADMIN_API_URL = `${API_BASE_URL}/api/admin/drops`;
 
-// Base axios config for including cookies
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
+
+// Attach auth token to all requests
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('fof_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const DropService = {
     verifySession: async () => {
         try {
-            const response = await axios.get('/api/auth/verify');
+            const response = await axios.get('/api/auth/me');
             return response.data;
         } catch (error) {
             console.error('Session verification failed:', error);
@@ -24,7 +35,12 @@ const DropService = {
     login: async (email, password) => {
         try {
             const response = await axios.post('/api/auth/login', { email, password });
-            return response.data;
+            const data = response.data;
+            if (data.success && data.access_token) {
+                localStorage.setItem('fof_token', data.access_token);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`;
+            }
+            return data;
         } catch (error) {
             console.error('Login failed:', error);
             throw error;
@@ -43,18 +59,21 @@ const DropService = {
 
     logout: async () => {
         try {
+            localStorage.removeItem('fof_token');
+            delete axios.defaults.headers.common['Authorization'];
             const response = await axios.post('/api/auth/logout');
             return response.data;
         } catch (error) {
+            localStorage.removeItem('fof_token');
+            delete axios.defaults.headers.common['Authorization'];
             console.error('Logout failed:', error);
             throw error;
         }
     },
 
     getDrops: async (activeOnly = false, includeProducts = false) => {
-
         try {
-            const response = await axios.get(API_URL, { params: { active: activeOnly, includeProducts } });
+            const response = await axios.get('/api/drops', { params: { active: activeOnly, includeProducts } });
             return response.data.drops || [];
         } catch (error) {
             console.error('Error fetching drops:', error);
@@ -64,7 +83,7 @@ const DropService = {
 
     createDrop: async (dropData) => {
         try {
-            const response = await axios.post(API_URL, dropData);
+            const response = await axios.post(ADMIN_API_URL, dropData);
             return response.data;
         } catch (error) {
             console.error('Error creating drop:', error);
@@ -74,7 +93,7 @@ const DropService = {
 
     updateDrop: async (id, dropData) => {
         try {
-            const response = await axios.put(`${API_URL}/${id}`, dropData);
+            const response = await axios.put(`${ADMIN_API_URL}/${id}`, dropData);
             return response.data;
         } catch (error) {
             console.error('Error updating drop:', error);
@@ -84,7 +103,7 @@ const DropService = {
 
     deleteDrop: async (id) => {
         try {
-            const response = await axios.delete(`${API_URL}/${id}`);
+            const response = await axios.delete(`${ADMIN_API_URL}/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error deleting drop:', error);

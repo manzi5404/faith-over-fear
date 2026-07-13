@@ -64,9 +64,23 @@ async function unreadCount(userId) {
   return count || 0;
 }
 
+async function findByUserIdAndUnread(userId, limit = 50, offset = 0) {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_read', false)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw error;
+  return data || [];
+}
+
 module.exports = {
   create,
   findByUserId,
+  findByUserIdAndUnread,
   markRead,
   markAllRead,
   unreadCount,
