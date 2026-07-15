@@ -28,6 +28,7 @@
               type="password"
               v-model="loginPassword"
               required
+              autocomplete="current-password"
               class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               placeholder="••••••••"
             />
@@ -94,12 +95,7 @@
               >
                 Drops
               </button>
-              <button 
-                @click="currentTab = 'reservations'"
-                :class="['px-4 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'reservations' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-500 hover:text-white hover:bg-slate-800']"
-              >
-                Reservations
-              </button>
+
               <button
                 @click="currentTab = 'orders'"
                 :class="['px-4 py-2 rounded-lg text-sm font-bold transition-all', currentTab === 'orders' ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'text-slate-500 hover:text-white hover:bg-slate-800']"
@@ -242,10 +238,7 @@
           />
         </section>
 
-        <!-- Reservations -->
-        <section v-if="currentTab === 'reservations'">
-          <AdminReservations @updated="msg => notify(msg.message, msg.type)" />
-        </section>
+
 
         <!-- Orders -->
         <section v-if="currentTab === 'orders'">
@@ -286,7 +279,7 @@ import { ref, onMounted } from 'vue';
 import AdminDropList from './AdminDropList.vue';
 import AdminDropForm from './AdminDropForm.vue';
 import AdminSettings from './AdminSettings.vue';
-import AdminReservations from './AdminReservations.vue';
+
 import AdminMessages from './AdminMessages.vue';
 import AdminOrders from './AdminOrders.vue';
 import DropService from './DropService';
@@ -594,8 +587,6 @@ const handleNotificationClick = async (note) => {
     // Navigate to relevant tab
     if (note.type === 'message') {
       currentTab.value = 'messages';
-    } else if (note.type === 'reservation') {
-      currentTab.value = 'reservations';
     }
   } catch (error) {
     console.error('Failed to mark notification:', error);

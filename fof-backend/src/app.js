@@ -22,8 +22,12 @@ const paymentRoutes = require('./routes/payment.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const waitlistRoutes = require('./routes/waitlist.routes');
 const messageRoutes = require('./routes/message.routes');
+const settingsRoutes = require('./routes/settings.routes');
+const siteStatusRoutes = require('./routes/siteStatus.routes');
 
 const app = express();
+
+
 
 // Security
 app.use(helmet());
@@ -65,6 +69,9 @@ app.use('/api/products', productRoutes);
 app.use('/api/collections', collectionRoutes);
 app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/contact', messageRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/site-status', siteStatusRoutes);
+
 
 // Upload routes (admin only)
 app.use('/api/upload', requireAuth, requireAdmin, uploadRoutes);

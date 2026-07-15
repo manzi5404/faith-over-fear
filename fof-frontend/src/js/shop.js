@@ -52,7 +52,9 @@ const shopLogic = () => ({
 
     async submitContact() {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/contact`, {
+const res = await fetch(`${API_BASE_URL}/api/contact`, {
+                // Debug to catch wrong endpoint
+                headers: { 'Content-Type': 'application/json' },
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -70,7 +72,9 @@ const shopLogic = () => ({
                 this.contactPhone = '';
                 this.contactSubject = '';
                 this.contactMessage = '';
-                window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Message sent successfully!', type: 'success' } }));
+            window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Message sent successfully!', type: 'success' } }));
+            // Debug: make sure the correct endpoint is hit
+            console.log('[Contact Debug] POST /api/contact payload ok');
             } else {
                 window.dispatchEvent(new CustomEvent('notify', { detail: { message: data.error || 'Failed to send message', type: 'error' } }));
             }
@@ -181,15 +185,18 @@ const shopLogic = () => ({
         };
     },
 
-    isReservationMode() {
-        return !this.activeDrop;
+    // Disable waitlist/reservation mode on product page.
+    // Users should always see Add to Cart / Pay with MoMo.
+    siteGate: {
+        status: null,
+        images: [],
+        email: ''
     },
-    isLiveMode() {
-        return !!this.activeDrop;
-    },
-    isClosedMode() {
-        return false;
-    },
+
+    isReservationMode() { return false; },
+    isLiveMode() { return this.siteGate.status === 'live'; },
+    isClosedMode() { return this.siteGate.status === 'closed'; },
+
 
     resolveImage(product) {
         if (!product) return '/placeholder.jpg';
@@ -213,7 +220,35 @@ const shopLogic = () => ({
 
         this.loading = true;
         this.configLoading = true;
+
+        // Site closed/live gate (blocks entire page when closed)
         try {
+            const settingsRes = await fetch(`${API_BASE_URL}/api/settings`);
+            const settingsData = await settingsRes.json();
+            const settings = settingsData?.settings || {};
+
+            this.siteGate.status = String(settings.siteStatus || 'live').toLowerCase();
+
+            // settings.siteClosedImages stored as JSON array string
+            let imgs = settings.siteClosedImages;
+            if (typeof imgs === 'string') {
+                const t = imgs.trim();
+                if (t.startsWith('[')) {
+                    try { imgs = JSON.parse(t); } catch { imgs = []; }
+                } else {
+                    imgs = t.split(',').map(s => s.trim()).filter(Boolean);
+                }
+            }
+            this.siteGate.images = Array.isArray(imgs) ? imgs : [];
+
+            this.renderSiteGate();
+
+        } catch (e) {
+            console.warn('[SITE_GATE] settings fetch failed, defaulting to live', e);
+        }
+
+        try {
+
             const urlParams = new URLSearchParams(window.location.search);
             const productId = urlParams.get('id');
             if (productId) {
@@ -232,8 +267,109 @@ const shopLogic = () => ({
         } finally {
             this.loading = false;
             this.configLoading = false;
+            // Ensure overlay stays when closed
+            this.renderSiteGate();
         }
+
         window.addEventListener('cart-updated', () => this.initCart());
+    },
+
+    renderSiteGate() {
+        const gateRootId = 'site-gate-root';
+        let existing = document.getElementById(gateRootId);
+
+        // When live: remove overlay
+        if (!this.isClosedMode()) {
+            if (existing) existing.remove();
+            return;
+        }
+
+        // Closed: block everything and show overlay
+        if (!existing) {
+            existing = document.createElement('div');
+            existing.id = gateRootId;
+            existing.innerHTML = `
+                <div id="site-gate-overlay" style="position:fixed;inset:0;z-index:999999;background:#000;display:flex;align-items:center;justify-content:center;">
+                    <div style="width:min(920px,92vw);padding:26px 18px;display:flex;flex-direction:column;gap:16px;align-items:center;">
+                        <div style="color:#fff;font-weight:900;letter-spacing:-1px;font-size:42px;line-height:1;">F<span style="color:#ff3b3b;">></span>F</div>
+                        <div style="color:#ccc;text-transform:uppercase;letter-spacing:6px;font-size:10px;font-weight:700;">SITE CLOSED</div>
+
+                        <div id="site-gate-card" style="width:100%;max-width:680px;background:rgba(10,10,10,.9);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.7);padding:18px;">
+                            <div id="site-gate-image-strip" style="display:flex;gap:14px;align-items:center;white-space:nowrap;overflow:hidden;">
+                                <div id="site-gate-images" style="display:flex;gap:14px;align-items:center;animation:siteGateSlide 16s linear infinite;">
+                                </div>
+                            </div>
+                            <style>
+                                @keyframes siteGateSlide {
+                                    0% { transform: translateX(0); }
+                                    100% { transform: translateX(-50%); }
+                                }
+                            </style>
+                        </div>
+
+                        <div style="width:100%;max-width:520px;display:flex;gap:10px;align-items:center;">
+                            <input id="site-gate-email" type="email" placeholder="Enter your email" style="flex:1;min-width:0;padding:16px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#0b0b0b;color:#fff;outline:none;" />
+                            <button id="site-gate-notify" style="padding:16px 20px;border-radius:12px;border:1px solid #ff3b3b;background:#ff3b3b;color:#000;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">Notify me</button>
+                        </div>
+
+                        <div id="site-gate-status" style="color:#ccc;font-size:12px;min-height:18px;text-align:center;"></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(existing);
+        }
+
+        // Populate images
+        const imgWrap = existing.querySelector('#site-gate-images');
+        if (imgWrap) {
+            const imgs = this.siteGate.images?.length ? this.siteGate.images : ['https://placehold.co/680x420/000000/FFFFFF/png?text=F%3EF'];
+            const html = imgs.map(src => `<img src="${src}" alt="model" style="width:260px;max-width:38vw;height:160px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.08);" />`).join('');
+            // duplicate for smooth slide loop
+            imgWrap.innerHTML = html + html;
+        }
+
+        // Bind submit
+        const btn = existing.querySelector('#site-gate-notify');
+        const emailInput = existing.querySelector('#site-gate-email');
+        const statusEl = existing.querySelector('#site-gate-status');
+
+        if (btn && !btn.dataset.bound) {
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', async () => {
+                const email = (emailInput?.value || '').trim();
+                if (!email) {
+                    if (statusEl) statusEl.textContent = 'Please enter your email.';
+                    return;
+                }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    if (statusEl) statusEl.textContent = 'Enter a valid email.';
+                    return;
+                }
+
+                if (statusEl) statusEl.textContent = 'Submitting...';
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/waitlist`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: null,
+                            email,
+                            phone: null,
+                            source: 'site_closed'
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        if (statusEl) statusEl.textContent = 'Done! We’ll notify you when we’re live.';
+                        if (emailInput) emailInput.value = '';
+                    } else {
+                        if (statusEl) statusEl.textContent = data.error || 'Failed. Try again.';
+                    }
+                } catch {
+                    if (statusEl) statusEl.textContent = 'Failed. Try again.';
+                }
+            });
+        }
     },
 
     getCachedProduct(productId) {

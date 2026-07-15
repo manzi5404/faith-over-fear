@@ -27,7 +27,7 @@ async function existsByEmail(email) {
 }
 
 async function findUnnotified(limit = 1000) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('waitlist')
     .select('*')
     .eq('notified', false)

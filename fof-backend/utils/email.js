@@ -1,9 +1,14 @@
+const { Resend } = require('resend');
 let resendClient = null;
 
 function getResendClient() {
     if (resendClient) return resendClient;
     const apiKey = process.env.RESEND_API_KEY || process.env.EMAIL_API_KEY;
-    if (!apiKey) return null;
+    if (!apiKey) {
+        console.warn('⚠️  [EMAIL_SERVICE] NOT_CONFIGURED: Missing RESEND_API_KEY / EMAIL_API_KEY. All emails will be suppressed (stubbed).');
+        return null;
+    }
+    console.log(`🔑 [EMAIL_SERVICE] Configured with key prefix: ${String(apiKey).slice(0, 6)}... (from ${process.env.RESEND_API_KEY ? 'RESEND_API_KEY' : 'EMAIL_API_KEY'})`);
     resendClient = new Resend(apiKey);
     return resendClient;
 }
@@ -18,7 +23,7 @@ async function sendEmail({ email, subject, message, html }) {
 
     try {
         console.log(`📨 [EMAIL_SERVICE] Attempting delivery to: ${email}...`);
-        
+
         const data = await getResendClient().emails.send({
             from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
             to: email,
@@ -27,8 +32,11 @@ async function sendEmail({ email, subject, message, html }) {
         });
 
         console.log(`✅ [EMAIL_SERVICE] Success for ${email}:`, data.data?.id);
+        return data;
     } catch (error) {
-        console.error(`❌ [EMAIL_SERVICE] Delivery failed for ${email}:`, error.message);
+        // Resend SDK errors often include a structured `error` array with reasons
+        const detail = error?.response?.data || error?.error || error?.message || error;
+        console.error(`❌ [EMAIL_SERVICE] Delivery failed for ${email}:`, detail);
         throw error;
     }
 }

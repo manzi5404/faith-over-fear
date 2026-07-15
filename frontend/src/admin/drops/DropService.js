@@ -173,26 +173,7 @@ const DropService = {
         }
     },
 
-    // Reservation APIs
-    getReservations: async () => {
-        try {
-            const response = await axios.get('/api/admin/reservations');
-            return response.data.reservations || [];
-        } catch (error) {
-            console.error('Error fetching reservations:', error);
-            throw error;
-        }
-    },
 
-    updateReservationStatus: async (id, status) => {
-        try {
-            const response = await axios.patch(`/api/admin/reservations/${id}/status`, { status });
-            return response.data;
-        } catch (error) {
-            console.error('Error updating reservation status:', error);
-            throw error;
-        }
-    },
 
     // Order APIs
     getOrders: async () => {
@@ -215,7 +196,81 @@ const DropService = {
         }
     },
 
+    // Settings APIs
+    getSettings: async () => {
+        try {
+            const response = await axios.get('/api/settings');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching settings:', error);
+            throw error;
+        }
+    },
+
+    updateSetting: async (settingKey, settingValue) => {
+        try {
+            const response = await axios.put('/api/settings', {
+                setting_key: settingKey,
+                setting_value: settingValue
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error updating setting:', error);
+            throw error;
+        }
+    },
+
+    getWaitlist: async () => {
+        try {
+            const response = await axios.get('/api/waitlist');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching waitlist:', error);
+            throw error;
+        }
+    },
+
+    addToWaitlist: async (email, name = null) => {
+        try {
+            const response = await axios.post('/api/waitlist', {
+                email,
+                name,
+                source: 'admin'
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error adding to waitlist:', error);
+            throw error;
+        }
+    },
+
+    uploadImage: async (file) => {
+        try {
+            const form = new FormData();
+            form.append('file', file);
+            const response = await axios.post('/api/upload', form, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            throw error;
+        }
+    },
+
+    // Site status APIs
+    broadcastSiteStatusEmails: async () => {
+        try {
+            const response = await axios.post('/api/site-status/broadcast');
+            return response.data;
+        } catch (error) {
+            console.error('Error broadcasting site status emails:', error);
+            throw error;
+        }
+    },
+
     // Announcement APIs
+
     getAnnouncement: async () => {
         try {
             const response = await axios.get('/api/announcement');

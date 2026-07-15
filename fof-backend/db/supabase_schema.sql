@@ -20,6 +20,7 @@ DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS product_quality_prices CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS reservations CASCADE;
+DROP TABLE IF EXISTS waitlist CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS quality_levels CASCADE;
 DROP TABLE IF EXISTS drops CASCADE;
@@ -299,13 +300,27 @@ ON CONFLICT (id) DO NOTHING;
 -- but those columns are intentionally NOT created in this schema.
 
 -- ============================================================
+-- 11b. WAITLIST (emails captured while the site is closed)
+-- ============================================================
+
+CREATE TABLE waitlist (
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name        VARCHAR(255),
+    email       VARCHAR(255) NOT NULL UNIQUE,
+    phone       VARCHAR(50),
+    source      VARCHAR(50),
+    notified    BOOLEAN NOT NULL DEFAULT false,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
 -- 12. SETTINGS (key-value feature flags)
 -- ============================================================
 
 CREATE TABLE settings (
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     key         VARCHAR(255) NOT NULL UNIQUE,
-    value       VARCHAR(255) NOT NULL,
+    value       TEXT NOT NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -314,8 +329,17 @@ CREATE TABLE settings (
 -- The models/settings.js file queries 'setting_key' and 'setting_value' which
 -- means it MUST be updated to use 'key' and 'value' (see migration report).
 
-INSERT INTO settings (key, value) VALUES ('purchasingDisabled', 'false'), ('isRestocking', 'false')
+INSERT INTO settings (key, value) VALUES
+    ('purchasingDisabled', 'false'),
+    ('isRestocking', 'false'),
+    ('siteStatus', 'live'),
+    ('siteClosedImages', '[]')
 ON CONFLICT (key) DO NOTHING;
+
+-- Allow public (anon) reads of settings so the storefront/admin can fetch site status.
+ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read settings" ON settings;
+CREATE POLICY "Public read settings" ON settings FOR SELECT USING (true);
 
 -- ============================================================
 -- 13. ANNOUNCEMENTS (Singleton: id = 1)
