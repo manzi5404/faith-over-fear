@@ -46,15 +46,10 @@
 
         <div class="space-y-4">
           <div class="space-y-2">
-            <label class="block text-xs uppercase tracking-widest text-slate-500 font-bold">Notify Waitlist</label>
+            <label class="block text-xs uppercase tracking-widest text-slate-500 font-bold">Add Subscriber</label>
             <p class="text-sm text-slate-400">
-              Email every address that signed up while the site was closed (unnotified only) with the correct message for the current status.
+              Manually add an email address to the waitlist. All subscribers are listed below.
             </p>
-          </div>
-
-          <div class="flex items-center gap-3 text-sm text-slate-400">
-            <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-bold text-white">{{ waitlistCount }}</span>
-            <span>people on the waitlist</span>
           </div>
 
           <div class="flex items-center gap-2">
@@ -72,21 +67,6 @@
             >
               {{ addingEmail ? 'Adding...' : 'Add' }}
             </button>
-          </div>
-
-          <button
-            type="button"
-            @click="broadcastEmails"
-            :disabled="broadcasting"
-            class="w-full rounded-xl bg-red-600/15 border border-red-600/30 hover:bg-red-600/25 disabled:opacity-50 text-red-200 text-xs font-bold uppercase tracking-widest px-6 py-3 transition-all shadow-lg shadow-red-600/10"
-          >
-            {{ broadcasting ? 'Sending...' : 'Send Notification Emails' }}
-          </button>
-
-          <div v-if="broadcastResult" class="text-sm text-slate-300 p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-1">
-            <p><span class="font-bold uppercase tracking-widest text-[10px] text-slate-500">Status</span> {{ broadcastResult.status }}</p>
-            <p><span class="font-bold uppercase tracking-widest text-[10px] text-slate-500">Emails sent</span> {{ broadcastResult.sent }}</p>
-            <p><span class="font-bold uppercase tracking-widest text-[10px] text-slate-500">Marked notified</span> {{ broadcastResult.markedNotified }}</p>
           </div>
         </div>
       </div>
@@ -150,6 +130,37 @@
         {{ savingImages ? 'Saving...' : 'Save Images' }}
       </button>
     </section>
+
+    <!-- Waitlist subscribers (read-only list) -->
+    <section class="bg-zinc-900/50 border border-slate-800 rounded-2xl p-8 shadow-xl">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-white flex items-center gap-3">
+          <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          Waitlist Subscribers
+        </h2>
+        <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-bold text-white text-sm">{{ subscribers.length }}</span>
+      </div>
+
+      <div v-if="subscribers.length === 0" class="text-sm text-slate-500 italic py-6 text-center">
+        No subscribers yet.
+      </div>
+
+      <div v-else class="space-y-2">
+        <div
+          v-for="sub in subscribers"
+          :key="sub.id"
+          class="flex items-center gap-3 rounded-xl border border-slate-800 bg-black/40 px-4 py-3"
+        >
+          <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span class="text-sm text-white truncate">{{ sub.email }}</span>
+          <span class="text-[11px] text-slate-500 uppercase tracking-widest ml-auto shrink-0">{{ sub.source || 'web' }}</span>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -161,14 +172,21 @@ const emit = defineEmits(['updated']);
 
 const siteStatus = ref('live');
 const closedImages = ref([]);
-const waitlistCount = ref(0);
+const subscribers = ref([]);
 
-const broadcasting = ref(false);
-const broadcastResult = ref(null);
 const savingImages = ref(false);
 const uploading = ref(false);
 const newEmail = ref('');
 const addingEmail = ref(false);
+
+const fetchSubscribers = async () => {
+  try {
+    const res = await DropService.getWaitlist();
+    subscribers.value = res?.entries || [];
+  } catch {
+    subscribers.value = [];
+  }
+};
 
 const addSubscriber = async () => {
   const email = newEmail.value.trim();
@@ -177,7 +195,7 @@ const addSubscriber = async () => {
   try {
     await DropService.addToWaitlist(email);
     newEmail.value = '';
-    await fetchWaitlistCount();
+    await fetchSubscribers();
     emit('updated', { message: 'Subscriber added to waitlist.', type: 'success' });
   } catch {
     emit('updated', { message: 'Failed to add subscriber.', type: 'error' });
@@ -226,16 +244,6 @@ const fetchSiteGate = async () => {
   }
 };
 
-const fetchWaitlistCount = async () => {
-  try {
-    const res = await DropService.getWaitlist();
-    const entries = res?.entries || [];
-    waitlistCount.value = entries.length;
-  } catch {
-    waitlistCount.value = 0;
-  }
-};
-
 const setSiteStatus = async (status) => {
   const normalized = String(status || '').toLowerCase();
   siteStatus.value = normalized;
@@ -273,30 +281,8 @@ const saveImages = async () => {
   }
 };
 
-const broadcastEmails = async () => {
-  broadcasting.value = true;
-  broadcastResult.value = null;
-  try {
-    const data = await DropService.broadcastSiteStatusEmails();
-    broadcastResult.value = {
-      status: data.status,
-      sent: data.sent,
-      markedNotified: data.markedNotified
-    };
-    emit('updated', {
-      message: data.success ? 'Emails sent to the waitlist.' : 'Broadcast failed.',
-      type: data.success ? 'success' : 'error'
-    });
-    await fetchWaitlistCount();
-  } catch {
-    emit('updated', { message: 'Broadcast failed.', type: 'error' });
-  } finally {
-    broadcasting.value = false;
-  }
-};
-
 onMounted(async () => {
   await fetchSiteGate();
-  await fetchWaitlistCount();
+  await fetchSubscribers();
 });
 </script>
