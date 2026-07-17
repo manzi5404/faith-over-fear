@@ -5,7 +5,6 @@ export default {
     "./shop.html",
     "./product.html",
     "./cart.html",
-    "./reservations.html",
     "./login.html",
     "./signup.html",
     "./about.html",

@@ -8,7 +8,6 @@ export default defineConfig({
         shop: './shop.html',
         product: './product.html',
         cart: './cart.html',
-        reservations: './reservations.html',
         collections: './collections.html',
         login: './login.html',
         signup: './signup.html',

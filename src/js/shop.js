@@ -543,8 +543,7 @@ const shopLogic = () => ({
             }
 
             const orderIdStr = createdOrderIds.length > 0 ? createdOrderIds.join(', ') : 'N/A';
-            const trackingUrl = `${window.location.origin}/reservations.html`;
-            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.\nTrack: ${trackingUrl}`;
+            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
 
             window.open(`https://wa.me/250791832523?text=${encodeURIComponent(message)}`, "_blank");
 
@@ -559,7 +558,7 @@ const shopLogic = () => ({
             }, 500);
             window.dispatchEvent(new CustomEvent("notify", { 
                 detail: { 
-                    message: `Order #${orderIdStr} placed! Track it at /reservations.html`, 
+                    message: `Order #${orderIdStr} placed successfully!`, 
                     type: "success" 
                 } 
             }));

@@ -83,6 +83,8 @@ async function createFromCart(userId, customerData, sessionId = null) {
 
   const totalAmount = enrichedItems.reduce((sum, item) => sum + item.subtotal, 0);
 
+  const productImages = enrichedItems.length > 0 ? (enrichedItems[0].productImages || null) : null;
+
   const order = await orderRepo.create({
     user_id: userId,
     status: 'pending_payment',
@@ -92,6 +94,7 @@ async function createFromCart(userId, customerData, sessionId = null) {
     total_price: Number(totalAmount.toFixed(2)),
     payment_method: customerData.payment_method || 'reservation',
     color: enrichedItems.length > 0 ? enrichedItems[0].color : null,
+    product_image_urls: productImages,
   });
 
   const reservedVariants = [];

@@ -7,7 +7,7 @@ import path from 'path';
 // List of root HTML pages that need to be built
 const rootHtmlFiles = [
   'index.html', 'shop.html', 'lookbook.html', 'cart.html', 'product.html',
-  'contact.html', 'about.html', 'reservations.html', 'shipping.html',
+  'contact.html', 'about.html', 'shipping.html',
   'faq.html', 'terms.html', 'login.html', 'signup.html',
   'forgot-password.html', 'reset-password.html'
 ];
