@@ -16,7 +16,7 @@ const productRoutes = require('./routes/productRoutes');
 const dropRoutes = require('./routes/dropRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
-const reservationRoutes = require('./routes/reservationRoutes');
+
 const orderRoutes = require('./routes/orderRoutes');
 const uploadRoutes = require('./routes/upload');
 const adminRoutes = require('./routes/adminRoutes');
@@ -66,7 +66,7 @@ app.use('/api/drops', dropRoutes);
 app.get('/api/store-config', storeConfigController.getStoreConfig);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/announcement', announcementRoutes);
-app.use('/api/reservations', reservationRoutes);
+
 
 // Contact message route
 app.post('/api/contact', async (req, res) => {
