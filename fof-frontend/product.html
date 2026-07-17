@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -30,7 +30,7 @@
         }
     </style>
 </head>
-<body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden"
+<body data-api-base-url="http://localhost:5000" class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden"
       x-data="shopLogic()"
       x-init="init()"
       @scroll.window="scrolled = (window.pageYOffset > 50)"
@@ -289,7 +289,7 @@
                         <div>
                             <p class="text-[10px] uppercase font-bold tracking-widest text-fof-accent" x-text="selectedProduct.category"></p>
                             <h4 class="text-sm font-bold uppercase" x-text="selectedProduct.name"></h4>
-                            <p class="text-xs text-gray-400" x-text="'Size: ' + reservationData.size + ' | Qty: ' + reservationData.quantity"></p>
+                            <p class="text-xs text-gray-400" x-text="'Size: ' + reservationData.size + (reservationData.color ? ' / ' + reservationData.color : '') + ' | Qty: ' + reservationData.quantity"></p>
                             <template x-if="selectedQuality">
                                 <div class="mt-2">
                                     <p class="text-[10px] uppercase tracking-widest text-fof-accent font-bold" x-text="selectedQuality.quality_name"></p>
@@ -394,7 +394,7 @@
                             <template x-if="activeProduct">
                                 <div class="space-y-2">
                                     <div class="flex items-start justify-between text-sm">
-                                        <span class="max-w-[70%] text-zinc-300" x-text="activeProduct.name + ' (' + modalSize + ') x' + modalQuantity"></span>
+                                        <span class="max-w-[70%] text-zinc-300" x-text="activeProduct.name + ' (' + modalSize + (modalColor ? ' / ' + modalColor : '') + ') x' + modalQuantity"></span>
                                         <span class="font-mono font-bold text-fof-white" x-text="momoQuickPayAmount + ' FRW'"></span>
                                     </div>
                                     <template x-if="modalQuality">

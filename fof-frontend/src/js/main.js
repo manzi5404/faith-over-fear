@@ -7,10 +7,10 @@ import collectionsLogic from './collections.js';
 import { initHeroAnimation } from './animations.js';
 import { initIntro } from './intro.js';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || (() => {
+const API_BASE_URL = import.meta.env.VITE_API_URL || document.body?.dataset?.apiBaseUrl || (() => {
     const host = window.location.hostname;
-    if (host === 'localhost') return '';
-    if (host === '127.0.0.1') return '';
+    if (host === 'localhost') return 'http://localhost:5000';
+    if (host === '127.0.0.1') return 'http://localhost:5000';
     return 'https://fof-backend-production.up.railway.app';
 })();
 

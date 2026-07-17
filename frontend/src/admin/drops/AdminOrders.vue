@@ -12,6 +12,10 @@
       </button>
     </div>
 
+    <div v-if="error" class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm">
+      {{ error }}
+    </div>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       <div
         v-for="status in orderStatuses"
@@ -54,6 +58,7 @@
                       <div class="text-sm font-medium text-slate-300">{{ getProductName(order) }}</div>
                       <div class="flex flex-wrap gap-2 mt-1">
                         <span v-if="order.size" class="text-[9px] uppercase font-bold px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Size: {{ order.size }}</span>
+                        <span v-if="order.color" class="text-[9px] uppercase font-bold px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Color: {{ order.color }}</span>
                         <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">Qty: {{ order.quantity || 1 }}</span>
                         <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded">#{{ order.id }}</span>
                       </div>
@@ -106,14 +111,17 @@ import DropService from './DropService';
 
 const orders = ref([]);
 const emit = defineEmits(['updated']);
-const orderStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
+const error = ref('');
+const orderStatuses = ['pending_payment', 'pending', 'confirmed', 'completed', 'cancelled'];
 
 const fetchOrders = async () => {
+  error.value = '';
   try {
     const data = await DropService.getOrders();
     orders.value = Array.isArray(data) ? data.filter(order => (order.payment_method || '').toLowerCase() === 'momo') : [];
-  } catch (error) {
-    console.error('Failed to load orders:', error);
+  } catch (err) {
+    console.error('Failed to load orders:', err);
+    error.value = err?.response?.data?.message || err?.message || 'Failed to load orders. Check console for details.';
   }
 };
 
@@ -159,6 +167,7 @@ const getProductImage = (order) => {
 const getStatusClass = (status) => {
   const base = 'px-2 py-0.5 rounded-full font-bold uppercase tracking-widest text-[9px] ';
   switch (status) {
+    case 'pending_payment': return base + 'bg-orange-500/10 text-orange-400 border border-orange-500/20';
     case 'pending': return base + 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
     case 'confirmed': return base + 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
     case 'completed': return base + 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';

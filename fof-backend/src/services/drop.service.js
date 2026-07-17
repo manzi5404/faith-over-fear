@@ -29,6 +29,28 @@ async function createQualityPrices(productId, qualityPrices) {
   await qualityPriceRepo.upsert(productId, qualityPrices);
 }
 
+async function syncProductVariants(productId, colors, sizes, quantity = 10) {
+  const colorList = Array.isArray(colors) ? colors.filter(Boolean) : [];
+  const sizeList = Array.isArray(sizes) ? sizes.filter(Boolean) : [];
+  if (colorList.length === 0 || sizeList.length === 0) return;
+
+  const variantsService = require('./variant.service');
+  await productRepo.deleteVariants(productId);
+  const variantPayload = [];
+  for (const color of colorList) {
+    for (const size of sizeList) {
+      const safeColor = String(color).trim();
+      const safeSize = String(size).trim();
+      if (!safeColor || !safeSize) continue;
+      const sku = `PROD-${productId}-${safeColor.replace(/[^a-zA-Z0-9]/g, '')}-${safeSize.replace(/[^a-zA-Z0-9]/g, '')}`;
+      variantPayload.push({ color: safeColor, size: safeSize, sku, stock: Number.isFinite(quantity) ? Math.max(0, Number(quantity)) : 10 });
+    }
+  }
+  if (variantPayload.length > 0) {
+    await variantsService.createVariants(productId, variantPayload);
+  }
+}
+
 async function ensureUniqueSlug(baseSlug, excludeId = null) {
   let slug = baseSlug;
   let counter = 1;
@@ -131,7 +153,7 @@ async function createDrop(data) {
     image_url: data.image_url || null,
     release_date: data.release_date || new Date().toISOString(),
     close_date: data.close_date || null,
-    status: normalizeStatus(data.status),
+    status: data.status ? normalizeStatus(data.status) : (data.type === 'new-drop' || data.type === 'recent-drop' ? 'live' : 'upcoming'),
     type: data.type || 'recent-drop',
   };
 
@@ -158,8 +180,9 @@ async function createDrop(data) {
         drop_id: drop.id,
         slug,
         name: product.name || product.title || 'Untitled Product',
-        status: data.status || 'upcoming',
+        status: data.status || payload.status,
         sizes: Array.isArray(product.sizes) ? product.sizes : [],
+        colors: Array.isArray(product.colors) ? product.colors : [],
         image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
       };
       delete normalizedProduct.size;
@@ -168,9 +191,11 @@ async function createDrop(data) {
       delete normalizedProduct.tempId;
       delete normalizedProduct.uploading;
       delete normalizedProduct.quality_prices;
+      delete normalizedProduct.colorsInput;
       const createdProduct = await productRepo.create(normalizedProduct);
 
       await createQualityPrices(createdProduct.id, product.quality_prices);
+      await syncProductVariants(createdProduct.id, normalizedProduct.colors, normalizedProduct.sizes, product.quantity);
     }
   }
 
@@ -210,10 +235,6 @@ async function updateDrop(id, data) {
     }
   }
 
-  if (Object.keys(updateData).length === 0) {
-    return existing;
-  }
-
   const wasLive = existing.status === 'live';
   const willBeLive = updateData.status === 'live';
 
@@ -221,11 +242,11 @@ async function updateDrop(id, data) {
   if (willBeLive && !wasLive) {
     updated = await dropRepo.activate(id);
     events.emit(events.DROP_ACTIVATED, { drop: updated });
-  } else {
+  } else if (Object.keys(updateData).length > 0) {
     updated = await dropRepo.update(id, updateData);
+  } else {
+    updated = existing;
   }
-
-  return updated;
 
   if (data.products && Array.isArray(data.products)) {
     const existingProducts = await productRepo.findByDropId(id);
@@ -251,16 +272,19 @@ async function updateDrop(id, data) {
           description: product.description || null,
           price: parseFloat(product.price) || 0,
           slug,
-          status: data.status || 'upcoming',
+          status: data.status || updateData.status || existing.status,
           sizes: Array.isArray(product.sizes) ? product.sizes : [],
+          colors: Array.isArray(product.colors) ? product.colors : [],
           image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
           quantity: parseInt(product.quantity) || 1,
         };
         delete normalizedProduct.tempId;
         delete normalizedProduct.uploading;
         delete normalizedProduct.quality_prices;
+        delete normalizedProduct.colorsInput;
         await productRepo.update(product.id, normalizedProduct);
         await createQualityPrices(product.id, product.quality_prices);
+        await syncProductVariants(product.id, normalizedProduct.colors, normalizedProduct.sizes, product.quantity);
       } else {
         const baseSlug = generateSlug(product.name || product.title || 'product');
         let slug = baseSlug;
@@ -277,8 +301,9 @@ async function updateDrop(id, data) {
           drop_id: id,
           slug,
           name: product.name || product.title || 'Untitled Product',
-          status: data.status || 'upcoming',
+          status: data.status || updateData.status || existing.status,
           sizes: Array.isArray(product.sizes) ? product.sizes : [],
+          colors: Array.isArray(product.colors) ? product.colors : [],
           image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
           quantity: parseInt(product.quantity) || 1,
         };
@@ -288,8 +313,10 @@ async function updateDrop(id, data) {
         delete normalizedProduct.tempId;
         delete normalizedProduct.uploading;
         delete normalizedProduct.quality_prices;
+        delete normalizedProduct.colorsInput;
         const newProduct = await productRepo.create(normalizedProduct);
         await createQualityPrices(newProduct.id, product.quality_prices);
+        await syncProductVariants(newProduct.id, normalizedProduct.colors, normalizedProduct.sizes, product.quantity);
       }
     }
 

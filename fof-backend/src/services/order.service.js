@@ -59,6 +59,7 @@ async function createFromCart(userId, customerData, sessionId = null) {
     const unitPrice = v.price_override || p.base_price;
     enrichedItems.push({
       variantId: v.id,
+      productId: p.id,
       productName: p.name,
       size: v.size,
       color: v.color,
@@ -86,11 +87,10 @@ async function createFromCart(userId, customerData, sessionId = null) {
     status: 'pending_payment',
     customer_name: customerData.customer_name || null,
     customer_email: customerData.customer_email || null,
-    customer_phone: customerData.customer_phone || null,
-    shipping_address: customerData.shipping_address || null,
-    total_amount: Number(totalAmount.toFixed(2)),
+    phone_number: customerData.customer_phone || null,
+    total_price: Number(totalAmount.toFixed(2)),
     payment_method: customerData.payment_method || 'reservation',
-    payment_reference: null,
+    color: enrichedItems.length > 0 ? enrichedItems[0].color : null,
   });
 
   const reservedVariants = [];
@@ -101,13 +101,13 @@ async function createFromCart(userId, customerData, sessionId = null) {
       events.emit(events.INVENTORY_RESERVED, { variantId: item.variantId, orderId: order.id, quantity: item.quantity });
 
       await orderRepo.createOrderItem(order.id, {
-        product_variant_id: item.variantId,
+        product_id: item.productId,
         product_name: item.productName,
         size: item.size,
         color: item.color,
-        unit_price: item.unitPrice,
+        price_at_purchase: Number(item.unitPrice),
+        total_price: Number(item.subtotal),
         quantity: item.quantity,
-        subtotal: item.subtotal,
       });
     }
   } catch (err) {
@@ -131,42 +131,49 @@ async function createFromCart(userId, customerData, sessionId = null) {
 
 async function createDirect(userId, customerData, items, sessionId = null) {
   if (!Array.isArray(items) || items.length === 0) {
-    throw new AppError('At least one item is required', 400);
+    throw new AppError('At least one item is required to place an order', 400);
   }
 
   const activeDrop = await dropService.getActiveDrop();
   if (!activeDrop) {
-    throw new AppError('Store is not currently active', 400);
+    throw new AppError('Store is not currently active. Please try again later or contact support.', 400);
   }
 
   const enrichedItems = [];
   for (const item of items) {
-    const variant = await variantRepo.findById(item.variantId);
+    const variantId = item?.variantId;
+    if (!variantId) {
+      throw new AppError('Each order item must include a variant ID. Please select a valid size and color.', 400);
+    }
+
+    const variant = await variantRepo.findById(variantId);
+
     if (!variant) {
-      throw new AppError(`Variant not found: ${item.variantId}`, 404);
+      throw new AppError(`Selected variant (${variantId}) no longer exists. Please refresh and try again.`, 404);
     }
 
     const product = await productRepo.findById(variant.product_id);
     if (!product) {
-      throw new AppError(`Product not found for variant ${variant.id}`, 404);
+      throw new AppError(`Product not found for the selected variant. Please refresh and try again.`, 404);
     }
 
     if (product.drop_id !== activeDrop.id) {
-      throw new AppError(`Product "${product.name}" is not from the active drop`, 400);
+      throw new AppError(`"${product.name}" is not available in the current drop. Please refresh the page and try again.`, 400);
     }
 
     const qty = Number(item.quantity) || 1;
     if (qty < 1 || qty > 99) {
-      throw new AppError('Quantity must be between 1 and 99', 400);
+      throw new AppError(`Invalid quantity (${qty}). Please enter a number between 1 and 99.`, 400);
     }
 
     if (variant.stock < qty) {
-      throw new AppError(`Insufficient stock for ${variant.color}/${variant.size}`, 400);
+      throw new AppError(`Not enough stock for ${variant.color}/${variant.size}. Available: ${variant.stock}, requested: ${qty}.`, 400);
     }
 
     const unitPrice = variant.price_override || product.base_price;
     enrichedItems.push({
       variantId: variant.id,
+      productId: product.id,
       productName: product.name,
       size: variant.size,
       color: variant.color,
@@ -183,16 +190,23 @@ async function createDirect(userId, customerData, items, sessionId = null) {
     status: 'pending_payment',
     customer_name: customerData.customer_name || null,
     customer_email: customerData.customer_email || null,
-    customer_phone: customerData.customer_phone || null,
-    shipping_address: customerData.shipping_address || null,
-    total_amount: Number(totalAmount.toFixed(2)),
+    phone_number: customerData.customer_phone || null,
+    total_price: Number(totalAmount.toFixed(2)),
     payment_method: customerData.payment_method || 'reservation',
-    payment_reference: null,
+    color: enrichedItems.length > 0 ? enrichedItems[0].color : null,
   });
 
   for (const item of enrichedItems) {
     await variantRepo.reserveStock(item.variantId, item.quantity, order.id);
-    await orderRepo.createOrderItem(order.id, item);
+    await orderRepo.createOrderItem(order.id, {
+      product_id: item.productId,
+      product_name: item.productName,
+      size: item.size,
+      color: item.color,
+      price_at_purchase: Number(item.unitPrice),
+      total_price: Number(item.subtotal),
+      quantity: item.quantity,
+    });
   }
 
   const fullOrder = await orderRepo.findById(order.id);

@@ -295,4 +295,23 @@
     main {
         padding-top: var(--header-height);
     }
+
+    /* Floating Drop Card Animation */
+    .float-drop {
+        animation: floatDrop 4s ease-in-out infinite;
+    }
+
+    .float-drop-shadow {
+        animation: floatShadow 4s ease-in-out infinite;
+    }
+}
+
+@keyframes floatDrop {
+    0%, 100% { transform: translateY(0) rotate(-0.5deg); }
+    50% { transform: translateY(-14px) rotate(0.5deg); }
+}
+
+@keyframes floatShadow {
+    0%, 100% { transform: scale(1); opacity: 0.25; }
+    50% { transform: scale(1.08); opacity: 0.12; }
 }

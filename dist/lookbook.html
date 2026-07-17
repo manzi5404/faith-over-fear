@@ -154,18 +154,18 @@
                     <template x-for="drop in drops" :key="drop.id">
                         <div class="group cursor-pointer"
                              @click="selectDrop(drop)">
-                            <div class="relative aspect-[4/5] overflow-hidden mb-4 bg-fof-gray">
-                                <img :src="drop.image_url || '/placeholder.jpg'" :alt="drop.title" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
-                                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300"></div>
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <span class="bg-white text-black font-bold uppercase tracking-[0.2em] text-xs px-6 py-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-3 group-hover:translate-y-0">
-                                        Shop the Drop
-                                    </span>
+                                <div class="relative aspect-[4/5] overflow-hidden mb-4 bg-fof-gray">
+                                    <img :src="drop.image_url || '/placeholder.jpg'" :alt="drop.title" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300"></div>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <span class="bg-white text-black font-bold uppercase tracking-[0.2em] text-xs px-6 py-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 transform md:translate-y-3 md:group-hover:translate-y-0 translate-y-0">
+                                            Shop the Drop
+                                        </span>
+                                    </div>
+                                    <div class="absolute top-4 left-4 bg-fof-accent text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
+                                        Recent
+                                    </div>
                                 </div>
-                                <div class="absolute top-4 left-4 bg-fof-accent text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
-                                    Recent
-                                </div>
-                            </div>
                             <h3 class="text-xl font-bold uppercase leading-none mb-1 group-hover:text-fof-accent transition-colors" x-text="drop.title"></h3>
                             <p class="text-gray-400 text-[10px] uppercase tracking-widest" x-text="drop.description || ''"></p>
                         </div>
@@ -232,7 +232,7 @@
                                 </div>
                                 <div class="mt-auto space-y-3">
                                     <button @click="window.location.href='/product.html?id=' + product.id" class="w-full py-3 border border-fof-gray text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all">See Details</button>
-                                    <button @click.stop="activeProduct = product; openMomoQuickPay(activeProduct, 1, product.uiSize || 'M')" class="w-full py-3 bg-fof-accent text-black font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all">Pay with MoMo</button>
+                                    <button @click.stop="activeProduct = product; openMomoQuickPay(activeProduct, 1, product.uiSize || 'M')" class="w-full py-3 bg-fof-accent text-white font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all">Pay with MoMo</button>
                                 </div>
                             </div>
                         </div>

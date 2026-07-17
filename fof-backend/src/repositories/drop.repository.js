@@ -98,7 +98,16 @@ async function update(id, data) {
 }
 
 async function activate(id) {
-    const { data, error } = await supabaseAdmin.rpc('activate_drop', { p_drop_id: id });
+    const { data, error } = await supabaseAdmin
+        .from('drops')
+        .update({ 
+            status: 'live',
+            release_date: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select('*')
+        .single();
+
     if (error) throw error;
     return data;
 }

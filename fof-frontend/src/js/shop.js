@@ -403,7 +403,8 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
         this.selectedProduct = product;
         this.activeProduct = product;
         this.selectedSize = product.sizes && product.sizes.length > 0 ? product.sizes[0] : "M";
-        this.selectedColor = product.colors && product.colors.length > 0 ? product.colors[0] : "";
+        const variants = product.product_variants || product.variants || [];
+        this.selectedColor = product.colors && product.colors.length > 0 ? product.colors[0] : (variants.length > 0 ? variants[0].color : "");
         this.qualityLevels = product.product_quality_prices || product.quality_prices || [];
         this.selectedQuality = this.qualityLevels.length > 0 ? this.qualityLevels[0] : null;
     },
@@ -417,6 +418,9 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             .then(data => {
                 if (data.success && data.product) {
                     const p = data.product;
+                    const variants = p.product_variants || [];
+                    const variantColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+                    const variantSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
                     const product = {
                         ...p,
                         dropName: p.dropName || p.drop?.title || '',
@@ -426,7 +430,9 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
                         uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
                         images: p.images || p.image_urls || [],
                         quality_prices: p.product_quality_prices || p.quality_prices || [],
-                        status: p.status || "live"
+                        status: p.status || "live",
+                        colors: variantColors.length > 0 ? variantColors : (Array.isArray(p.colors) ? p.colors : []),
+                        sizes: variantSizes.length > 0 ? variantSizes : (Array.isArray(p.sizes) ? p.sizes : [])
                     };
                     this.cacheProducts([product]);
                 }
@@ -442,18 +448,25 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             const data = await res.json();
             if (data.success && Array.isArray(data.drops)) {
                 this.drops = data.drops.map(drop => {
-                    const mappedProducts = (drop.products || []).map(p => ({
-                        ...p,
-                        dropName: drop.title || drop.name || '',
-                        dropType: drop.type || 'new-drop',
-                        dropSlug: drop.slug || '',
-                        showDetails: false,
-                        uiQuantity: 1,
-                        uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
-                        images: p.images || p.image_urls || [],
-                        quality_prices: p.product_quality_prices || p.quality_prices || [],
-                        status: drop.status || "live"
-                    }));
+                    const mappedProducts = (drop.products || []).map(p => {
+                        const variants = p.product_variants || [];
+                        const variantColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+                        const variantSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+                        return {
+                            ...p,
+                            dropName: drop.title || drop.name || '',
+                            dropType: drop.type || 'new-drop',
+                            dropSlug: drop.slug || '',
+                            showDetails: false,
+                            uiQuantity: 1,
+                            uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
+                            images: p.images || p.image_urls || [],
+                            quality_prices: p.product_quality_prices || p.quality_prices || [],
+                            status: drop.status || "live",
+                            colors: variantColors.length > 0 ? variantColors : (Array.isArray(p.colors) ? p.colors : []),
+                            sizes: variantSizes.length > 0 ? variantSizes : (Array.isArray(p.sizes) ? p.sizes : [])
+                        };
+                    });
                     return {
                         ...drop,
                         products: mappedProducts,
@@ -489,6 +502,9 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             const data = await res.json();
             if (data.success && data.product) {
                 const p = data.product;
+                const variants = p.product_variants || [];
+                const variantColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+                const variantSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
                 const product = {
                     ...p,
                     dropName: p.dropName || p.drop?.title || '',
@@ -498,7 +514,9 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
                     uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
                     images: p.images || p.image_urls || [],
                     quality_prices: p.product_quality_prices || p.quality_prices || [],
-                    status: p.status || "live"
+                    status: p.status || "live",
+                    colors: variantColors.length > 0 ? variantColors : (Array.isArray(p.colors) ? p.colors : []),
+                    sizes: variantSizes.length > 0 ? variantSizes : (Array.isArray(p.sizes) ? p.sizes : [])
                 };
                 this.products = [product];
                 this.cacheProducts([product]);
@@ -703,7 +721,18 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             }).join("\n");
         } else {
             const variant = this.variantBySizeColor(checkoutProduct, this.modalSize, this.modalColor);
-            orderItems = [{ variantId: variant ? variant.id : null, quantity: parseInt(this.modalQuantity) }];
+            const variantId = variant ? variant.id : null;
+
+            // Hard-fail early: backend expects non-null variantId (UUID)
+            if (!variantId) {
+                window.dispatchEvent(new CustomEvent('notify', {
+                    detail: { message: 'Select a valid size/color before paying.', type: 'error' }
+                }));
+                this.loading = false;
+                return;
+            }
+
+            orderItems = [{ variantId, quantity: parseInt(this.modalQuantity) }];
             const colorStr = this.modalColor ? ` / ${this.modalColor}` : '';
             itemsList = `- ${checkoutProduct.name}${colorStr} (${this.modalSize}) x${this.modalQuantity} [${this.totalPrice} FRW]`;
         }
@@ -726,15 +755,29 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
                     customer_phone: this.senderPhone
                 })
             });
-            const result = await response.json();
+            
+            let result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                const text = await response.text();
+                throw new Error(`Server error (${response.status}): ${text || 'Unknown error'}`);
+            }
+            
+            if (!response.ok) {
+                throw new Error(result?.error || result?.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             if (result.success && result.order) {
                 createdOrderIds.push(result.order.id);
             } else if (!result.success) {
-                throw new Error(result.message || "Failed to create order");
+                throw new Error(result.error || result.message || "Failed to create order");
             }
 
             const orderIdStr = createdOrderIds.length > 0 ? createdOrderIds.join(', ') : 'N/A';
-            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
+            const trackingUrl = `${window.location.origin}/reservations.html`;
+            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.\nTrack: ${trackingUrl}`;
 
             window.open(`https://wa.me/250791832523?text=${encodeURIComponent(message)}`, "_blank");
 
@@ -747,17 +790,24 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
                 this.showMomoModal = false;
                 this.activeProduct = null;
             }, 500);
-            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Order placed! Please verify your payment on WhatsApp.", type: "success" } }));
+            window.dispatchEvent(new CustomEvent("notify", { 
+                detail: { 
+                    message: `Order #${orderIdStr} placed! Track it at /reservations.html`, 
+                    type: "success" 
+                } 
+            }));
         } catch (err) {
-            console.error("Order creation failed, using fallback:", err);
+            console.error("Order creation failed:", err);
+            const errorMessage = err?.message || "Failed to create order";
+            const detailedError = `Order creation failed: ${errorMessage}`;
+            
+            window.dispatchEvent(new CustomEvent("notify", { 
+                detail: { message: detailedError, type: "error" } 
+            }));
 
-            const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.`;
+            const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.\nNote: Order creation encountered an issue. Please contact support with your order details.`;
 
             window.open(`https://wa.me/250791832523?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
-
-            window.dispatchEvent(new CustomEvent("notify", {
-                detail: { message: "Redirecting to WhatsApp for manual verification.", type: "success" }
-            }));
 
             if (isCartCheckout) {
                 this.cartItems = [];

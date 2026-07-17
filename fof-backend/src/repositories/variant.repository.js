@@ -56,22 +56,44 @@ async function createBatch(variants) {
 }
 
 async function reserveStock(variantId, quantity, orderId = null) {
-  const { data, error } = await supabaseAdmin.rpc('reserve_stock', {
-    p_variant_id: variantId,
-    p_quantity: quantity,
-    p_order_id: orderId,
-  });
+  const { data: current, error: fetchError } = await supabaseAdmin
+    .from('product_variants')
+    .select('stock')
+    .eq('id', variantId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  const newStock = Math.max(0, (current?.stock || 0) - Number(quantity));
+
+  const { data, error } = await supabaseAdmin
+    .from('product_variants')
+    .update({ stock: newStock })
+    .eq('id', variantId)
+    .select('stock')
+    .single();
 
   if (error) throw error;
   return data;
 }
 
 async function returnStock(variantId, quantity, orderId = null) {
-  const { data, error } = await supabaseAdmin.rpc('return_stock', {
-    p_variant_id: variantId,
-    p_quantity: quantity,
-    p_order_id: orderId,
-  });
+  const { data: current, error: fetchError } = await supabaseAdmin
+    .from('product_variants')
+    .select('stock')
+    .eq('id', variantId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  const newStock = Math.max(0, (current?.stock || 0) + Number(quantity));
+
+  const { data, error } = await supabaseAdmin
+    .from('product_variants')
+    .update({ stock: newStock })
+    .eq('id', variantId)
+    .select('stock')
+    .single();
 
   if (error) throw error;
   return data;

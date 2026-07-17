@@ -60,6 +60,12 @@ const productLogic = () => ({
         }
 
         if (this.product) {
+            const variants = this.product.product_variants || [];
+            const variantColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+            const variantSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+            this.product.colors = variantColors.length > 0 ? variantColors : (Array.isArray(this.product.colors) ? this.product.colors : []);
+            this.product.sizes = variantSizes.length > 0 ? variantSizes : (Array.isArray(this.product.sizes) ? this.product.sizes : []);
+
             this.selectedSize = this.product.sizes && this.product.sizes.length > 0 ? this.product.sizes[0] : "";
             this.selectedColor = this.product.colors && this.product.colors.length > 0 ? this.product.colors[0] : "";
 
@@ -94,7 +100,7 @@ const productLogic = () => ({
 
         const shop = Alpine.$data(document.body);
         if (shop && typeof shop.addToCart === 'function') {
-            shop.addToCart(this.product, this.quantity, this.selectedSize, this.selectedQuality);
+            shop.addToCart(this.product, this.quantity, this.selectedSize, this.selectedColor);
         } else {
             console.error("shopLogic.addToCart not found");
         }
@@ -109,7 +115,7 @@ const productLogic = () => ({
         if (!this.product) return;
         const shop = Alpine.$data(document.body);
         if (shop && typeof shop.openMomoQuickPay === 'function') {
-            shop.openMomoQuickPay(this.product, this.quantity, this.selectedSize, this.selectedQuality);
+            shop.openMomoQuickPay(this.product, this.quantity, this.selectedSize, this.selectedColor, this.selectedQuality);
         } else {
             console.error("shopLogic.openMomoQuickPay not found");
         }
@@ -119,7 +125,7 @@ const productLogic = () => ({
         if (!this.product) return;
         const shop = Alpine.$data(document.body);
         if (shop && typeof shop.initReservation === 'function') {
-            shop.initReservation(this.product, this.selectedSize, this.selectedQuality);
+            shop.initReservation(this.product, this.selectedSize, this.selectedColor);
         } else {
             console.error("shopLogic.initReservation not found");
         }

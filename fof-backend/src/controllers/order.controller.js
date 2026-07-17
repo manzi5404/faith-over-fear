@@ -1,6 +1,7 @@
 const { requireAuth } = require('../middleware/auth');
 const { requireAdmin } = require('../middleware/admin');
 const orderService = require('../services/order.service');
+const variantRepo = require('../repositories/variant.repository');
 const { handleServiceError } = require('../utils/responseHandler');
 
 async function createOrder(req, res) {
@@ -19,6 +20,17 @@ async function createOrder(req, res) {
     let order;
     if (req.body.items && Array.isArray(req.body.items) && req.body.items.length > 0) {
       order = await orderService.createDirect(userId, customerData, req.body.items, sessionId);
+    } else if (req.body.product_id && req.body.size) {
+      const variants = await variantRepo.findByProductId(req.body.product_id);
+      const variant = variants.find(v => v.size === req.body.size && (!req.body.color || v.color === req.body.color)) || variants[0];
+      if (!variant) {
+        return res.status(400).json({ success: false, error: 'Selected size/color combination is not available' });
+      }
+      const qty = Number(req.body.quantity) || 1;
+      order = await orderService.createDirect(userId, customerData, [{
+        variantId: variant.id,
+        quantity: qty,
+      }], sessionId);
     } else {
       order = await orderService.createFromCart(userId, customerData, sessionId);
     }
@@ -28,15 +40,15 @@ async function createOrder(req, res) {
       order: {
         id: order.id,
         status: order.status,
-        total_amount: order.total_amount,
+        total_amount: order.total_price,
         created_at: order.created_at,
         items: (order.order_items || []).map((item) => ({
           product_name: item.product_name,
           size: item.size,
           color: item.color,
-          unit_price: item.unit_price,
+          unit_price: item.price_at_purchase,
           quantity: item.quantity,
-          subtotal: item.subtotal,
+          subtotal: item.total_price,
         })),
       },
     });

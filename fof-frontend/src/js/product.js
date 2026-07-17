@@ -90,6 +90,12 @@ const productLogic = () => ({
         }
 
         if (this.product) {
+            const variants = this.product.product_variants || [];
+            const variantColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+            const variantSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+            this.product.colors = variantColors.length > 0 ? variantColors : (Array.isArray(this.product.colors) ? this.product.colors : []);
+            this.product.sizes = variantSizes.length > 0 ? variantSizes : (Array.isArray(this.product.sizes) ? this.product.sizes : []);
+
             this.selectedSize = this.product.sizes && this.product.sizes.length > 0 ? this.product.sizes[0] : "";
             this.selectedColor = this.product.colors && this.product.colors.length > 0 ? this.product.colors[0] : "";
             this.qualityLevels = this.product.product_quality_prices || [];

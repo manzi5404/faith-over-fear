@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -23,7 +23,7 @@
         }
     </style>
 </head>
-<body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden"
+<body data-api-base-url="http://localhost:5000" class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden"
       x-data="collectionsLogic()"
       x-init="init()">
 
@@ -70,7 +70,7 @@
                         <p class="eyebrow mb-3">Curated Drops</p>
                         <h1 class="section-title">Our <span>Collections</span></h1>
                     </div>
-                    <p class="text-muted text-sm max-w-sm">Shop by theme — hand-picked groups of pieces designed to be worn together.</p>
+                    <p class="text-muted text-sm max-w-sm">Shop by theme � hand-picked groups of pieces designed to be worn together.</p>
                 </div>
 
                 <template x-for="collection in collections" :key="collection.id">

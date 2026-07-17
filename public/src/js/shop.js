@@ -1,4 +1,9 @@
-const API_BASE_URL = 'https://fof-backend-production.up.railway.app';
+const API_BASE_URL = window.API_BASE_URL || document.body?.dataset?.apiBaseUrl || (() => {
+    const host = window.location.hostname;
+    if (host === 'localhost') return 'http://localhost:5000';
+    if (host === '127.0.0.1') return 'http://localhost:5000';
+    return 'https://fof-backend-production.up.railway.app';
+})();
 
 const shopLogic = () => ({
     products: [],
@@ -244,6 +249,9 @@ const shopLogic = () => ({
                 data.drops.forEach(drop => {
                     if (drop.products && Array.isArray(drop.products)) {
                         drop.products.forEach(p => {
+                            const variants = p.product_variants || [];
+                            const variantColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+                            const variantSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
                             allProducts.push({
                                 ...p,
                                 dropName: drop.title || drop.name || '',
@@ -254,7 +262,9 @@ const shopLogic = () => ({
                                 uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
                                 images: p.images || p.image_urls || [],
                                 quality_prices: p.product_quality_prices || p.quality_prices || [],
-                                status: drop.status || "live"
+                                status: drop.status || "live",
+                                colors: variantColors.length > 0 ? variantColors : (Array.isArray(p.colors) ? p.colors : []),
+                                sizes: variantSizes.length > 0 ? variantSizes : (Array.isArray(p.sizes) ? p.sizes : [])
                             });
                         });
                     }
@@ -346,7 +356,7 @@ const shopLogic = () => ({
 
     initCart() { this.cartItems = JSON.parse(localStorage.getItem("fof_cart")) || []; },
 
-    openMomoQuickPay(product, qty = 1, size = "M", qualityLevel = null) {
+    openMomoQuickPay(product, qty = 1, size = "M", color = null, qualityLevel = null) {
         if (this.storeSettings.purchasingDisabled) {
             window.dispatchEvent(new CustomEvent("notify", {
                 detail: { message: "Purchasing is currently disabled.", type: "error" }
@@ -357,6 +367,7 @@ const shopLogic = () => ({
         this.selectedProduct = product;
         this.modalQuantity = product ? (parseInt(qty) || 1) : 1;
         this.modalSize = product ? (size || product.uiSize || "M") : "M";
+        this.modalColor = color || (product && this.colorsOf(product)[0]) || null;
         this.modalQuality = qualityLevel;
         this.showMomoModal = true;
     },
@@ -373,6 +384,14 @@ const shopLogic = () => ({
         // Support with or without 250 prefix, focusing on standard 10-digit RW numbers starting with 07...
         // Supported 07 prefixes: 2, 3, 8, 9
         return /^07(?:2|3|8|9)\d{7}$/.test(normalizedPhone);
+    },
+
+    colorsOf(product) {
+        if (!product) return [];
+        const variants = product.product_variants || product.variants || [];
+        const colors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+        if (colors.length === 0 && Array.isArray(product.colors)) return product.colors;
+        return colors;
     },
 
     async processMomoPayment() {
@@ -445,13 +464,15 @@ const shopLogic = () => ({
         // Prepare WhatsApp message components
         let itemsList = isCartCheckout
             ? this.cartItems.map(item => {
+                const colorStr = item.selectedColor ? ` / ${item.selectedColor}` : '';
                 const qualityStr = item.selectedQuality ? ` (${item.selectedQuality})` : '';
-                return `- ${item.name}${qualityStr} (${item.selectedSize}) x${item.quantity} [${(item.price * item.quantity).toLocaleString()} FRW]`;
+                return `- ${item.name}${colorStr}${qualityStr} (${item.selectedSize}) x${item.quantity} [${(item.price * item.quantity).toLocaleString()} FRW]`;
             }).join("\n")
             : (() => {
+                const colorStr = this.modalColor ? ` / ${this.modalColor}` : '';
                 const qualityStr = this.modalQuality ? ` (${this.modalQuality.quality_name})` : '';
                 const basePrice = this.modalQuality ? parseFloat(this.modalQuality.price) : parseFloat(checkoutProduct.price);
-                return `- ${checkoutProduct.name}${qualityStr} (${this.modalSize}) x${this.modalQuantity} [${(basePrice * this.modalQuantity).toLocaleString()} FRW]`;
+                return `- ${checkoutProduct.name}${colorStr}${qualityStr} (${this.modalSize}) x${this.modalQuantity} [${(basePrice * this.modalQuantity).toLocaleString()} FRW]`;
             })();
 
         let createdOrderIds = [];
@@ -472,6 +493,7 @@ const shopLogic = () => ({
                             product_id: item.id,
                             product_name: item.name,
                             size: item.selectedSize,
+                            color: item.selectedColor,
                             quantity: item.quantity,
                             total_price: parseFloat(effectivePrice) * parseInt(item.quantity),
                             quality_level_id: item.qualityLevelId || null,
@@ -482,8 +504,11 @@ const shopLogic = () => ({
                         })
                     });
                     const result = await response.json();
-                    if (result.success) {
-                        createdOrderIds.push(result.orderId);
+                    if (result.success && result.order) {
+                        createdOrderIds.push(result.order.id);
+                    } else {
+                        const errorMsg = result?.error || result?.message || `HTTP ${response.status}: ${response.statusText}`;
+                        throw new Error(errorMsg);
                     }
                 }
             } else {
@@ -499,6 +524,7 @@ const shopLogic = () => ({
                         product_id: checkoutProduct.id,
                         product_name: checkoutProduct.name,
                         size: this.modalSize,
+                        color: this.modalColor,
                         quantity: this.modalQuantity,
                         total_price: parseFloat(basePrice) * parseInt(this.modalQuantity),
                         quality_level_id: this.modalQuality ? this.modalQuality.quality_level_id : null,
@@ -512,12 +538,13 @@ const shopLogic = () => ({
                 if (result.success) {
                     createdOrderIds.push(result.orderId);
                 } else {
-                    throw new Error(result.message || "Failed to create order");
+                    throw new Error(result.error || result.message || "Failed to create order");
                 }
             }
 
             const orderIdStr = createdOrderIds.length > 0 ? createdOrderIds.join(', ') : 'N/A';
-            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
+            const trackingUrl = `${window.location.origin}/reservations.html`;
+            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.\nTrack: ${trackingUrl}`;
 
             window.open(`https://wa.me/250791832523?text=${encodeURIComponent(message)}`, "_blank");
 
@@ -530,21 +557,24 @@ const shopLogic = () => ({
                 this.showMomoModal = false;
                 this.activeProduct = null;
             }, 500);
-            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Order placed! Please verify your payment on WhatsApp.", type: "success" } }));
+            window.dispatchEvent(new CustomEvent("notify", { 
+                detail: { 
+                    message: `Order #${orderIdStr} placed! Track it at /reservations.html`, 
+                    type: "success" 
+                } 
+            }));
         } catch (err) {
-            console.error("Order creation failed, using fallback:", err);
+            console.error("Order creation failed:", err);
+            const errorMessage = err?.message || "Failed to create order";
+            const detailedError = `Order creation failed: ${errorMessage}`;
+            
+            window.dispatchEvent(new CustomEvent("notify", { 
+                detail: { message: detailedError, type: "error" } 
+            }));
 
-            // Fallback: Open WhatsApp even if API fails
-            const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.`;
+            const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.\nNote: Order creation encountered an issue. Please contact support with your order details.`;
 
             window.open(`https://wa.me/250791832523?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
-
-            window.dispatchEvent(new CustomEvent("notify", {
-                detail: {
-                    message: "Redirecting to WhatsApp for manual verification.",
-                    type: "success"
-                }
-            }));
 
             if (isCartCheckout) {
                 this.cartItems = [];
@@ -571,7 +601,7 @@ const shopLogic = () => ({
         }
     },
 
-    addToCart(product, qty = 1, size = "M", qualityLevel = null) {
+    addToCart(product, qty = 1, size = "M", color = null, qualityLevel = null) {
         if (this.storeSettings.purchasingDisabled) {
             window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Purchasing is currently disabled.", type: "error" } }));
             return;
@@ -584,6 +614,7 @@ const shopLogic = () => ({
         const existingItemIndex = this.cartItems.findIndex(item =>
             item.id === product.id &&
             item.selectedSize === size &&
+            item.selectedColor === color &&
             item.qualityLevelId === qualityLevelId
         );
 
@@ -594,6 +625,7 @@ const shopLogic = () => ({
             this.cartItems.push({
                 ...product,
                 selectedSize: size,
+                selectedColor: color,
                 selectedQuality: qualityName,
                 qualityLevelId: qualityLevelId,
                 price: effectivePrice,
@@ -609,7 +641,7 @@ const shopLogic = () => ({
     incrementQty(product) { product.uiQuantity++; },
     decrementQty(product) { if (product.uiQuantity > 1) product.uiQuantity--; },
 
-    initReservation(product, size = "M", qualityLevel = null) {
+    initReservation(product, size = "M", color = null, qualityLevel = null) {
         if (!this.ensureLoggedIn()) return;
         console.log('[Reservation Debug] frontend mode before opening form:', this.storeConfig.store_mode);
         this.selectedProduct = product;
@@ -618,7 +650,7 @@ const shopLogic = () => ({
             email: this.senderEmail || '',
             phone: this.senderPhone || '',
             size: size || product.uiSize || "M",
-            color: product.colors && product.colors.length > 0 ? product.colors[0] : '',
+            color: color || (product.colors && product.colors.length > 0 ? product.colors[0] : ''),
             quantity: product.uiQuantity || 1,
             selectedQuality: qualityLevel ? qualityLevel.quality_name : null,
             qualityLevelId: qualityLevel ? qualityLevel.quality_level_id : null

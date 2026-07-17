@@ -217,8 +217,8 @@
                                                  <button class="flex-1 btn-primary h-full"
                                                          @click="addToCart()">Add To Cart</button>
                                         </div>
-                                                 <button class="w-full btn-primary py-5"
-                                                 @click="payWithMoMo()">Pay with MoMo</button>
+                                                  <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6"
+                                                  @click="payWithMoMo()">Pay with MoMo</button>
                                     </div>
                                 </template>
                             </div>
@@ -294,7 +294,7 @@
                         <div>
                             <p class="text-[10px] uppercase font-bold tracking-widest text-fof-accent" x-text="selectedProduct.category"></p>
                             <h4 class="text-sm font-bold uppercase" x-text="selectedProduct.name"></h4>
-                            <p class="text-xs text-gray-400" x-text="'Size: ' + reservationData.size + ' | Qty: ' + reservationData.quantity"></p>
+                            <p class="text-xs text-gray-400" x-text="'Size: ' + reservationData.size + (reservationData.color ? ' / ' + reservationData.color : '') + ' | Qty: ' + reservationData.quantity"></p>
                             <template x-if="selectedQuality">
                                 <div class="mt-2">
                                     <p class="text-[10px] uppercase tracking-widest text-fof-accent font-bold" x-text="selectedQuality.quality_name"></p>
@@ -399,7 +399,7 @@
                             <template x-if="activeProduct">
                                 <div class="space-y-2">
                                     <div class="flex items-start justify-between text-sm">
-                                        <span class="max-w-[70%] text-zinc-300" x-text="activeProduct.name + ' (' + modalSize + ') x' + modalQuantity"></span>
+                                        <span class="max-w-[70%] text-zinc-300" x-text="activeProduct.name + ' (' + modalSize + (modalColor ? ' / ' + modalColor : '') + ') x' + modalQuantity"></span>
                                         <span class="font-mono font-bold text-fof-white" x-text="momoQuickPayAmount + ' FRW'"></span>
                                     </div>
                                     <template x-if="modalQuality">

@@ -165,6 +165,16 @@
                 </div>
               </div>
 
+              <div class="space-y-2 md:col-span-2">
+                <label class="text-xs font-medium text-slate-400">Colors Available (comma separated)</label>
+                <input
+                  type="text"
+                  v-model="product.colorsInput"
+                  class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="Black, White, Beige"
+                />
+              </div>
+
               <div class="space-y-2">
                 <label class="text-xs font-medium text-slate-400">Quantity</label>
                 <input
@@ -291,7 +301,7 @@ const isDropMode = computed(() => props.mode === 'drop');
 const formData = reactive({
   name: '',
   description: '',
-  status: 'upcoming',
+  status: 'live',
   type: 'recent-drop',
   image_url: '',
   release_date: '',
@@ -308,6 +318,8 @@ const emptyProduct = () => ({
   description: '',
   price: '',
   sizes: [],
+  colors: [],
+  colorsInput: '',
   quantity: 1,
   image_urls: [],
   quality_prices: { essential: '', premium: '', luxe: '' },
@@ -319,14 +331,15 @@ onMounted(async () => {
   if (props.initialData) {
     const normalizeProduct = (p) => {
       const sizes = Array.isArray(p.sizes) ? p.sizes : (p.size ? [p.size] : []);
+      const colors = Array.isArray(p.colors) ? p.colors : (p.colorsInput ? p.colorsInput.split(',').map(c => c.trim()).filter(Boolean) : []);
       const image_urls = Array.isArray(p.image_urls) ? p.image_urls : (p.image_url ? [p.image_url] : []);
       const quality_prices = p.quality_prices || { essential: '', premium: '', luxe: '' };
-      return { ...p, sizes, image_urls, quality_prices, uploading: false };
+      return { ...p, sizes, colors, colorsInput: colors.join(', '), image_urls, quality_prices, uploading: false };
     };
     Object.assign(formData, {
       name: props.initialData.title || props.initialData.name || '',
       description: props.initialData.description || '',
-      status: props.initialData.status || 'upcoming',
+      status: props.initialData.status || (props.initialData.type === 'new-drop' || props.initialData.type === 'recent-drop' ? 'live' : 'upcoming'),
       type: props.initialData.type || 'recent-drop',
       image_url: props.initialData.image_url || '',
       release_date: props.initialData.release_date || '',
@@ -425,9 +438,17 @@ const validate = () => {
 const handleSubmit = async () => {
   if (!validate()) return;
 
+  const payload = {
+    ...formData,
+    products: (formData.products || []).map(p => ({
+      ...p,
+      colors: p.colorsInput ? p.colorsInput.split(',').map(c => c.trim()).filter(Boolean) : (Array.isArray(p.colors) ? p.colors : [])
+    }))
+  };
+
   isSubmitting.value = true;
   try {
-    await emit('submit', { ...formData });
+    await emit('submit', payload);
   } finally {
     isSubmitting.value = false;
   }

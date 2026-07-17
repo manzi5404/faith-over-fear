@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -48,7 +48,7 @@
         }
     </style>
 </head>
-<body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden"
+<body data-api-base-url="http://localhost:5000" class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden"
       x-data="shopLogic()"
       x-init="init()"
       @scroll.window="scrolled = (window.pageYOffset > 50)"
@@ -97,7 +97,7 @@
                         <p class="eyebrow mb-3">The Full Archive</p>
                         <h1 class="section-title">Our <span>Collection</span></h1>
                     </div>
-                    <p class="text-muted text-sm max-w-sm">Every drop we've released — explore the complete Faith Over Fear archive.</p>
+                    <p class="text-muted text-sm max-w-sm">Every drop we've released � explore the complete Faith Over Fear archive.</p>
                 </div>
 
                 <!-- DROPS VIEW -->
@@ -117,7 +117,7 @@
                                     <img :src="drop.image_url || '/placeholder.jpg'" :alt="drop.title" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                                     <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300"></div>
                                     <div class="absolute inset-0 flex items-center justify-center">
-                                        <span class="bg-white text-black font-bold uppercase tracking-[0.2em] text-xs px-6 py-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-3 group-hover:translate-y-0">
+                                        <span class="bg-white text-black font-bold uppercase tracking-[0.2em] text-xs px-6 py-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 transform md:translate-y-3 md:group-hover:translate-y-0 translate-y-0">
                                             Shop the Drop
                                         </span>
                                     </div>
@@ -164,6 +164,11 @@
                                             <p class="text-[10px] uppercase tracking-[0.2em] text-muted mt-1" x-text="product.category || selectedDrop.title"></p>
                                         </div>
                                         <span class="price" x-text="product.price.toLocaleString() + ' FRW'"></span>
+                                    </div>
+                                    <div x-show="product.colors && product.colors.length > 0" class="flex flex-wrap gap-1.5 mt-3">
+                                        <template x-for="color in product.colors">
+                                            <span class="text-[9px] uppercase font-bold px-2 py-0.5 bg-zinc-800 text-gray-400 rounded" x-text="color"></span>
+                                        </template>
                                     </div>
                                     <div class="mt-5">
                                         <span class="btn-secondary w-full text-center text-[10px] py-3">View Product</span>

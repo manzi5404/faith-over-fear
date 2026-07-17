@@ -10,22 +10,28 @@ async function verifyPayment(orderId, paymentReference, paymentMethod, verifiedB
     throw new ValidationError('Payment reference is required');
   }
 
-  const { data, error } = await supabaseAdmin.rpc('verify_payment', {
-    p_order_id: orderId,
-    p_payment_reference: paymentReference,
-    p_payment_method: paymentMethod || 'manual',
-  });
-
-  if (error) {
-    if (error.message.includes('VERIFICATION_FAILED')) {
-      throw new ValidationError('Payment verification failed: order is not in pending_payment status');
-    }
-    throw error;
+  const order = await orderRepo.findById(orderId);
+  if (!order) {
+    throw new NotFoundError('Order not found');
   }
 
-  if (data.status !== 'paid') {
-    throw new ValidationError('Payment verification did not succeed');
+  if (order.status !== 'pending_payment') {
+    throw new ValidationError('Payment verification failed: order is not in pending_payment status');
   }
+
+  const updateData = {
+    status: 'paid',
+    payment_method: paymentMethod || 'manual',
+  };
+
+  const { data, error } = await supabaseAdmin
+    .from('orders')
+    .update(updateData)
+    .eq('id', orderId)
+    .select('*')
+    .single();
+
+  if (error) throw error;
 
   const { exists, data: verification } = await paymentVerificationRepo.create({
     orderId,
