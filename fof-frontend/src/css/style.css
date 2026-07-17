@@ -331,6 +331,59 @@
     color: var(--muted);
   }
 
+  .hover-crossfade {
+    position: relative;
+  }
+  .hover-crossfade img {
+    transition: opacity 0.5s ease, transform 0.7s var(--ease);
+  }
+  .hover-crossfade .front {
+    position: relative;
+    z-index: 1;
+  }
+  .hover-crossfade .back {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    opacity: 0;
+  }
+  .fof-product-card:hover .hover-crossfade .front,
+  .hover-crossfade.flipped .front {
+    opacity: 0;
+  }
+  .fof-product-card:hover .hover-crossfade .back,
+  .hover-crossfade.flipped .back {
+    opacity: 1;
+  }
+
+  .flip-btn {
+    display: none;
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+  }
+  .flip-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+  @media (max-width: 767px) {
+    .flip-btn {
+      display: flex;
+    }
+  }
+
   /* ---------- Modal / Drawer ---------- */
   .fof-modal-backdrop {
     position: fixed;

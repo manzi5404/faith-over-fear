@@ -194,12 +194,12 @@
                      x-transition:enter-end="opacity-100 translate-y-0"
                      class="mb-16 flex justify-center">
                     <div @click="selectDrop(drops[0])"
-                         class="relative cursor-pointer group max-w-2xl w-full"
+                         class="relative cursor-pointer group w-full max-w-none md:max-w-6xl mx-auto px-2 md:px-0"
                          x-data="{ hover: false }"
                          @mouseenter="hover = true"
                          @mouseleave="hover = false"
                          style="animation: floatDrop 4s ease-in-out infinite;">
-                        <div class="relative aspect-[16/9] md:aspect-[21/9] overflow-hidden rounded-2xl bg-fof-gray shadow-2xl">
+                        <div class="relative aspect-[2/3] md:aspect-[21/9] overflow-hidden rounded-2xl bg-fof-gray shadow-2xl">
                             <img :src="drops[0].image_url || '/placeholder.jpg'"
                                  :alt="drops[0].title"
                                  class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
@@ -233,7 +233,7 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <template x-for="drop in drops" :key="drop.id">
+                        <template x-for="drop in drops.slice(1)" :key="drop.id">
                             <div class="group cursor-pointer"
                                  @click="selectDrop(drop)"
                                  @mouseenter="drop.products && drop.products.forEach(p => preloadProduct(p.id))">
@@ -285,10 +285,13 @@
                                @mouseenter="window.innerWidth >= 768 ? flipped = true : null; preloadProduct(product.id)"
                                @mouseleave="window.innerWidth >= 768 ? flipped = false : null"
                                style="will-change: transform, opacity;">
-                                <div class="media hover-crossfade">
+                                <div class="media hover-crossfade" :class="{ 'flipped': flipped }">
                                     <span class="tag" x-show="true">New</span>
                                     <img :src="product.images[0] || '/placeholder.jpg'" :alt="product.name" class="front" loading="lazy">
                                     <img x-show="product.images.length > 1" :src="product.images[1] || '/placeholder.jpg'" :alt="product.name" class="back opacity-0" loading="lazy">
+                                    <button type="button" class="flip-btn md:hidden" @click.stop="flipped = !flipped" aria-label="Flip image">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                                    </button>
                                 </div>
                                 <div class="info">
                                     <div class="flex justify-between items-start">

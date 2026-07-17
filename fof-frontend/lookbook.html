@@ -149,11 +149,16 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                         <template x-for="product in selectedDropProducts" :key="product.id">
                             <a :href="'/product.html?id=' + product.id" class="fof-product-card group"
-                               @mouseenter="preloadProduct(product.id)">
-                                <div class="media hover-crossfade">
+                               x-data="{ flipped: false }"
+                               @mouseenter="flipped = true; preloadProduct(product.id)"
+                               @mouseleave="flipped = false">
+                                <div class="media hover-crossfade" :class="{ 'flipped': flipped }">
                                     <span class="tag">Collection</span>
                                     <img :src="product.images[0] || '/placeholder.jpg'" :alt="product.name" class="front" loading="lazy">
                                     <img x-show="product.images.length > 1" :src="product.images[1] || '/placeholder.jpg'" :alt="product.name" class="back opacity-0" loading="lazy">
+                                    <button type="button" class="flip-btn md:hidden" @click.stop="flipped = !flipped" aria-label="Flip image">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                                    </button>
                                 </div>
                                 <div class="info">
                                     <div class="flex justify-between items-start">
