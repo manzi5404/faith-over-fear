@@ -7,11 +7,12 @@ const { events } = require('../events');
 const { AppError, ValidationError, NotFoundError, ForbiddenError } = require('../utils/errors');
 
 const TRANSITIONS = {
-  pending_payment: ['paid', 'cancelled'],
-  paid: ['processing', 'cancelled'],
-  processing: ['shipped', 'cancelled'],
-  shipped: ['completed'],
-  completed: [],
+  pending_payment: ['paid', 'cancelled', 'pending', 'confirmed', 'processing', 'shipped', 'completed'],
+  pending: ['paid', 'cancelled', 'confirmed', 'processing', 'shipped', 'completed'],
+  paid: ['processing', 'cancelled', 'shipped', 'completed'],
+  processing: ['shipped', 'cancelled', 'completed'],
+  shipped: ['completed', 'cancelled'],
+  completed: ['cancelled'],
   cancelled: [],
 };
 
@@ -171,6 +172,7 @@ async function createDirect(userId, customerData, items, sessionId = null) {
     }
 
     const unitPrice = variant.price_override || product.base_price;
+    const productImages = Array.isArray(product.images) ? product.images : (Array.isArray(product.image_urls) ? product.image_urls : null);
     enrichedItems.push({
       variantId: variant.id,
       productId: product.id,
@@ -180,10 +182,13 @@ async function createDirect(userId, customerData, items, sessionId = null) {
       unitPrice: Number(unitPrice),
       quantity: qty,
       subtotal: Number((unitPrice * qty).toFixed(2)),
+      productImages: productImages,
     });
   }
 
   const totalAmount = enrichedItems.reduce((sum, item) => sum + item.subtotal, 0);
+
+  const productImages = enrichedItems.length > 0 ? (enrichedItems[0].productImages || null) : null;
 
   const order = await orderRepo.create({
     user_id: userId,
@@ -194,6 +199,7 @@ async function createDirect(userId, customerData, items, sessionId = null) {
     total_price: Number(totalAmount.toFixed(2)),
     payment_method: customerData.payment_method || 'reservation',
     color: enrichedItems.length > 0 ? enrichedItems[0].color : null,
+    product_image_urls: productImages,
   });
 
   for (const item of enrichedItems) {
@@ -206,6 +212,7 @@ async function createDirect(userId, customerData, items, sessionId = null) {
       price_at_purchase: Number(item.unitPrice),
       total_price: Number(item.subtotal),
       quantity: item.quantity,
+      product_image_urls: item.productImages || null,
     });
   }
 
@@ -216,37 +223,51 @@ async function createDirect(userId, customerData, items, sessionId = null) {
 }
 
 async function transitionStatus(orderId, newStatus) {
+  console.log('[TRANSITION STATUS] Input:', { orderId, newStatus });
+
   const order = await orderRepo.findById(orderId);
   if (!order) {
+    console.error('[TRANSITION STATUS] Order not found:', orderId);
     throw new NotFoundError('Order not found');
   }
 
+  console.log('[TRANSITION STATUS] Current order status:', order.status);
+
   if (order.status === 'completed' || order.status === 'cancelled') {
+    console.error('[TRANSITION STATUS] Terminal state transition attempted:', order.status, '→', newStatus);
     throw new ValidationError(`Cannot transition from terminal state: ${order.status}`);
   }
 
-  if (!canTransition(order.status, newStatus)) {
+  const canDo = canTransition(order.status, newStatus);
+  console.log('[TRANSITION STATUS] Can transition:', canDo, 'from', order.status, 'to', newStatus);
+
+  if (!canDo) {
+    console.error('[TRANSITION STATUS] Invalid transition blocked:', order.status, '→', newStatus);
     throw new ValidationError(`Invalid transition: ${order.status} → ${newStatus}`);
   }
 
   if (newStatus === 'cancelled' && ['pending_payment', 'paid'].includes(order.status)) {
+    console.log('[TRANSITION STATUS] Cancelling order, returning stock for', (order.order_items || []).length, 'items');
     for (const item of order.order_items || []) {
       try {
         await variantRepo.returnStock(item.product_variant_id, item.quantity, orderId);
         events.emit(events.INVENTORY_RELEASED, { variantId: item.product_variant_id, orderId, quantity: item.quantity });
       } catch (err) {
-        console.error('Failed to return stock on cancel:', err);
+        console.error('[TRANSITION STATUS] Failed to return stock on cancel:', err);
       }
     }
   }
 
+  console.log('[TRANSITION STATUS] Updating order status in DB:', orderId, '→', newStatus);
   await orderRepo.updateStatus(orderId, newStatus);
 
   if (newStatus === 'cancelled') {
     events.emit(events.ORDER_CANCELLED, { orderId, status: newStatus });
   }
 
-  return orderRepo.findById(orderId);
+  const updated = await orderRepo.findById(orderId);
+  console.log('[TRANSITION STATUS] Final order status:', updated.status);
+  return updated;
 }
 
 async function getOrderById(id, userId = null) {

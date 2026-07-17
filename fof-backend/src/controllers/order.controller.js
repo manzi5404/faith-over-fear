@@ -94,11 +94,28 @@ async function getAllOrders(req, res) {
 }
 
 async function updateOrderStatus(req, res) {
+  console.log('[ORDER STATUS UPDATE] Request received:', {
+    method: req.method,
+    url: req.url,
+    params: req.params,
+    body: req.body,
+    user: req.user ? { id: req.user.id, role: req.user.role } : null,
+  });
+
   try {
     const { status } = req.body;
+    if (!status) {
+      console.error('[ORDER STATUS UPDATE] Missing status in request body');
+      return res.status(400).json({ success: false, error: 'Status is required' });
+    }
+
+    console.log('[ORDER STATUS UPDATE] Calling transitionStatus for order:', req.params.id, 'new status:', status);
     const order = await orderService.transitionStatus(req.params.id, status);
+    console.log('[ORDER STATUS UPDATE] Success:', order.id, order.status);
+
     return res.status(200).json({ success: true, order });
   } catch (err) {
+    console.error('[ORDER STATUS UPDATE] Error:', err.message, err.stack);
     return handleServiceError(res, err, req);
   }
 }

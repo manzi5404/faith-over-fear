@@ -50,7 +50,10 @@
         <nav class="primary-nav">
           <ul class="nav-list">
             <li><a href="/shop.html">Shop</a></li>
-            <li class="cta"><span x-text="user?.name" class="text-fof-accent"></span></li>
+            <li class="cta">
+              <span x-text="user?.name" class="text-fof-accent"></span>
+              <button @click="localStorage.removeItem('fof_token'); localStorage.removeItem('fof_user'); window.location.href='/login.html'" class="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors ml-2">Logout</button>
+            </li>
           </ul>
         </nav>
       </div>

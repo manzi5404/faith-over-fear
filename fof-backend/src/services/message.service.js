@@ -31,7 +31,7 @@ async function getById(id) {
 async function updateStatus(id, status) {
   const { data, error } = await supabaseAdmin
     .from('contact_messages')
-    .update({ status, updated_at: new Date().toISOString() })
+    .update({ status })
     .eq('id', id)
     .select('*')
     .single();

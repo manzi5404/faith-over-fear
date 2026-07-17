@@ -74,7 +74,7 @@ async function findAllAdmin(filters = {}) {
 async function updateStatus(id, status) {
   const { data, error } = await supabase
     .from('orders')
-    .update({ status, updated_at: new Date().toISOString() })
+    .update({ status })
     .eq('id', id)
     .select('id')
     .single();

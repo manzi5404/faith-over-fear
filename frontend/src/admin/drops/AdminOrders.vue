@@ -126,12 +126,15 @@ const fetchOrders = async () => {
 };
 
 const updateStatus = async (id, status) => {
+  console.log('[FRONTEND] Updating order status:', { id, status });
   try {
     await DropService.updateOrderStatus(id, status);
     emit('updated', { message: 'Order status updated!', type: 'success' });
     await fetchOrders();
   } catch (error) {
-    emit('updated', { message: 'Failed to update order status.', type: 'error' });
+    console.error('[FRONTEND] Status update failed:', error);
+    const msg = error?.response?.data?.error || error?.message || 'Failed to update order status.';
+    emit('updated', { message: msg, type: 'error' });
   }
 };
 
@@ -144,7 +147,9 @@ const getCustomerPhone = (order) => order.phone_number || '';
 const getProductName = (order) => order.product_name || 'Multiple Products';
 
 const getProductImage = (order) => {
-  const rawImages = order.product_image_urls;
+  const items = order.order_items || [];
+  const firstItem = items[0] || {};
+  const rawImages = firstItem.product_image_urls || order.product_image_urls;
 
   if (Array.isArray(rawImages) && rawImages.length > 0) {
     return rawImages[0];
