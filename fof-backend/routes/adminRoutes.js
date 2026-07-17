@@ -7,7 +7,6 @@ const productController = require('../controllers/productController');
 const dropController = require('../controllers/dropController');
 const orderController = require('../controllers/orderController');
 const storeConfigController = require('../controllers/storeConfigController');
-const reservationController = require('../controllers/reservationController');
 const announcementController = require('../controllers/announcementController');
 const contactController = require('../controllers/contactController');
 
@@ -15,7 +14,6 @@ const contactController = require('../controllers/contactController');
 const notificationRoutes = require('./notificationRoutes');
 const dropRoutes = require('./dropRoutes');
 const productRoutes = require('./productRoutes');
-const adminReservationRoutes = require('./adminReservationRoutes');
 const qualityLevelRoutes = require('./qualityLevelRoutes');
 
 // Apply verifyAdmin to ALL routes in this router
@@ -30,9 +28,6 @@ router.use('/quality-levels', qualityLevelRoutes);
 // Orders
 router.get('/orders', orderController.getAllOrders);
 router.put('/orders/:id/status', orderController.updateStatus);
-
-// Reservations
-router.use('/reservations', adminReservationRoutes);
 
 // Store Config & Settings
 router.get('/store-config', storeConfigController.getStoreConfig);
