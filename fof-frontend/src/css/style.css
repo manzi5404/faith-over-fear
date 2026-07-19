@@ -220,6 +220,7 @@
       z-index: 1001;
       cursor: pointer;
       padding: 10px;
+      margin-left: auto;
     }
     .hamburger span,
     .hamburger span::before,
@@ -236,6 +237,46 @@
     #menu-toggle:checked ~ .hamburger span { background: transparent; }
     #menu-toggle:checked ~ .hamburger span::before { transform: rotate(45deg); top: 0; }
     #menu-toggle:checked ~ .hamburger span::after { transform: rotate(-45deg); top: 0; }
+  }
+
+  /* ---------- Mobile Specific (max-width: 767px) ---------- */
+  @media (max-width: 767px) {
+    .site-header .container {
+      padding: 0 1rem;
+    }
+
+    .site-header .logo {
+      font-size: 1.4rem;
+    }
+
+    .nav-list a {
+      font-size: 1rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+
+    .eyebrow {
+      font-size: 0.8rem;
+    }
+
+    .btn-primary, .btn-secondary {
+      font-size: 0.8rem;
+      padding: 0.9rem 1.6rem;
+    }
+
+    .fof-product-card .name {
+      font-size: 1rem;
+    }
+
+    .fof-product-card .price {
+      font-size: 0.95rem;
+    }
+
+    .fof-product-card .info {
+      padding: 1.25rem 1rem 0.5rem;
+    }
   }
 
   /* ---------- Forms ---------- */
