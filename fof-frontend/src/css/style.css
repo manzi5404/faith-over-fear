@@ -34,6 +34,7 @@
     background: var(--paper);
     color: var(--ink);
     font-weight: 400;
+    font-size: 16px;
     letter-spacing: -0.011em;
     line-height: 1.55;
   }
@@ -242,11 +243,11 @@
   /* ---------- Mobile Specific (max-width: 767px) ---------- */
   @media (max-width: 767px) {
     .site-header .container {
-      padding: 0 1rem;
+      padding: 0 0.75rem;
     }
 
     .site-header .logo {
-      font-size: 1.4rem;
+      font-size: 1.5rem;
     }
 
     .nav-list a {
@@ -254,28 +255,67 @@
     }
 
     .section-title {
-      font-size: 1.5rem;
+      font-size: 1.75rem;
     }
 
     .eyebrow {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
     }
 
     .btn-primary, .btn-secondary {
-      font-size: 0.8rem;
-      padding: 0.9rem 1.6rem;
+      font-size: 0.9rem;
+      padding: 1rem 1.5rem;
+      min-height: 44px;
     }
 
     .fof-product-card .name {
-      font-size: 1rem;
+      font-size: 1.1rem;
     }
 
     .fof-product-card .price {
-      font-size: 0.95rem;
+      font-size: 1rem;
     }
 
     .fof-product-card .info {
-      padding: 1.25rem 1rem 0.5rem;
+      padding: 1.25rem 0.75rem 0.5rem;
+    }
+
+    .fof-product-card .tag {
+      font-size: 0.7rem;
+      padding: 0.35rem 0.7rem;
+    }
+
+    .fof-field {
+      font-size: 1rem;
+      padding: 0.9rem 1rem;
+    }
+
+    .fof-label {
+      font-size: 0.8rem;
+    }
+
+    .fof-card {
+      padding: 1.25rem;
+    }
+
+    .fof-modal-content {
+      max-width: 100%;
+      margin: 1rem;
+      border-radius: 12px;
+    }
+
+    .fof-modal-title {
+      font-size: 1.25rem;
+    }
+
+    /* Ensure floating featured card fits mobile */
+    .group.max-w-none {
+      margin: 0 -0.75rem;
+      width: calc(100% + 1.5rem);
+    }
+
+    .group.max-w-none [class*="aspect-"] {
+      border-radius: 0;
     }
   }
 
