@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-// Configure API base URL
-// Local dev: uses Vite proxy (empty string)
-// Netlify: use _redirects file OR set VITE_API_URL env var
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const isProduction = typeof window !== 'undefined' && window.location.hostname === 'faithoverfearrw.netlify.app';
+const API_BASE_URL = isProduction ? 'https://faith-over-fear-mqgz.onrender.com' : (import.meta.env.VITE_API_URL || '');
 const ADMIN_API_URL = `${API_BASE_URL}/api/admin/drops`;
 
 axios.defaults.baseURL = API_BASE_URL;

@@ -371,7 +371,10 @@ const handleImageUpload = async (event) => {
     uploadFormData.append('file', file);
 
     const token = localStorage.getItem('fof_token');
-    const response = await fetch('/api/upload', {
+    const uploadUrl = window.location.hostname === 'faithoverfearrw.netlify.app'
+      ? 'https://faith-over-fear-mqgz.onrender.com/api/upload'
+      : '/api/upload';
+    const response = await fetch(uploadUrl, {
       method: 'POST',
       headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       body: uploadFormData
@@ -398,11 +401,14 @@ const handleMultipleImageUpload = async (event, index) => {
   formData.products[index].uploading = true;
   try {
     const token = localStorage.getItem('fof_token');
+    const uploadUrl = window.location.hostname === 'faithoverfearrw.netlify.app'
+      ? 'https://faith-over-fear-mqgz.onrender.com/api/upload'
+      : '/api/upload';
     for (const file of files) {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
-      const response = await fetch('/api/upload', {
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         body: uploadFormData
