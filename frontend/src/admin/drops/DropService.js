@@ -188,7 +188,7 @@ const DropService = {
 
     updateOrderStatus: async (id, status) => {
         try {
-            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const API_BASE = import.meta.env.VITE_API_URL || 'https://faith-over-fear-mqgz.onrender.com';
             const response = await axios.put(`${API_BASE}/api/admin/orders/${id}/status`, { status });
             return response.data;
         } catch (error) {
