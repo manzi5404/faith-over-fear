@@ -201,9 +201,23 @@ async function getProfile(userId) {
   };
 }
 
+async function getProfileByEmail(email) {
+  const user = await userRepo.findByEmail(email);
+  if (!user) {
+    return null;
+  }
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+  };
+}
+
 module.exports = {
   register,
   login,
   googleOAuth,
   getProfile,
+  getProfileByEmail,
 };

@@ -241,6 +241,9 @@
                                         </div>
                                     </div>
                                     <div class="absolute top-4 left-4 bg-fof-accent text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest z-10">New</div>
+                                    <button @click.stop="flipped = !flipped" class="md:hidden absolute bottom-4 right-4 w-10 h-10 bg-black/60 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white z-20 hover:bg-fof-accent hover:border-fof-accent transition-all">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                    </button>
                                 </div>
                                 <div class="flex-1 flex flex-col pt-4">
                                     <div class="flex justify-between items-start mb-6">
