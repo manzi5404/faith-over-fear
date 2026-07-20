@@ -9,6 +9,7 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: true,
 });
 
 const checkoutLimiter = rateLimit({
@@ -20,6 +21,7 @@ const checkoutLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: true,
 });
 
 const apiLimiter = rateLimit({
@@ -31,6 +33,7 @@ const apiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: true,
 });
 
 module.exports = { authLimiter, checkoutLimiter, apiLimiter };
