@@ -587,9 +587,6 @@ const shopLogic = () => ({
         } finally {
             this.loading = false;
         }
-        } finally {
-            this.loading = false;
-        }
     },
 
     async copyToClipboard(text, type) {

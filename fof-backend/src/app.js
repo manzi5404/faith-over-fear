@@ -27,7 +27,7 @@ const siteStatusRoutes = require('./routes/siteStatus.routes');
 
 const app = express();
 
-
+app.set('trust proxy', true);
 
 // Security
 app.use(helmet());
