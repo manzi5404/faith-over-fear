@@ -80,6 +80,21 @@ const productLogic = () => ({
         }, { once: true });
     },
 
+    applyQualityDescriptions(levels) {
+        if (!Array.isArray(levels)) return levels;
+        const fallbacks = {
+            'essential': 'Standard cotton tee. Comfortable everyday fit with solid construction. Great value for regular wear.',
+            'premium': 'Upgraded heavyweight fabric. Softer feel, reinforced seams, and a structured collar. Built to last longer.',
+            'luxe': 'Premium combed cotton, ultra-soft handfeel, and precision tailoring. The highest quality construction for a premium look and feel.',
+        };
+        return levels.map(level => {
+            if (!level || level.quality_description) return level;
+            const name = (level.quality_name || '').toLowerCase();
+            const desc = fallbacks[name] || fallbacks['essential'];
+            return { ...level, quality_description: desc };
+        });
+    },
+
     loadProductData(id, products) {
         if (id) {
             this.product = products.find(p => p.id == id);
@@ -98,7 +113,7 @@ const productLogic = () => ({
 
             this.selectedSize = this.product.sizes && this.product.sizes.length > 0 ? this.product.sizes[0] : "";
             this.selectedColor = this.product.colors && this.product.colors.length > 0 ? this.product.colors[0] : "";
-            this.qualityLevels = this.product.product_quality_prices || [];
+            this.qualityLevels = this.applyQualityDescriptions(this.product.product_quality_prices || []);
             this.selectedQuality = this.qualityLevels.length > 0 ? this.qualityLevels[0] : null;
 
             this.relatedItems = products
