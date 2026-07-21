@@ -442,7 +442,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
 
     async fetchDropAndProducts() {
         try {
-            const isLookbook = window.location.pathname === '/lookbook.html';
+            const isLookbook = document.body && document.body.dataset.page === 'lookbook';
             const typeFilter = isLookbook ? 'recent-drop' : 'new-drop';
             const res = await fetch(`${API_BASE_URL}/api/drops?includeProducts=true&type=${typeFilter}`);
             const data = await res.json();
