@@ -20,7 +20,7 @@ async function findAll(includeAll = false) {
   let query = supabaseAdmin.from('drops').select('*').order('created_at', { ascending: false });
 
   if (!includeAll) {
-    query = query.or('status.eq.live,status.eq.upcoming');
+    query = query.in('status', ['live', 'upcoming']);
   }
 
   const { data, error } = await query;
