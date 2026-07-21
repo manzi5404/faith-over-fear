@@ -293,36 +293,56 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
         const gateRootId = 'site-gate-root';
         let existing = document.getElementById(gateRootId);
 
+        // When live: remove overlay
         if (!this.isClosedMode()) {
             if (existing) existing.remove();
             return;
         }
 
+        // Closed: block everything and show overlay
         if (!existing) {
             existing = document.createElement('div');
             existing.id = gateRootId;
             existing.innerHTML = `
                 <div id="site-gate-overlay" style="position:fixed;inset:0;z-index:999999;background:#000;display:flex;align-items:center;justify-content:center;">
-                    <div style="width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;background:#000;">
-                        <div style="position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=1400&q=80') center/cover no-repeat;opacity:0.15;filter:grayscale(100%) contrast(1.1);"></div>
-                        <div style="position:relative;z-index:2;text-align:center;padding:40px 24px;max-width:720px;width:100%;">
-                            <p style="font-size:11px;font-weight:700;letter-spacing:6px;text-transform:uppercase;color:#888;margin-bottom:16px;">Faith Over Fear</p>
-                            <h1 style="font-size:clamp(48px,10vw,96px);font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:24px;color:#fff;">F<span style="color:#ff3b3b;">&gt;</span>F</h1>
-                            <h2 style="font-size:clamp(24px,4vw,40px);font-weight:800;letter-spacing:-0.5px;line-height:1.15;margin-bottom:20px;color:#fff;">We're taking a short break.</h2>
-                            <p style="font-size:15px;line-height:1.7;color:#999;max-width:520px;margin:0 auto 36px;">We're working on something new. Leave your email and we'll notify you the moment we drop.</p>
-                            <div style="display:flex;gap:10px;max-width:480px;margin:0 auto 16px;">
-                                <input id="site-gate-email" type="email" placeholder="Enter your email" style="flex:1;min-width:0;padding:16px 18px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:rgba(10,10,10,0.8);color:#fff;font-size:14px;font-family:inherit;outline:none;" />
-                                <button id="site-gate-notify" style="padding:16px 24px;border-radius:12px;border:1px solid #fff;background:#fff;color:#000;font-weight:900;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:inherit;white-space:nowrap;">Notify Me</button>
+                    <div style="width:min(920px,92vw);padding:26px 18px;display:flex;flex-direction:column;gap:16px;align-items:center;">
+                        <div style="color:#fff;font-weight:900;letter-spacing:-1px;font-size:42px;line-height:1;">F<span style="color:#fff;">></span>F</div>
+                        <div style="color:#999;text-transform:uppercase;letter-spacing:6px;font-size:10px;font-weight:700;">SITE CLOSED</div>
+
+                        <div id="site-gate-card" style="width:100%;max-width:680px;background:rgba(10,10,10,.9);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.7);padding:18px;">
+                            <div id="site-gate-image-strip" style="display:flex;gap:14px;align-items:center;white-space:nowrap;overflow:hidden;">
+                                <div id="site-gate-images" style="display:flex;gap:14px;align-items:center;animation:siteGateSlide 16s linear infinite;">
+                                </div>
                             </div>
-                            <div id="site-gate-status" style="color:#888;font-size:12px;min-height:18px;margin-top:4px;"></div>
-                            <p style="margin-top:48px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#555;">&copy; 2026 Faith Over Fear. All Rights Reserved.</p>
+                            <style>
+                                @keyframes siteGateSlide {
+                                    0% { transform: translateX(0); }
+                                    100% { transform: translateX(-50%); }
+                                }
+                            </style>
                         </div>
+
+                        <div style="width:100%;max-width:520px;display:flex;gap:10px;align-items:center;">
+                            <input id="site-gate-email" type="email" placeholder="Enter your email" style="flex:1;min-width:0;padding:16px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#0b0b0b;color:#fff;outline:none;" />
+                            <button id="site-gate-notify" style="padding:16px 20px;border-radius:12px;border:1px solid #fff;background:#fff;color:#000;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">Notify me</button>
+                        </div>
+
+                        <div id="site-gate-status" style="color:#999;font-size:12px;min-height:18px;text-align:center;"></div>
                     </div>
                 </div>
             `;
             document.body.appendChild(existing);
         }
 
+        // Populate images
+        const imgWrap = existing.querySelector('#site-gate-images');
+        if (imgWrap) {
+            const imgs = this.siteGate.images?.length ? this.siteGate.images : ['https://placehold.co/680x420/000000/FFFFFF/png?text=F%3EF'];
+            const html = imgs.map(src => `<img src="${src}" alt="model" style="width:260px;max-width:38vw;height:160px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.08);" />`).join('');
+            imgWrap.innerHTML = html + html;
+        }
+
+        // Bind submit
         const btn = existing.querySelector('#site-gate-notify');
         const emailInput = existing.querySelector('#site-gate-email');
         const statusEl = existing.querySelector('#site-gate-status');
@@ -331,18 +351,30 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             btn.dataset.bound = '1';
             btn.addEventListener('click', async () => {
                 const email = (emailInput?.value || '').trim();
-                if (!email) { if (statusEl) statusEl.textContent = 'Please enter your email.'; return; }
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { if (statusEl) statusEl.textContent = 'Enter a valid email.'; return; }
+                if (!email) {
+                    if (statusEl) statusEl.textContent = 'Please enter your email.';
+                    return;
+                }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    if (statusEl) statusEl.textContent = 'Enter a valid email.';
+                    return;
+                }
+
                 if (statusEl) statusEl.textContent = 'Submitting...';
                 try {
                     const res = await fetch(`${API_BASE_URL}/api/waitlist`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: null, email, phone: null, source: 'site_closed' })
+                        body: JSON.stringify({
+                            name: null,
+                            email,
+                            phone: null,
+                            source: 'site_closed'
+                        })
                     });
                     const data = await res.json();
                     if (data.success) {
-                        if (statusEl) statusEl.textContent = "Done! We'll notify you when we're live.";
+                        if (statusEl) statusEl.textContent = 'Done! We’ll notify you when we’re live.';
                         if (emailInput) emailInput.value = '';
                     } else {
                         if (statusEl) statusEl.textContent = data.error || 'Failed. Try again.';
