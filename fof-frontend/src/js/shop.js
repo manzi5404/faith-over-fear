@@ -306,8 +306,8 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             existing.innerHTML = `
                 <div id="site-gate-overlay" style="position:fixed;inset:0;z-index:999999;background:#000;display:flex;align-items:center;justify-content:center;">
                     <div style="width:min(920px,92vw);padding:26px 18px;display:flex;flex-direction:column;gap:16px;align-items:center;">
-                        <div style="color:#fff;font-weight:900;letter-spacing:-1px;font-size:42px;line-height:1;">F<span style="color:#ff3b3b;">></span>F</div>
-                        <div style="color:#ccc;text-transform:uppercase;letter-spacing:6px;font-size:10px;font-weight:700;">SITE CLOSED</div>
+                        <div style="color:#fff;font-weight:900;letter-spacing:-1px;font-size:42px;line-height:1;">F<span style="color:#fff;">></span>F</div>
+                        <div style="color:#999;text-transform:uppercase;letter-spacing:6px;font-size:10px;font-weight:700;">SITE CLOSED</div>
 
                         <div id="site-gate-card" style="width:100%;max-width:680px;background:rgba(10,10,10,.9);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.7);padding:18px;">
                             <div id="site-gate-image-strip" style="display:flex;gap:14px;align-items:center;white-space:nowrap;overflow:hidden;">
@@ -324,10 +324,10 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
 
                         <div style="width:100%;max-width:520px;display:flex;gap:10px;align-items:center;">
                             <input id="site-gate-email" type="email" placeholder="Enter your email" style="flex:1;min-width:0;padding:16px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#0b0b0b;color:#fff;outline:none;" />
-                            <button id="site-gate-notify" style="padding:16px 20px;border-radius:12px;border:1px solid #ff3b3b;background:#ff3b3b;color:#000;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">Notify me</button>
+                            <button id="site-gate-notify" style="padding:16px 20px;border-radius:12px;border:1px solid #fff;background:#fff;color:#000;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">Notify me</button>
                         </div>
 
-                        <div id="site-gate-status" style="color:#ccc;font-size:12px;min-height:18px;text-align:center;"></div>
+                        <div id="site-gate-status" style="color:#999;font-size:12px;min-height:18px;text-align:center;"></div>
                     </div>
                 </div>
             `;
@@ -339,7 +339,6 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
         if (imgWrap) {
             const imgs = this.siteGate.images?.length ? this.siteGate.images : ['https://placehold.co/680x420/000000/FFFFFF/png?text=F%3EF'];
             const html = imgs.map(src => `<img src="${src}" alt="model" style="width:260px;max-width:38vw;height:160px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.08);" />`).join('');
-            // duplicate for smooth slide loop
             imgWrap.innerHTML = html + html;
         }
 
