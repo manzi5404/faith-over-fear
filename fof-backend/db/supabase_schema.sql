@@ -150,6 +150,7 @@ CREATE TABLE products (
     colors          JSONB,
     image_urls      JSONB,
     status          VARCHAR(50) NOT NULL DEFAULT 'draft',
+    default_quality_level_id BIGINT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_products_drop

@@ -33,6 +33,27 @@
     </div>
 
     <div class="space-y-3">
+      <label class="text-sm font-medium text-slate-400">Default Quality Level</label>
+      <div class="flex gap-3">
+        <button type="button" @click="productData.default_quality_level = 'basic'"
+          :class="productData.default_quality_level === 'basic' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600'"
+          class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
+          Basic
+        </button>
+        <button type="button" @click="productData.default_quality_level = 'premium'"
+          :class="productData.default_quality_level === 'premium' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600'"
+          class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
+          Premium
+        </button>
+        <button type="button" @click="productData.default_quality_level = 'luxe'"
+          :class="productData.default_quality_level === 'luxe' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600'"
+          class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
+          Luxe
+        </button>
+      </div>
+    </div>
+
+    <div class="space-y-3">
       <label class="text-sm font-medium text-slate-400">Quality Level Prices (FRW)</label>
       <div class="grid grid-cols-3 gap-4">
         <div v-for="level in qualityLevels" :key="level.id" class="space-y-1">
@@ -126,7 +147,8 @@ const productData = reactive({
   sizes: ['S', 'M', 'L', 'XL'],
   colors: [],
   image_urls: [],
-  is_active: true
+  is_active: true,
+  default_quality_level: 'basic'
 });
 
 const colorsInput = ref('');
@@ -163,10 +185,12 @@ const applyInitialData = (initialData) => {
     colors: [],
     image_urls: [],
     is_active: true,
+    default_quality_level: 'basic',
     ...(initialData || {})
   });
 
   isEditing.value = !!initialData?.id || !!initialData?.tempId;
+  productData.default_quality_level = initialData?.default_quality_level || (initialData?.default_quality_level_id === 2 ? 'premium' : initialData?.default_quality_level_id === 3 ? 'luxe' : 'basic');
   colorsInput.value = Array.isArray(productData.colors) ? productData.colors.join(', ') : '';
   qualityPrices.value = (initialData?.quality_prices || []).map(q => ({
     quality_level_id: q.quality_level_id || nameToId[q.quality_name],
@@ -186,6 +210,7 @@ const handleSave = () => {
   productData.colors = colorsInput.value.split(',').map(c => c.trim()).filter(Boolean);
   const essentialQp = qualityPrices.value.find(q => q.quality_level_id === 1);
   if (essentialQp && productData.price <= 0) productData.price = essentialQp.price;
-  emit('save', { ...productData, quality_prices: qualityPrices.value });
+  const levelId = nameToId[productData.default_quality_level] || 1;
+  emit('save', { ...productData, default_quality_level_id: levelId, quality_prices: qualityPrices.value });
 };
 </script>

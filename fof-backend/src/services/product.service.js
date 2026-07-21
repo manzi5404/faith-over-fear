@@ -112,7 +112,7 @@ async function updateProduct(id, data) {
   }
 
   const allowedFields = [
-    'name', 'slug', 'description', 'base_price', 'images', 'status', 'drop_id',
+    'name', 'slug', 'description', 'base_price', 'images', 'status', 'drop_id', 'default_quality_level_id',
   ];
 
   const updateData = {};

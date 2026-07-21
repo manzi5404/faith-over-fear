@@ -114,7 +114,8 @@ const productLogic = () => ({
             this.selectedSize = this.product.sizes && this.product.sizes.length > 0 ? this.product.sizes[0] : "";
             this.selectedColor = this.product.colors && this.product.colors.length > 0 ? this.product.colors[0] : "";
             this.qualityLevels = this.applyQualityDescriptions(this.product.product_quality_prices || []);
-            this.selectedQuality = this.qualityLevels.length > 0 ? this.qualityLevels[0] : null;
+            const defaultQlId = this.product.default_quality_level_id;
+            this.selectedQuality = this.qualityLevels.find(q => q.quality_level_id === defaultQlId) || (this.qualityLevels.length > 0 ? this.qualityLevels[0] : null);
 
             this.relatedItems = products
                 .filter(p => p.dropType === this.product.dropType && p.id !== this.product.id)

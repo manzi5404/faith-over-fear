@@ -421,7 +421,8 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
         const variants = product.product_variants || product.variants || [];
         this.selectedColor = product.colors && product.colors.length > 0 ? product.colors[0] : (variants.length > 0 ? variants[0].color : "");
         this.qualityLevels = this.applyQualityDescriptions(product.product_quality_prices || product.quality_prices || []);
-        this.selectedQuality = this.qualityLevels.length > 0 ? this.qualityLevels[0] : null;
+        const defaultQlId = product.default_quality_level_id;
+        this.selectedQuality = this.qualityLevels.find(q => q.quality_level_id === defaultQlId) || (this.qualityLevels.length > 0 ? this.qualityLevels[0] : null);
     },
 
     preloadProduct(productId) {
@@ -446,6 +447,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
                         images: p.images || p.image_urls || [],
                         quality_prices: p.product_quality_prices || p.quality_prices || [],
                         status: p.status || "live",
+                        default_quality_level_id: p.default_quality_level_id,
                         colors: variantColors.length > 0 ? variantColors : (Array.isArray(p.colors) ? p.colors : []),
                         sizes: variantSizes.length > 0 ? variantSizes : (Array.isArray(p.sizes) ? p.sizes : [])
                     };
@@ -478,6 +480,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
                             images: p.images || p.image_urls || [],
                             quality_prices: p.product_quality_prices || p.quality_prices || [],
                             status: drop.status || "live",
+                            default_quality_level_id: p.default_quality_level_id,
                             colors: variantColors.length > 0 ? variantColors : (Array.isArray(p.colors) ? p.colors : []),
                             sizes: variantSizes.length > 0 ? variantSizes : (Array.isArray(p.sizes) ? p.sizes : [])
                         };

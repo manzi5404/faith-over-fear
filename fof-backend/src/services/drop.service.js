@@ -170,10 +170,14 @@ async function createDrop(data) {
       let counter = 1;
       let isConflict = await productRepo.findBySlugConflict(slug);
       while (isConflict) {
-        slug = `${baseSlug}-${counter}`;
+        slug = `${generateSlug(product.name || product.title || 'product')}-${counter}`;
         counter++;
         isConflict = await productRepo.findBySlugConflict(slug);
       }
+
+      const qualityLevelName = (product.default_quality_level || 'basic').toLowerCase();
+      const qualityLevelMap = { basic: 1, premium: 2, luxe: 3 };
+      const defaultQualityLevelId = qualityLevelMap[qualityLevelName] || 1;
 
       const normalizedProduct = {
         ...product,
@@ -184,6 +188,7 @@ async function createDrop(data) {
         sizes: Array.isArray(product.sizes) ? product.sizes : [],
         colors: Array.isArray(product.colors) ? product.colors : [],
         image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
+        default_quality_level_id: defaultQualityLevelId,
       };
       delete normalizedProduct.size;
       delete normalizedProduct.image_url;
@@ -277,6 +282,7 @@ async function updateDrop(id, data) {
           colors: Array.isArray(product.colors) ? product.colors : [],
           image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
           quantity: parseInt(product.quantity) || 1,
+          default_quality_level_id: (() => { const ql = (product.default_quality_level || 'basic').toLowerCase(); const map = { basic: 1, premium: 2, luxe: 3 }; return map[ql] || 1; })(),
         };
         delete normalizedProduct.tempId;
         delete normalizedProduct.uploading;
@@ -306,6 +312,7 @@ async function updateDrop(id, data) {
           colors: Array.isArray(product.colors) ? product.colors : [],
           image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
           quantity: parseInt(product.quantity) || 1,
+          default_quality_level_id: (() => { const ql = (product.default_quality_level || 'basic').toLowerCase(); const map = { basic: 1, premium: 2, luxe: 3 }; return map[ql] || 1; })(),
         };
         delete normalizedProduct.size;
         delete normalizedProduct.image_url;

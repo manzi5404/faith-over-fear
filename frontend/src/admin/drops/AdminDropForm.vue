@@ -224,6 +224,28 @@
                 </div>
               </div>
 
+              <!-- Quality Level Selector -->
+              <div class="space-y-2 md:col-span-2">
+                <label class="text-xs font-medium text-slate-400">Default Quality Level</label>
+                <div class="flex gap-3">
+                  <button type="button" @click="product.default_quality_level = 'basic'"
+                    :class="product.default_quality_level === 'basic' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600'"
+                    class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
+                    Basic
+                  </button>
+                  <button type="button" @click="product.default_quality_level = 'premium'"
+                    :class="product.default_quality_level === 'premium' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600'"
+                    class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
+                    Premium
+                  </button>
+                  <button type="button" @click="product.default_quality_level = 'luxe'"
+                    :class="product.default_quality_level === 'luxe' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600'"
+                    class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
+                    Luxe
+                  </button>
+                </div>
+              </div>
+
               <!-- Quality Prices -->
               <div class="space-y-2 md:col-span-2">
                 <label class="text-xs font-medium text-slate-400">Quality Prices (FRW)</label>
@@ -323,6 +345,7 @@ const emptyProduct = () => ({
   quantity: 1,
   image_urls: [],
   quality_prices: { essential: '', premium: '', luxe: '' },
+  default_quality_level: 'basic',
   tempId: Date.now() + Math.random(),
   uploading: false
 });
@@ -334,7 +357,8 @@ onMounted(async () => {
       const colors = Array.isArray(p.colors) ? p.colors : (p.colorsInput ? p.colorsInput.split(',').map(c => c.trim()).filter(Boolean) : []);
       const image_urls = Array.isArray(p.image_urls) ? p.image_urls : (p.image_url ? [p.image_url] : []);
       const quality_prices = p.quality_prices || { essential: '', premium: '', luxe: '' };
-      return { ...p, sizes, colors, colorsInput: colors.join(', '), image_urls, quality_prices, uploading: false };
+      const default_quality_level = p.default_quality_level || (p.default_quality_level_id ? (p.default_quality_level_id === 2 ? 'premium' : p.default_quality_level_id === 3 ? 'luxe' : 'basic') : 'basic');
+      return { ...p, sizes, colors, colorsInput: colors.join(', '), image_urls, quality_prices, default_quality_level, uploading: false };
     };
     Object.assign(formData, {
       name: props.initialData.title || props.initialData.name || '',

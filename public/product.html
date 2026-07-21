@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Product | F>F</title>
+    <link rel="stylesheet" href="/src/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -28,14 +29,8 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/style-BICTOAOQ.js"></script>
-  <script type="module" crossorigin src="/assets/alpine-B4coYYx7.js"></script>
-  <script type="module" crossorigin src="/assets/gsap-CzGW6FVa.js"></script>
-  <script type="module" crossorigin src="/assets/vendor-DsuMuRmO.js"></script>
-  <script type="module" crossorigin src="/assets/main-x-9EFTkd.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/style-ESBS-82G.css">
 </head>
-<body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden"
+<body data-api-base-url="https://faith-over-fear-mqgz.onrender.com" class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden"
       x-data="shopLogic()"
       x-init="init()"
       @scroll.window="scrolled = (window.pageYOffset > 50)"
@@ -76,8 +71,8 @@
     <main class="pt-24 min-h-screen pb-20" x-data="productLogic()">
         <div class="container mx-auto px-6 py-12" x-show="!loadingPDP" x-cloak>
             <div class="text-sm text-gray-400 mb-12 uppercase tracking-[0.2em]">
-                <a href="/shop.html" class="hover:text-white transition-colors">Home</a> /
-                <a href="/shop.html" class="hover:text-white transition-colors">Shop</a> /
+                <a href="/shop.html" class="hover:bg-fof-white transition-colors">Home</a> /
+                <a href="/shop.html" class="hover:bg-fof-white transition-colors">Shop</a> /
                 <span class="text-white" x-text="product.name"></span>
             </div>
 
@@ -125,7 +120,7 @@
                             <div class="flex flex-wrap gap-3">
                                 <template x-for="color in product.colors">
                                     <button class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-[10px] font-bold uppercase tracking-wider transition-all"
-                                            :class="selectedColor === color ? 'border-fof-accent bg-fof-accent text-white' : 'border-zinc-600 bg-zinc-800 text-white hover:border-white'"
+                                            :class="selectedColor === color ? 'border-fof-accent bg-fof-accent text-white shadow-lg shadow-fof-accent/30' : 'border-zinc-600 bg-zinc-800 text-white hover:border-white'"
                                             @click="selectedColor = color"
                                             x-text="color"></button>
                                 </template>
@@ -137,7 +132,7 @@
                             <div class="flex flex-wrap gap-3">
                                 <template x-for="size in product.sizes">
                                     <button class="w-14 h-14 flex items-center justify-center border text-xs font-bold uppercase tracking-widest transition-all"
-                                            :class="selectedSize === size ? 'border-fof-white bg-white text-black' : 'border-zinc-600 bg-zinc-800 text-white hover:border-white'"
+                                            :class="selectedSize === size ? 'border-fof-white bg-fof-accent text-fof-black' : 'border-zinc-800 text-gray-400 hover:border-white'"
                                             @click="selectedSize = size"
                                             x-text="size"></button>
                                 </template>
@@ -155,7 +150,7 @@
                                             <span class="text-xs font-bold uppercase tracking-widest" x-text="quality.quality_name"></span>
                                             <span class="text-sm font-mono font-bold" x-text="(parseFloat(quality.price) * quantity).toLocaleString() + ' FRW'"></span>
                                         </div>
-                                        <span class="text-[10px] text-gray-500 leading-relaxed" x-text="quality.quality_description"></span>
+                                        <span class="text-xs text-slate-400 leading-relaxed mt-1 block" x-text="quality.quality_description"></span>
                                     </button>
                                 </template>
                             </div>
@@ -193,7 +188,7 @@
                                             <div class="pt-2">
                                                 <label class="flex items-center space-x-3 cursor-pointer group">
                                                     <input type="checkbox" x-model="viewedInstructions" class="form-checkbox bg-black border-zinc-800 text-fof-accent focus:ring-0 focus:ring-offset-0 w-4 h-4 rounded-none transition-all">
-                                                    <span class="text-[10px] uppercase font-bold tracking-widest text-zinc-500 group-hover:text-white transition-colors">I understand the waitlist process</span>
+                                                    <span class="text-[10px] uppercase font-bold tracking-widest text-zinc-500 group-hover:bg-fof-white transition-colors">I understand the waitlist process</span>
                                                 </label>
                                             </div>
                                         </div>
@@ -215,8 +210,8 @@
                                                  <button class="flex-1 btn-primary h-full"
                                                          @click="addToCart()">Add To Cart</button>
                                         </div>
-                                                  <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6"
-                                                  @click="payWithMoMo()">Pay with MoMo</button>
+                                                 <button class="w-full btn-primary py-5"
+                                                 @click="payWithMoMo()">Pay with MoMo</button>
                                     </div>
                                 </template>
                             </div>
@@ -245,7 +240,7 @@
             <div class="mt-32 pt-16 border-t border-zinc-900" x-show="relatedItems.length > 0">
                 <div class="flex justify-between items-end mb-12">
                     <h2 class="text-3xl font-display font-bold uppercase tracking-tight">Complete <span class="text-fof-accent">The Drop</span></h2>
-                    <a href="/shop.html" class="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">View All</a>
+                    <a href="/shop.html" class="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:bg-fof-white transition-colors">View All</a>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <template x-for="item in relatedItems" :key="item.id">
@@ -281,7 +276,7 @@
         <div class="relative bg-zinc-900 border border-fof-gray w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900 sticky top-0 z-10">
                 <h3 class="text-xl font-display font-bold uppercase tracking-tight">Join the Waitlist</h3>
-                <button @click="reservationModalOpen = false" class="text-gray-500 hover:text-white">
+                <button @click="reservationModalOpen = false" class="text-gray-500 hover:bg-fof-white">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -347,7 +342,7 @@
                     <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-fof-accent">MomoQuickPay</p>
                     <h3 class="text-xl font-display font-bold uppercase tracking-tight text-fof-white sm:text-2xl">MoMo Checkout</h3>
                 </div>
-                <button @click="closeMomoQuickPay()" class="text-zinc-500 transition-colors hover:text-white" aria-label="Close modal">
+                <button @click="closeMomoQuickPay()" class="text-zinc-500 transition-colors hover:bg-fof-white" aria-label="Close modal">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -464,6 +459,7 @@
         </div>
     </footer>
 
+    <script type="module" src="/src/js/main.js"></script>
 
     <!-- Global Notifications -->
     <div class="fixed bottom-6 right-6 z-[100] space-y-3 pointer-events-none"
@@ -494,3 +490,4 @@
     </div>
 </body>
 </html>
+
