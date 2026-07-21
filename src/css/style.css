@@ -31,7 +31,7 @@
 
 @layer components {
     .btn-primary {
-        @apply px-8 py-4 bg-fof-white text-fof-black font-bold uppercase tracking-widest hover:bg-fof-accent hover:text-white transition-all transform hover:scale-105;
+        @apply px-8 py-4 bg-fof-accent text-fof-black font-bold uppercase tracking-widest hover:bg-fof-white transition-all transform hover:scale-105;
     }
 
     /* Modern Header Redesign - F>F */

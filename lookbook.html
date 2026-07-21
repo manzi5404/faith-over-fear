@@ -237,7 +237,7 @@
                                         </template>
                                     </div>
                                     <div class="mt-auto space-y-3">
-                                        <button @click="window.location.href='/product.html?id=' + product.id" class="w-full py-3 border border-zinc-700 bg-zinc-800 text-white text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-fof-accent hover:text-fof-black transition-all">See Details</button>
+                                        <button @click="window.location.href='/product.html?id=' + product.id" class="w-full py-3 bg-fof-accent text-fof-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-white transition-all transform hover:scale-105">See Details</button>
                                         <button @click.stop="activeProduct = product; openMomoQuickPay(activeProduct, 1, product.uiSize || 'M', product.colors && product.colors.length > 0 ? product.colors[0] : null, null)" class="w-full py-3 bg-fof-accent text-fof-black font-bold uppercase tracking-[0.2em] hover:bg-fof-white transition-all transform hover:scale-105">Pay with MoMo</button>
                                     </div>
                             </div>
