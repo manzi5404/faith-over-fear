@@ -293,15 +293,64 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
         const gateRootId = 'site-gate-root';
         let existing = document.getElementById(gateRootId);
 
-        // When live: remove overlay
         if (!this.isClosedMode()) {
             if (existing) existing.remove();
             return;
         }
 
-        // Closed: redirect to dedicated closed page
-        if (window.location.pathname !== '/closed.html') {
-            window.location.href = '/closed.html';
+        if (!existing) {
+            existing = document.createElement('div');
+            existing.id = gateRootId;
+            existing.innerHTML = `
+                <div id="site-gate-overlay" style="position:fixed;inset:0;z-index:999999;background:#000;display:flex;align-items:center;justify-content:center;">
+                    <div style="width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;background:#000;">
+                        <div style="position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=1400&q=80') center/cover no-repeat;opacity:0.15;filter:grayscale(100%) contrast(1.1);"></div>
+                        <div style="position:relative;z-index:2;text-align:center;padding:40px 24px;max-width:720px;width:100%;">
+                            <p style="font-size:11px;font-weight:700;letter-spacing:6px;text-transform:uppercase;color:#888;margin-bottom:16px;">Faith Over Fear</p>
+                            <h1 style="font-size:clamp(48px,10vw,96px);font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:24px;color:#fff;">F<span style="color:#ff3b3b;">&gt;</span>F</h1>
+                            <h2 style="font-size:clamp(24px,4vw,40px);font-weight:800;letter-spacing:-0.5px;line-height:1.15;margin-bottom:20px;color:#fff;">We're taking a short break.</h2>
+                            <p style="font-size:15px;line-height:1.7;color:#999;max-width:520px;margin:0 auto 36px;">We're working on something new. Leave your email and we'll notify you the moment we drop.</p>
+                            <div style="display:flex;gap:10px;max-width:480px;margin:0 auto 16px;">
+                                <input id="site-gate-email" type="email" placeholder="Enter your email" style="flex:1;min-width:0;padding:16px 18px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:rgba(10,10,10,0.8);color:#fff;font-size:14px;font-family:inherit;outline:none;" />
+                                <button id="site-gate-notify" style="padding:16px 24px;border-radius:12px;border:1px solid #fff;background:#fff;color:#000;font-weight:900;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:inherit;white-space:nowrap;">Notify Me</button>
+                            </div>
+                            <div id="site-gate-status" style="color:#888;font-size:12px;min-height:18px;margin-top:4px;"></div>
+                            <p style="margin-top:48px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#555;">&copy; 2026 Faith Over Fear. All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(existing);
+        }
+
+        const btn = existing.querySelector('#site-gate-notify');
+        const emailInput = existing.querySelector('#site-gate-email');
+        const statusEl = existing.querySelector('#site-gate-status');
+
+        if (btn && !btn.dataset.bound) {
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', async () => {
+                const email = (emailInput?.value || '').trim();
+                if (!email) { if (statusEl) statusEl.textContent = 'Please enter your email.'; return; }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { if (statusEl) statusEl.textContent = 'Enter a valid email.'; return; }
+                if (statusEl) statusEl.textContent = 'Submitting...';
+                try {
+                    const res = await fetch(`${API_BASE_URL}/api/waitlist`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: null, email, phone: null, source: 'site_closed' })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        if (statusEl) statusEl.textContent = "Done! We'll notify you when we're live.";
+                        if (emailInput) emailInput.value = '';
+                    } else {
+                        if (statusEl) statusEl.textContent = data.error || 'Failed. Try again.';
+                    }
+                } catch {
+                    if (statusEl) statusEl.textContent = 'Failed. Try again.';
+                }
+            });
         }
     },
 

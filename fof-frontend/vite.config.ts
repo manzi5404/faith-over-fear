@@ -14,7 +14,6 @@ export default defineConfig({
         about: './about.html',
         contact: './contact.html',
         lookbook: './lookbook.html',
-        closed: './closed.html',
         faq: './faq.html',
         shipping: './shipping.html',
         terms: './terms.html',
