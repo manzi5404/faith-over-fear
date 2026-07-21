@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+      (function () {
+        try {
+          var played = sessionStorage.getItem('fof_intro_played') === '1';
+          var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (played || reduced) document.documentElement.classList.add('fof-intro-skip');
+        } catch (e) {}
+        setTimeout(function () {
+          var el = document.getElementById('fof-intro');
+          if (el) el.remove();
+        }, 9000);
+        var apiBase = document.body && document.body.dataset && document.body.dataset.apiBaseUrl;
+        if (apiBase) window.API_BASE_URL = apiBase;
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Join the Movement | F>F</title>
@@ -86,4 +101,5 @@
     <script type="module" src="/src/js/entry/signup-entry.js"></script>
 </body>
 </html>
+
 

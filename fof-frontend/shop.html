@@ -10,21 +10,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
-      /* Decide before first paint whether the cinematic intro should run.
-         It plays once per browser session (sessionStorage), and never for
-         users who prefer reduced motion — so the homepage is instant. */
       (function () {
         try {
           var played = sessionStorage.getItem('fof_intro_played') === '1';
           var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
           if (played || reduced) document.documentElement.classList.add('fof-intro-skip');
         } catch (e) {}
-        /* Failsafe: if the script never runs, drop the overlay so the shop
-           is never trapped behind a black screen. */
         setTimeout(function () {
           var el = document.getElementById('fof-intro');
           if (el) el.remove();
         }, 9000);
+        var apiBase = document.body && document.body.dataset && document.body.dataset.apiBaseUrl;
+        if (apiBase) window.API_BASE_URL = apiBase;
       })();
     </script>
     <style>
