@@ -9,10 +9,9 @@
     </style>
     <!-- Tailwind CSS (Using script specifically for styling consistency in this environment if needed, but linking style.css is preferred) -->
 
-  <script type="module" crossorigin src="/assets/style-CIrEOa6h.js"></script>
-  <script type="module" crossorigin src="/assets/module.esm-CwKKyv8g.js"></script>
-  <script type="module" crossorigin src="/assets/main-CZee0BYo.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/style-CY-zCG4d.css">
+  <script type="module" crossorigin src="/assets/module.esm-DqOHvlpq.js"></script>
+  <script type="module" crossorigin src="/assets/main-DfYIkIJ7.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/module-CajJ6wNa.css">
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
       x-data="shopLogic()"
@@ -93,18 +92,18 @@
     </div>
 
     <main class="pt-24 min-h-screen">
-        <div class="container mx-auto px-6 py-12">
+        <div class="container mx-auto px-4 md:px-6 py-12">
             <h1 class="text-4xl md:text-5xl font-display font-bold uppercase mb-12">Your <span class="text-fof-accent">Cart</span></h1>
 
             <!-- Empty Cart State -->
-            <div x-show="cartItems.length === 0" class="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up" x-cloak>
+            <div x-show="cartItems.length === 0" class="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up px-4" x-cloak>
                 <div class="text-gray-600 mb-6">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="0.5" stroke="currentColor" class="w-24 h-24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                     </svg>
                 </div>
                 <h2 class="text-2xl font-bold uppercase mb-4">Your cart is empty</h2>
-                <a href="/shop.html" class="bg-fof-white text-black font-bold uppercase py-3 px-8 text-xs tracking-widest hover:bg-fof-accent hover:text-white transition-colors">Start Shopping</a>
+                <a href="/shop.html" class="bg-fof-accent text-fof-black font-bold uppercase py-3 px-8 text-xs tracking-widest hover:bg-fof-white transition-all transform hover:scale-105 w-full md:w-auto block md:inline-block text-center">Start Shopping</a>
             </div>
 
             <!-- Cart Content -->
@@ -191,7 +190,7 @@
 
                         <!-- Live Mode Checkout -->
                         <template x-if="isLiveMode()">
-                            <button @click="initPayment(null)" class="w-full bg-fof-white text-black font-bold uppercase py-4 tracking-widest hover:bg-fof-accent hover:text-white transition-colors flex items-center justify-center space-x-2">
+                            <button @click="initPayment(null)" class="w-full bg-fof-accent text-fof-black font-bold uppercase py-4 tracking-widest hover:bg-fof-white transition-all transform hover:scale-105 flex items-center justify-center space-x-2">
                                 <span>Checkout with MoMo</span>
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                             </button>

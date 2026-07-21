@@ -29,10 +29,35 @@ const productLogic = () => ({
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
 
-        // Wait for products to be loaded in the global shopLogic
-        let attempts = 0;
-        const maxAttempts = 15;
+        try {
+            const res = await fetch(`/api/products/id/${id}`);
+            if (res.ok) {
+                const data = await res.json();
+                const product = data.product || data;
+                if (product && product.id) {
+                    const shop = Alpine.$data(document.body);
+                    if (shop && shop.products && shop.products.length > 0) {
+                        this.loadProductData(id, shop.products);
+                    } else {
+                        this.product = product;
+                        const variants = product.product_variants || [];
+                        const variantColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+                        const variantSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+                        this.product.colors = variantColors.length > 0 ? variantColors : (Array.isArray(product.colors) ? product.colors : []);
+                        this.product.sizes = variantSizes.length > 0 ? variantSizes : (Array.isArray(product.sizes) ? product.sizes : []);
+                        this.selectedSize = this.product.sizes && this.product.sizes.length > 0 ? this.product.sizes[0] : "";
+                        this.selectedColor = this.product.colors && this.product.colors.length > 0 ? this.product.colors[0] : "";
+                    }
+                    this.loadingPDP = false;
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn('Direct product fetch failed, falling back to shopLogic wait:', e);
+        }
 
+        let attempts = 0;
+        const maxAttempts = 10;
         const tryInit = () => {
             const shop = Alpine.$data(document.body);
             if (shop && shop.products && shop.products.length > 0) {
@@ -40,13 +65,12 @@ const productLogic = () => ({
                 this.loadingPDP = false;
             } else if (attempts < maxAttempts) {
                 attempts++;
-                setTimeout(tryInit, 200);
+                setTimeout(tryInit, 150);
             } else {
                 console.error("Failed to load products from shopLogic");
                 this.loadingPDP = false;
             }
         };
-
         tryInit();
     },
 

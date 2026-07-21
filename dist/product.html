@@ -27,10 +27,9 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/style-CIrEOa6h.js"></script>
-  <script type="module" crossorigin src="/assets/module.esm-CwKKyv8g.js"></script>
-  <script type="module" crossorigin src="/assets/main-CZee0BYo.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/style-CY-zCG4d.css">
+  <script type="module" crossorigin src="/assets/module.esm-DqOHvlpq.js"></script>
+  <script type="module" crossorigin src="/assets/main-DfYIkIJ7.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/module-CajJ6wNa.css">
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
       x-data="shopLogic()"
@@ -94,17 +93,29 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24">
                 <!-- Image Gallery -->
-                <div class="space-y-6" x-data="{ zooming: false, mouseX: 50, mouseY: 50 }">
-<div class="zoom-container aspect-[4/5] bg-fof-dark overflow-hidden"
-                          :class="{ 'zooming': zooming }"
-                          @mouseenter="zooming = true"
-                          @mouseleave="zooming = false; mouseX = 50; mouseY = 50"
-                          @mousemove="if(zooming) { const rect = $el.getBoundingClientRect(); mouseX = (($event.clientX - rect.left) / rect.width) * 100; mouseY = (($event.clientY - rect.top) / rect.height) * 100; }"
-                          @click="zooming = !zooming">
-                        <img :src="mainImage"
-                             :alt="product.name + ' - Faith Over Fear streetwear hoodie Rwanda'"
-                             class="w-full h-full object-cover transition-transform duration-300"
-                             :style="zooming ? `transform-origin: ${mouseX}% ${mouseY}%; transform: scale(1.5);` : ''">
+                <div class="space-y-6" x-data="{ zooming: false, mouseX: 50, mouseY: 50, flipped: false }">
+                    <div class="relative aspect-[4/5] bg-fof-dark overflow-hidden flip-card"
+                         :class="{ 'zooming': zooming }"
+                         @mouseenter="zooming = true"
+                         @mouseleave="zooming = false; mouseX = 50; mouseY = 50"
+                         @mousemove="if(zooming) { const rect = $el.getBoundingClientRect(); mouseX = (($event.clientX - rect.left) / rect.width) * 100; mouseY = (($event.clientY - rect.top) / rect.height) * 100; }"
+                         @click="zooming = !zooming">
+                        <div class="flip-card-inner h-full w-full">
+                            <div class="flip-card-front">
+                                <img :src="mainImage"
+                                     :alt="product.name + ' - Faith Over Fear streetwear hoodie Rwanda'"
+                                     class="w-full h-full object-cover transition-transform duration-300"
+                                     :style="zooming ? `transform-origin: ${mouseX}% ${mouseY}%; transform: scale(1.5);` : ''">
+                            </div>
+                            <div class="flip-card-back">
+                                <img :src="product.images[1] || product.images[0]"
+                                     :alt="product.name + ' back view'"
+                                     class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                        <button @click.stop="flipped = !flipped" class="md:hidden absolute bottom-4 right-4 w-10 h-10 bg-black/60 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white z-20 hover:bg-fof-accent hover:border-fof-accent transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                        </button>
                     </div>
                     <div class="grid grid-cols-4 gap-4">
                         <template x-for="(img, index) in product.images" :key="index">
@@ -140,7 +151,7 @@
                             <div class="flex flex-wrap gap-3">
                                 <template x-for="color in product.colors">
                                     <button class="px-6 py-3 border text-xs font-bold uppercase tracking-widest transition-all"
-                                            :class="selectedColor === color ? 'border-fof-accent bg-fof-accent text-white' : 'border-zinc-800 text-gray-400 hover:border-white'"
+                                            :class="selectedColor === color ? 'border-fof-accent bg-fof-accent text-white' : 'border-zinc-600 bg-zinc-800 text-white hover:border-white hover:bg-zinc-700'"
                                             @click="selectedColor = color"
                                             x-text="color"></button>
                                 </template>
@@ -153,7 +164,7 @@
                             <div class="flex flex-wrap gap-3">
                                 <template x-for="size in product.sizes">
                                     <button class="w-14 h-14 flex items-center justify-center border text-xs font-bold uppercase tracking-widest transition-all"
-                                            :class="selectedSize === size ? 'border-fof-white bg-white text-black' : 'border-zinc-800 text-gray-400 hover:border-white'"
+                                            :class="selectedSize === size ? 'border-white bg-white text-black' : 'border-zinc-600 bg-zinc-800 text-white hover:border-white hover:bg-zinc-700'"
                                             @click="selectedSize = size"
                                             x-text="size"></button>
                                 </template>
@@ -165,13 +176,13 @@
                             <div class="flex flex-col gap-3">
                                 <template x-for="quality in qualityLevels" :key="quality.quality_level_id">
                                     <button class="px-5 py-4 border text-left transition-all"
-                                            :class="selectedQuality && selectedQuality.quality_level_id === quality.quality_level_id ? 'border-fof-accent bg-fof-accent/10' : 'border-zinc-800 hover:border-zinc-600'"
+                                            :class="selectedQuality && selectedQuality.quality_level_id === quality.quality_level_id ? 'border-fof-accent bg-fof-accent/10' : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-600'"
                                             @click="selectedQuality = quality">
                                         <div class="flex items-center justify-between mb-1">
                                             <span class="text-xs font-bold uppercase tracking-widest" x-text="quality.quality_name"></span>
                                             <span class="text-sm font-mono font-bold" x-text="(parseFloat(quality.price) * quantity).toLocaleString() + ' FRW'"></span>
                                         </div>
-                                        <span class="text-[10px] text-gray-500 leading-relaxed" x-text="quality.quality_description"></span>
+                                        <span class="text-[10px] text-gray-400 leading-relaxed" x-text="quality.quality_description"></span>
                                     </button>
                                 </template>
                             </div>
@@ -222,7 +233,7 @@
                                             </div>
                                         </div>
 
-                                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        <button class="w-full bg-fof-accent text-fof-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-white transition-all transform hover:scale-105 py-6 disabled:opacity-30 disabled:cursor-not-allowed"
                                                 :disabled="!viewedInstructions"
                                                 @click="reserve()">
                                             Reserve Now
@@ -235,16 +246,16 @@
                                     <div class="flex flex-col space-y-4">
                                         <div class="flex items-center space-x-4 h-16">
                                             <div class="flex items-center border border-zinc-800 h-full">
-                                                <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity > 1 ? quantity-- : null">-</button>
+                                                <button class="px-6 h-full bg-zinc-900 text-white hover:bg-zinc-800 transition-colors text-xl" @click="quantity > 1 ? quantity-- : null">-</button>
                                                 <span class="px-4 font-mono font-bold text-lg min-w-[3rem] text-center" x-text="quantity"></span>
-                                                <button class="px-6 h-full hover:bg-zinc-800 transition-colors text-xl" @click="quantity++">+</button>
+                                                <button class="px-6 h-full bg-zinc-900 text-white hover:bg-zinc-800 transition-colors text-xl" @click="quantity++">+</button>
                                             </div>
-                                            <button class="flex-1 bg-fof-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all h-full"
-                                                    @click="addToCart()">
-                                                Add To Cart
-                                            </button>
+                                        <button class="flex-1 bg-fof-accent text-fof-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-white transition-all transform hover:scale-105 h-full"
+                                                @click="addToCart()">
+                                            Add To Cart
+                                        </button>
                                         </div>
-                                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6"
+                                        <button class="w-full bg-fof-accent text-fof-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-white transition-all transform hover:scale-105 py-6"
                                                 @click="payWithMoMo()">
                                             Pay with MoMo
                                         </button>
@@ -609,7 +620,7 @@
                 <h3 class="text-2xl font-display font-bold uppercase tracking-tight mb-4">Join the Movement</h3>
                 <p class="text-gray-400 text-sm mb-8 leading-relaxed">Unlock exclusive drops, track your orders, and join the Faith Over Fear community.</p>
                 <div class="space-y-4">
-                    <a href="/signup.html" class="block w-full bg-fof-white text-black font-bold uppercase py-4 text-xs tracking-widest hover:bg-fof-accent hover:text-white transition-all">Sign Up</a>
+                    <a href="/signup.html" class="block w-full bg-white text-black font-bold uppercase py-4 text-xs tracking-widest hover:bg-fof-accent hover:text-white transition-all">Sign Up</a>
                     <a href="/login.html" class="block w-full border border-zinc-800 text-white font-bold uppercase py-4 text-xs tracking-widest hover:bg-zinc-800 transition-all">Login</a>
                 </div>
                 <button @click="open = false" class="mt-6 text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 hover:text-white transition-colors">Maybe Later</button>

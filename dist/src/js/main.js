@@ -6,7 +6,14 @@ import productLogic from './product.js';
 import { initHeroAnimation } from './animations.js';
 import './announcement-entry.jsx';
 
-const API_BASE_URL = 'https://fof-backend-production.up.railway.app';
+const API_BASE_URL = (() => {
+    const host = window.location.hostname;
+    if (host === 'localhost') return 'http://localhost:5000';
+    if (host === '127.0.0.1') return 'http://localhost:5000';
+    return 'https://fof-backend-production.up.railway.app';
+})();
+
+window.API_BASE_URL = API_BASE_URL;
 
 window.Alpine = Alpine;
 window.gsap = gsap;

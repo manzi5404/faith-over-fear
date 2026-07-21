@@ -231,7 +231,7 @@
                                             </div>
                                         </div>
 
-                                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        <button class="w-full bg-fof-accent text-fof-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-white transition-all transform hover:scale-105 py-6 disabled:opacity-30 disabled:cursor-not-allowed"
                                                 :disabled="!viewedInstructions"
                                                 @click="reserve()">
                                             Reserve Now
@@ -248,12 +248,12 @@
                                                 <span class="px-4 font-mono font-bold text-lg min-w-[3rem] text-center" x-text="quantity"></span>
                                                 <button class="px-6 h-full bg-zinc-900 text-white hover:bg-zinc-800 transition-colors text-xl" @click="quantity++">+</button>
                                             </div>
-                                            <button class="flex-1 bg-white text-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-accent hover:text-white transition-all h-full"
-                                                    @click="addToCart()">
-                                                Add To Cart
-                                            </button>
+                                        <button class="flex-1 bg-fof-accent text-fof-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-white transition-all transform hover:scale-105 h-full"
+                                                @click="addToCart()">
+                                            Add To Cart
+                                        </button>
                                         </div>
-                                        <button class="w-full bg-fof-accent text-white font-bold uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-black transition-all py-6"
+                                        <button class="w-full bg-fof-accent text-fof-black font-bold uppercase tracking-[0.2em] text-xs hover:bg-fof-white transition-all transform hover:scale-105 py-6"
                                                 @click="payWithMoMo()">
                                             Pay with MoMo
                                         </button>
