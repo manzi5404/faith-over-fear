@@ -131,7 +131,7 @@ CREATE INDEX idx_quality_levels_sort ON quality_levels (sort_order);
 
 -- Seed defaults (from code logic)
 INSERT INTO quality_levels (name, description, sort_order, is_active) VALUES
-    ('Essential', 'Standard cotton tee. Comfortable everyday fit with solid construction. Great value for regular wear.', 1, TRUE),
+    ('Basic', 'Standard cotton tee. Comfortable everyday fit with solid construction. Great value for regular wear.', 1, TRUE),
     ('Premium', 'Upgraded heavyweight fabric. Softer feel, reinforced seams, and a structured collar. Built to last longer.', 2, TRUE),
     ('Luxe', 'Premium combed cotton, ultra-soft handfeel, and precision tailoring. The highest quality construction for a premium look and feel.', 3, TRUE)
 ON CONFLICT DO NOTHING;

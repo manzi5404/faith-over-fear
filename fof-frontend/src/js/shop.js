@@ -110,7 +110,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
     applyQualityDescriptions(levels) {
         if (!Array.isArray(levels)) return levels;
         const fallbacks = {
-            'essential': 'Standard cotton tee. Comfortable everyday fit with solid construction. Great value for regular wear.',
+            'basic': 'Standard cotton tee. Comfortable everyday fit with solid construction. Great value for regular wear.',
             'premium': 'Upgraded heavyweight fabric. Softer feel, reinforced seams, and a structured collar. Built to last longer.',
             'luxe': 'Premium combed cotton, ultra-soft handfeel, and precision tailoring. The highest quality construction for a premium look and feel.',
         };

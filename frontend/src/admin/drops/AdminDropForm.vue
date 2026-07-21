@@ -229,7 +229,7 @@
                 <label class="text-xs font-medium text-slate-400">Quality Prices (FRW)</label>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Essential</span>
+                     <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Basic</span>
                     <input type="number" v-model="product.quality_prices.essential" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1" placeholder="15000" />
                   </div>
                   <div>

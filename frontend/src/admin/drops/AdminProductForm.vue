@@ -134,7 +134,7 @@ const errors = reactive({});
 const isEditing = ref(false);
 
 const qualityLevels = [
-  { id: 1, name: 'Essential' },
+  { id: 1, name: 'Basic' },
   { id: 2, name: 'Premium' },
   { id: 3, name: 'Luxe' }
 ];
@@ -152,7 +152,7 @@ const setQualityPrice = (levelId, value) => {
   if (price > 0) qualityPrices.value.push({ quality_level_id: levelId, price });
 };
 
-const nameToId = { 'Essential': 1, 'Premium': 2, 'Luxe': 3 };
+const nameToId = { 'Basic': 1, 'Premium': 2, 'Luxe': 3 };
 
 const applyInitialData = (initialData) => {
   Object.assign(productData, {
