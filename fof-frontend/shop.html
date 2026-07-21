@@ -199,7 +199,7 @@
                             <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
                                 <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-fof-accent mb-3">Just Dropped</p>
                                 <h2 class="text-3xl md:text-5xl font-display font-bold uppercase tracking-tight text-white mb-4" x-text="drops[0].title"></h2>
-                                <span class="inline-flex items-center space-x-2 bg-white text-black font-bold uppercase tracking-[0.2em] text-xs px-8 py-4 rounded-sm group-hover:bg-fof-accent group-hover:text-white transition-all duration-300">
+                                <span class="inline-flex items-center space-x-2 bg-fof-accent text-fof-black font-bold uppercase tracking-[0.2em] text-xs px-8 py-4 rounded-sm group-hover:bg-fof-white transition-all duration-300">
                                     <span>Shop</span>
                                     <span x-text="drops[0].title"></span>
                                 </span>
@@ -233,7 +233,7 @@
                                     <img :src="drop.image_url || '/placeholder.jpg'" :alt="drop.title" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                                     <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300"></div>
                                     <div class="absolute inset-0 flex items-center justify-center">
-                                        <span class="bg-white text-black font-bold uppercase tracking-[0.2em] text-xs px-6 py-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 transform md:translate-y-3 md:group-hover:translate-y-0 translate-y-0">
+                                        <span class="bg-fof-accent text-fof-black font-bold uppercase tracking-[0.2em] text-xs px-6 py-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 transform md:translate-y-3 md:group-hover:translate-y-0 translate-y-0">
                                             Shop the Drop
                                         </span>
                                     </div>
@@ -257,7 +257,7 @@
                      x-transition:leave-start="opacity-100"
                      x-transition:leave-end="opacity-0">
                     <div class="mb-8">
-                        <button @click="clearSelection" class="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-colors flex items-center gap-2">
+                        <button @click="clearSelection" class="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 hover:bg-fof-white transition-colors flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                             Back to Drops
                         </button>
@@ -402,7 +402,7 @@
                     <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-fof-accent">MomoQuickPay</p>
                     <h3 class="text-xl font-display font-bold uppercase tracking-tight text-fof-white sm:text-2xl">MoMo Checkout</h3>
                 </div>
-                <button @click="closeMomoQuickPay()" class="text-zinc-500 transition-colors hover:text-white" aria-label="Close modal">
+                <button @click="closeMomoQuickPay()" class="text-zinc-500 transition-colors hover:bg-fof-white" aria-label="Close modal">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -569,10 +569,10 @@
             <h3 class="text-2xl font-display font-bold uppercase tracking-tight mb-4">Join the Movement</h3>
             <p class="text-gray-400 text-sm mb-8 leading-relaxed">Unlock exclusive drops, track your orders, and join the Faith Over Fear community.</p>
             <div class="space-y-4">
-                <a href="/signup.html" class="block w-full bg-fof-white text-white font-bold uppercase py-4 text-xs tracking-widest hover:bg-fof-accent hover:text-white transition-all">Sign Up</a>
+                <a href="/signup.html" class="block w-full bg-fof-white text-white font-bold uppercase py-4 text-xs tracking-widest hover:bg-fof-white transition-all">Sign Up</a>
                 <a href="/login.html" class="block w-full border border-zinc-800 text-white font-bold uppercase py-4 text-xs tracking-widest hover:bg-zinc-800 transition-all">Login</a>
             </div>
-            <button @click="open = false" class="mt-6 text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 hover:text-white transition-colors">Maybe Later</button>
+            <button @click="open = false" class="mt-6 text-[10px] uppercase font-bold tracking-[0.2em] text-gray-600 hover:bg-fof-white transition-colors">Maybe Later</button>
         </div>
     </div>
 

@@ -78,7 +78,7 @@
                     </svg>
                 </div>
                 <h2 class="text-2xl font-bold uppercase mb-4">Your cart is empty</h2>
-                <a href="/shop.html" class="bg-fof-white text-black font-bold uppercase py-3 px-8 text-xs tracking-widest hover:bg-fof-accent hover:text-white transition-colors">Start Shopping</a>
+                <a href="/shop.html" class="bg-fof-accent text-fof-black font-bold uppercase py-3 px-8 text-xs tracking-widest hover:bg-fof-white transition-colors">Start Shopping</a>
             </div>
 
             <div x-show="cartItems.length > 0" class="grid grid-cols-1 lg:grid-cols-3 gap-12" x-transition>
@@ -143,7 +143,7 @@
                             <span class="text-3xl font-display font-bold text-white font-mono" x-text="grandTotal + ' FRW'"></span>
                         </div>
                         <template x-if="isLiveMode()">
-                            <button @click="initPayment(null)" class="w-full bg-fof-white text-black font-bold uppercase py-4 tracking-widest hover:bg-fof-accent hover:text-white transition-colors flex items-center justify-center space-x-2">
+                            <button @click="initPayment(null)" class="w-full bg-fof-accent text-fof-black font-bold uppercase py-4 tracking-widest hover:bg-fof-white transition-colors flex items-center justify-center space-x-2">
                                 <span>Checkout with MoMo</span>
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                             </button>
@@ -177,7 +177,7 @@
         <div class="relative z-[10001] bg-zinc-900 border border-fof-gray w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh] animate-fade-in-up pointer-events-auto rounded-lg">
             <div class="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 z-10">
                 <h3 class="text-xl font-display font-bold uppercase tracking-tight">MoMo Checkout</h3>
-                <button @click="paymentModalOpen = false" class="text-gray-500 hover:text-white transition-colors">
+                <button @click="paymentModalOpen = false" class="text-gray-500 hover:bg-fof-white transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -208,7 +208,7 @@
                                 <span class="block text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">To (Store Number)</span>
                                 <span class="font-mono text-white text-lg font-bold tracking-wider" x-text="'*182*1*1*0791832523#'"></span>
                             </div>
-                            <div class="flex items-center space-x-2 px-3 py-2 bg-zinc-800/50 group-hover:bg-fof-accent group-hover:text-white transition-all rounded text-[10px] uppercase font-bold tracking-widest relative">
+                            <div class="flex items-center space-x-2 px-3 py-2 bg-zinc-800/50 group-hover:bg-fof-accent group-hover:bg-fof-white transition-all rounded text-[10px] uppercase font-bold tracking-widest relative">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
                                 <span>Copy</span>
                                 <span x-show="copyFeedback === 'Number'" x-cloak class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-fof-accent text-white text-[10px] px-2 py-1 rounded whitespace-nowrap">Copied!</span>

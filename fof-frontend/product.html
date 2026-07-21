@@ -71,8 +71,8 @@
     <main class="pt-24 min-h-screen pb-20" x-data="productLogic()">
         <div class="container mx-auto px-6 py-12" x-show="!loadingPDP" x-cloak>
             <div class="text-sm text-gray-400 mb-12 uppercase tracking-[0.2em]">
-                <a href="/shop.html" class="hover:text-white transition-colors">Home</a> /
-                <a href="/shop.html" class="hover:text-white transition-colors">Shop</a> /
+                <a href="/shop.html" class="hover:bg-fof-white transition-colors">Home</a> /
+                <a href="/shop.html" class="hover:bg-fof-white transition-colors">Shop</a> /
                 <span class="text-white" x-text="product.name"></span>
             </div>
 
@@ -132,7 +132,7 @@
                             <div class="flex flex-wrap gap-3">
                                 <template x-for="size in product.sizes">
                                     <button class="w-14 h-14 flex items-center justify-center border text-xs font-bold uppercase tracking-widest transition-all"
-                                            :class="selectedSize === size ? 'border-fof-white bg-white text-black' : 'border-zinc-800 text-gray-400 hover:border-white'"
+                                            :class="selectedSize === size ? 'border-fof-white bg-fof-accent text-fof-black' : 'border-zinc-800 text-gray-400 hover:border-white'"
                                             @click="selectedSize = size"
                                             x-text="size"></button>
                                 </template>
@@ -188,7 +188,7 @@
                                             <div class="pt-2">
                                                 <label class="flex items-center space-x-3 cursor-pointer group">
                                                     <input type="checkbox" x-model="viewedInstructions" class="form-checkbox bg-black border-zinc-800 text-fof-accent focus:ring-0 focus:ring-offset-0 w-4 h-4 rounded-none transition-all">
-                                                    <span class="text-[10px] uppercase font-bold tracking-widest text-zinc-500 group-hover:text-white transition-colors">I understand the waitlist process</span>
+                                                    <span class="text-[10px] uppercase font-bold tracking-widest text-zinc-500 group-hover:bg-fof-white transition-colors">I understand the waitlist process</span>
                                                 </label>
                                             </div>
                                         </div>
@@ -240,7 +240,7 @@
             <div class="mt-32 pt-16 border-t border-zinc-900" x-show="relatedItems.length > 0">
                 <div class="flex justify-between items-end mb-12">
                     <h2 class="text-3xl font-display font-bold uppercase tracking-tight">Complete <span class="text-fof-accent">The Drop</span></h2>
-                    <a href="/shop.html" class="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors">View All</a>
+                    <a href="/shop.html" class="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:bg-fof-white transition-colors">View All</a>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <template x-for="item in relatedItems" :key="item.id">
@@ -276,7 +276,7 @@
         <div class="relative bg-zinc-900 border border-fof-gray w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900 sticky top-0 z-10">
                 <h3 class="text-xl font-display font-bold uppercase tracking-tight">Join the Waitlist</h3>
-                <button @click="reservationModalOpen = false" class="text-gray-500 hover:text-white">
+                <button @click="reservationModalOpen = false" class="text-gray-500 hover:bg-fof-white">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -342,7 +342,7 @@
                     <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-fof-accent">MomoQuickPay</p>
                     <h3 class="text-xl font-display font-bold uppercase tracking-tight text-fof-white sm:text-2xl">MoMo Checkout</h3>
                 </div>
-                <button @click="closeMomoQuickPay()" class="text-zinc-500 transition-colors hover:text-white" aria-label="Close modal">
+                <button @click="closeMomoQuickPay()" class="text-zinc-500 transition-colors hover:bg-fof-white" aria-label="Close modal">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>

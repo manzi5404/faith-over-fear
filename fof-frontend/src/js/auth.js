@@ -27,17 +27,6 @@ export const authAPI = {
         return data;
     },
 
-    async googleAuth(idToken) {
-        const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_token: idToken })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Google login failed');
-        return data;
-    },
-
     async me() {
         const token = localStorage.getItem('fof_token');
         const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
