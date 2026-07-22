@@ -1,5 +1,5 @@
 -- =========================================================
--- FAITH OVER FEAR — Authoritative Database Schema
+-- DOTTIE.YZ — Authoritative Database Schema
 -- Generated from: models/*.js + db/init.js
 -- Run in this exact order (foreign key dependency order)
 -- =========================================================
@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS store_config (
 
 -- Seed the required single row
 INSERT IGNORE INTO store_config (id, store_mode, announcement)
-VALUES (1, 'closed', 'Welcome to Faith Over Fear');
+VALUES (1, 'closed', 'Welcome to DOTTIE.YZ');
 
 
 -- 9. SETTINGS  (key-value store for app-wide feature flags)
@@ -218,7 +218,7 @@ CREATE TABLE IF NOT EXISTS announcements (
 
 -- Seed required single row so UPDATE never creates 0 affectedRows
 INSERT IGNORE INTO announcements (id, title, message, button_text, is_enabled, version, status)
-VALUES (1, 'Welcome to F>F', 'New drops are coming.', 'SHOP THE DROP', 0, 1, 'live');
+VALUES (1, 'Welcome to D>Y', 'New drops are coming.', 'SHOP THE DROP', 0, 1, 'live');
 
 
 -- 11. NOTIFICATIONS  (admin notification inbox)
@@ -246,3 +246,4 @@ CREATE TABLE IF NOT EXISTS contact_messages (
     status     VARCHAR(50)  DEFAULT 'unread',   -- 'unread' | 'read' | 'replied'
     created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

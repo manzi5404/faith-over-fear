@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Account | DOTTIE.YZ</title>
+    <link rel="stylesheet" href="/src/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="auth-page" x-data="signupLogic()">
+    <div class="auth-card">
+        <div class="auth-logo">DOTTIE<span>.</span>YZ</div>
+        <div class="auth-subtitle">Join the Community</div>
+
+        <form @submit.prevent="signup()" class="space-y-5">
+            <div>
+                <label class="DOTTIE-label">Full Name</label>
+                <input type="text" x-model="name" required class="DOTTIE-field" placeholder="Your name">
+            </div>
+            <div>
+                <label class="DOTTIE-label">Email</label>
+                <input type="email" x-model="email" required class="DOTTIE-field" placeholder="you@email.com">
+            </div>
+            <div>
+                <label class="DOTTIE-label">Password</label>
+                <input type="password" x-model="password" required class="DOTTIE-field" placeholder="Min. 8 characters">
+            </div>
+            <div>
+                <label class="DOTTIE-label">Confirm Password</label>
+                <input type="password" x-model="confirmPassword" required class="DOTTIE-field" placeholder="Repeat password">
+            </div>
+            <button type="submit" class="btn-primary w-full" :disabled="loading">
+                <span x-show="!loading">Create Account</span>
+                <span x-show="loading">Creating...</span>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="/login.html">Sign in</a>
+        </div>
+    </div>
+
+    <script type="module" src="/src/js/entry/signup-entry.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | DOTTIE.YZ</title>
+    <link rel="stylesheet" href="/src/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="auth-page" x-data="authLogic()">
+    <div class="auth-card">
+        <div class="auth-logo">DOTTIE<span>.</span>YZ</div>
+        <div class="auth-subtitle">Member Access</div>
+
+        <form @submit.prevent="login()" class="space-y-5">
+            <div>
+                <label class="DOTTIE-label">Email</label>
+                <input type="email" x-model="email" required class="DOTTIE-field" placeholder="you@email.com">
+            </div>
+            <div>
+                <label class="DOTTIE-label">Password</label>
+                <input type="password" x-model="password" required class="DOTTIE-field" placeholder="••••••••">
+            </div>
+            <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" x-model="rememberMe" class="w-4 h-4 rounded border-white/20 bg-transparent accent-DOTTIE-blue">
+                    <span class="text-xs text-white/50">Remember me</span>
+                </label>
+                <a href="/forgot-password.html" class="text-xs text-DOTTIE-blue hover:text-white transition-colors">Forgot password?</a>
+            </div>
+            <button type="submit" class="btn-primary w-full" :disabled="loading">
+                <span x-show="!loading">Sign In</span>
+                <span x-show="loading">Signing in...</span>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            New here? <a href="/signup.html">Create an account</a>
+        </div>
+    </div>
+
+    <script type="module" src="/src/js/entry/login-entry.js"></script>
+</body>
+</html>

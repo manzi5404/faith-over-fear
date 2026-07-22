@@ -10,7 +10,7 @@ const API_BASE_URL = (() => {
     const host = window.location.hostname;
     if (host === 'localhost') return 'http://localhost:5000';
     if (host === '127.0.0.1') return 'http://localhost:5000';
-    return 'https://fof-backend-production.up.railway.app';
+    return 'https://dottie-backend-production.up.railway.app';
 })();
 
 window.API_BASE_URL = API_BASE_URL;
@@ -53,21 +53,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Authentication & Notification Logic
     const checkAuth = () => {
-        const token = localStorage.getItem('fof_token');
-        const user = JSON.parse(localStorage.getItem('fof_user') || 'null');
+        const token = localStorage.getItem('DOTTIE_token');
+        const user = JSON.parse(localStorage.getItem('DOTTIE_user') || 'null');
         return { isLoggedIn: !!token, user };
     };
 
     const showAuthNotification = () => {
         const { isLoggedIn } = checkAuth();
-        const lastPrompt = localStorage.getItem('fof_last_auth_prompt');
+        const lastPrompt = localStorage.getItem('DOTTIE_last_auth_prompt');
         const now = Date.now();
 
         // Only show if not logged in and haven't prompted in the last 24 hours
         if (!isLoggedIn && (!lastPrompt || now - parseInt(lastPrompt) > 24 * 60 * 60 * 1000)) {
             setTimeout(() => {
                 window.dispatchEvent(new CustomEvent('show-auth-modal'));
-                localStorage.setItem('fof_last_auth_prompt', now.toString());
+                localStorage.setItem('DOTTIE_last_auth_prompt', now.toString());
             }, 5000); // Show after 5 seconds
         }
     };
@@ -96,5 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchGlobalData();
     showAuthNotification();
 
-    console.log("F>F Frontend Loaded");
+    console.log("D>Y Frontend Loaded");
 });
+

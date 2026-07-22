@@ -18,8 +18,8 @@ window.authLogic = () => ({
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Login failed');
 
-            localStorage.setItem('fof_token', data.token);
-            localStorage.setItem('fof_user', JSON.stringify({ name: data.name, id: data.userId }));
+            localStorage.setItem('DOTTIE_token', data.token);
+            localStorage.setItem('DOTTIE_user', JSON.stringify({ name: data.name, id: data.userId }));
             
             window.dispatchEvent(new CustomEvent('notify', { detail: { message: 'Logged in successfully', type: 'success' } }));
             setTimeout(() => window.location.href = '/index.html', 1500);
@@ -33,3 +33,4 @@ window.authLogic = () => ({
 
 window.Alpine = Alpine;
 Alpine.start();
+
