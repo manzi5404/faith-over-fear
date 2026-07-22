@@ -290,99 +290,13 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
     },
 
     renderSiteGate() {
-        const gateRootId = 'site-gate-root';
-        let existing = document.getElementById(gateRootId);
-
-        // When live: remove overlay
         if (!this.isClosedMode()) {
+            const existing = document.getElementById('site-gate-root');
             if (existing) existing.remove();
             return;
         }
-
-        // Closed: block everything and show overlay
-        if (!existing) {
-            existing = document.createElement('div');
-            existing.id = gateRootId;
-            existing.innerHTML = `
-                <div id="site-gate-overlay" style="position:fixed;inset:0;z-index:999999;background:#000;display:flex;align-items:center;justify-content:center;">
-                    <div style="width:min(920px,92vw);padding:26px 18px;display:flex;flex-direction:column;gap:16px;align-items:center;">
-                        <div style="color:#fff;font-weight:900;letter-spacing:-1px;font-size:42px;line-height:1;">F<span style="color:#fff;">></span>F</div>
-                        <div style="color:#999;text-transform:uppercase;letter-spacing:6px;font-size:10px;font-weight:700;">SITE CLOSED</div>
-
-                        <div id="site-gate-card" style="width:100%;max-width:680px;background:rgba(10,10,10,.9);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.7);padding:18px;">
-                            <div id="site-gate-image-strip" style="display:flex;gap:14px;align-items:center;white-space:nowrap;overflow:hidden;">
-                                <div id="site-gate-images" style="display:flex;gap:14px;align-items:center;animation:siteGateSlide 16s linear infinite;">
-                                </div>
-                            </div>
-                            <style>
-                                @keyframes siteGateSlide {
-                                    0% { transform: translateX(0); }
-                                    100% { transform: translateX(-50%); }
-                                }
-                            </style>
-                        </div>
-
-                        <div style="width:100%;max-width:520px;display:flex;gap:10px;align-items:center;">
-                            <input id="site-gate-email" type="email" placeholder="Enter your email" style="flex:1;min-width:0;padding:16px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#0b0b0b;color:#fff;outline:none;" />
-                            <button id="site-gate-notify" style="padding:16px 20px;border-radius:12px;border:1px solid #fff;background:#fff;color:#000;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">Notify me</button>
-                        </div>
-
-                        <div id="site-gate-status" style="color:#999;font-size:12px;min-height:18px;text-align:center;"></div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(existing);
-        }
-
-        // Populate images
-        const imgWrap = existing.querySelector('#site-gate-images');
-        if (imgWrap) {
-            const imgs = this.siteGate.images?.length ? this.siteGate.images : ['https://placehold.co/680x420/000000/FFFFFF/png?text=F%3EF'];
-            const html = imgs.map(src => `<img src="${src}" alt="model" style="width:260px;max-width:38vw;height:160px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.08);" />`).join('');
-            imgWrap.innerHTML = html + html;
-        }
-
-        // Bind submit
-        const btn = existing.querySelector('#site-gate-notify');
-        const emailInput = existing.querySelector('#site-gate-email');
-        const statusEl = existing.querySelector('#site-gate-status');
-
-        if (btn && !btn.dataset.bound) {
-            btn.dataset.bound = '1';
-            btn.addEventListener('click', async () => {
-                const email = (emailInput?.value || '').trim();
-                if (!email) {
-                    if (statusEl) statusEl.textContent = 'Please enter your email.';
-                    return;
-                }
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                    if (statusEl) statusEl.textContent = 'Enter a valid email.';
-                    return;
-                }
-
-                if (statusEl) statusEl.textContent = 'Submitting...';
-                try {
-                    const res = await fetch(`${API_BASE_URL}/api/waitlist`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            name: null,
-                            email,
-                            phone: null,
-                            source: 'site_closed'
-                        })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        if (statusEl) statusEl.textContent = 'Done! We’ll notify you when we’re live.';
-                        if (emailInput) emailInput.value = '';
-                    } else {
-                        if (statusEl) statusEl.textContent = data.error || 'Failed. Try again.';
-                    }
-                } catch {
-                    if (statusEl) statusEl.textContent = 'Failed. Try again.';
-                }
-            });
+        if (window.location.pathname !== '/closed.html') {
+            window.location.href = '/closed.html';
         }
     },
 
@@ -946,3 +860,4 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
 });
 
 export default shopLogic;
+

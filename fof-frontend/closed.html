@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faith Over Fear — Temporarily Closed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #000;
+    color: #fff;
+  }
+
+  /* ===== Slider ===== */
+  #bg-slider {
+    position: fixed; inset: 0; z-index: 0;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1.8s cubic-bezier(.4,0,.2,1);
+    will-change: transform, opacity;
+    animation: breathe 8s ease-in-out infinite;
+  }
+  .slide.active { opacity: 1; }
+  @keyframes breathe {
+    0%   { transform: scale(1) translateX(0) rotate(0deg); }
+    50%  { transform: scale(1.08) translateX(-10px) rotate(-.8deg); }
+    100% { transform: scale(1) translateX(0) rotate(0deg); }
+  }
+  #bg-overlay {
+    position: fixed; inset: 0; z-index: 1;
+    background: rgba(0,0,0,.82);
+  }
+
+  /* ===== Progress Bar ===== */
+  #progress-bar {
+    position: fixed; top: 0; left: 0; height: 2px; z-index: 10;
+    background: #fff;
+    width: 0%;
+    transition: width .05s linear;
+  }
+
+  /* ===== Noise ===== */
+  #noise {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: .04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  /* ===== Particles ===== */
+  .particle {
+    position: fixed; border-radius: 50%; background: #fff; z-index: 3; pointer-events: none; opacity: 0;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0%   { opacity: 0; transform: translateY(100vh) scale(0); }
+    10%  { opacity: .6; }
+    90%  { opacity: .6; }
+    100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+  }
+
+  /* ===== Card ===== */
+  #card {
+    position: fixed; right: 6vw; top: 50%; z-index: 5;
+    transform: translateY(-50%);
+    width: min(420px, 90vw);
+    padding: 48px 40px;
+    background: rgba(10,10,10,.55);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 24px;
+    box-shadow: 0 40px 100px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
+    opacity: 0;
+    animation: cardIn .9s .6s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(-50%) translateX(30px); }
+    to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+  }
+
+  /* ===== Logo ===== */
+  #logo {
+    font-size: 11px; font-weight: 700; letter-spacing: 5px; text-transform: uppercase;
+    color: rgba(255,255,255,.7); margin-bottom: 32px;
+    opacity: 0; animation: fadeUp .7s .3s ease forwards;
+  }
+
+  /* ===== Typography ===== */
+  h1 {
+    font-size: clamp(32px, 4.5vw, 52px);
+    font-weight: 800; line-height: 1.05; letter-spacing: -1.5px;
+    margin-bottom: 20px;
+    opacity: 0; animation: fadeUp .8s .5s ease forwards;
+  }
+  #desc {
+    font-size: 14px; line-height: 1.7; color: rgba(255,255,255,.65);
+    margin-bottom: 32px; max-width: 380px;
+    opacity: 0; animation: fadeUp .8s .7s ease forwards;
+  }
+
+  /* ===== Form ===== */
+  #email-form { display: flex; gap: 10px; opacity: 0; animation: fadeUp .8s .9s ease forwards; }
+  #email {
+    flex: 1; padding: 16px 18px; border-radius: 14px; border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06); backdrop-filter: blur(12px); color: #fff; font-size: 14px;
+    font-family: inherit; outline: none; transition: all .25s;
+  }
+  #email:focus {
+    border-color: rgba(255,255,255,.35);
+    box-shadow: 0 0 0 4px rgba(255,255,255,.06), 0 0 30px rgba(255,255,255,.08);
+  }
+  #email::placeholder { color: rgba(255,255,255,.35); }
+  #submit {
+    padding: 16px 22px; border-radius: 14px; border: 1px solid #fff;
+    background: #fff; color: #000; font-weight: 800; font-size: 12px;
+    letter-spacing: 2px; text-transform: uppercase; cursor: pointer; font-family: inherit;
+    transition: all .2s; white-space: nowrap;
+  }
+  #submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255,255,255,.2);
+  }
+  #submit:active { transform: scale(.96); }
+  #submit.success {
+    background: transparent; color: #fff; border-color: rgba(255,255,255,.3);
+    cursor: default;
+  }
+
+  /* ===== Status ===== */
+  #status {
+    margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.5); min-height: 18px;
+    opacity: 0; animation: fadeUp .8s 1.1s ease forwards;
+  }
+
+  /* ===== Footer ===== */
+  #footer {
+    position: fixed; bottom: 28px; left: 0; right: 0; z-index: 5; text-align: center;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,.25);
+    opacity: 0; animation: fadeUp .8s 1.3s ease forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Mobile ===== */
+  @media (max-width: 768px) {
+    #card {
+      right: 4vw; left: 4vw; bottom: 4vh; top: auto;
+      transform: none; width: auto;
+      padding: 36px 28px;
+      animation-name: cardInMobile;
+    }
+    @keyframes cardInMobile {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #email-form { flex-direction: column; }
+    #submit { width: 100%; }
+    #progress-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background Slider -->
+<div id="bg-slider">
+  <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=1400&q=80');"></div>
+  <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1400&q=80');"></div>
+  <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1400&q=80');"></div>
+</div>
+<div id="bg-overlay"></div>
+<div id="progress-bar"></div>
+<div id="noise"></div>
+
+<!-- Floating Glass Card -->
+<div id="card">
+  <div id="logo">Faith Over Fear</div>
+  <h1>The Store Is<br>Temporarily Closed.</h1>
+  <p id="desc">Every drop is released with intention. We're preparing the next chapter. Leave your email and we'll let you know the moment the doors reopen.</p>
+  <form id="email-form">
+    <input id="email" type="email" placeholder="Enter your email" required />
+    <button id="submit" type="submit">Notify Me</button>
+  </form>
+  <div id="status"></div>
+</div>
+
+<div id="footer">Crafted with purpose. See you soon.</div>
+
+<script>
+  (function() {
+    const slides = document.querySelectorAll('.slide');
+    const bar = document.getElementById('progress-bar');
+    const form = document.getElementById('email-form');
+    const input = document.getElementById('email');
+    const btn = document.getElementById('submit');
+    const status = document.getElementById('status');
+    const card = document.getElementById('card');
+    const overlay = document.getElementById('bg-overlay');
+    let current = 0;
+    const slideTime = 5000;
+    let progressStart = Date.now();
+
+    function nextSlide() {
+      slides[current].classList.remove('active');
+      current = (current + 1) % slides.length;
+      slides[current].classList.add('active');
+      progressStart = Date.now();
+    }
+
+    function updateProgress() {
+      const elapsed = Date.now() - progressStart;
+      const pct = Math.min((elapsed / slideTime) * 100, 100);
+      bar.style.width = pct + '%';
+      requestAnimationFrame(updateProgress);
+    }
+    setInterval(nextSlide, slideTime);
+    requestAnimationFrame(updateProgress);
+
+    // Particles
+    for (let i = 0; i < 20; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+      p.style.animationDuration = (8 + Math.random() * 12) + 's';
+      p.style.animationDelay = Math.random() * 8 + 's';
+      document.body.appendChild(p);
+    }
+
+    // Mouse parallax
+    document.addEventListener('mousemove', (e) => {
+      const x = (e.clientX / window.innerWidth - .5) * 20;
+      const y = (e.clientY / window.innerHeight - .5) * 20;
+      card.style.transform = `translateY(-50%) translate(${x * .4}px, ${y * .4}px)`;
+      overlay.style.background = `rgba(0,0,0,${.82 - Math.abs(x) * .001})`;
+    });
+
+    // Submit
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = input.value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        status.textContent = 'Please enter a valid email.';
+        status.style.color = 'rgba(255,255,255,.5)';
+        return;
+      }
+      status.textContent = 'Submitting...';
+      status.style.color = 'rgba(255,255,255,.5)';
+      try {
+        const res = await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name: null, phone: null, source: 'site_closed' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> You\'re In</span>';
+          btn.classList.add('success');
+          input.value = '';
+          status.textContent = "We'll let you know first.";
+          status.style.color = 'rgba(255,255,255,.7)';
+        } else {
+          status.textContent = data.error || 'Failed. Try again.';
+          status.style.color = 'rgba(255,255,255,.5)';
+        }
+      } catch {
+        status.textContent = 'Failed. Try again.';
+        status.style.color = 'rgba(255,255,255,.5)';
+      }
+    });
+  })();
+</script>
+</body>
+</html>
