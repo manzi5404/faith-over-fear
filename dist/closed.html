@@ -19,21 +19,14 @@
   /* ===== Slider ===== */
   #bg-slider {
     position: fixed; inset: 0; z-index: 0;
-    display: flex; align-items: center; justify-content: center;
-    padding: 80px 40px;
   }
   .slide {
-    position: absolute;
-    width: 100%; max-width: 900px;
-    aspect-ratio: 4/3;
+    position: absolute; inset: -20px;
     background-size: cover;
     background-position: center;
     opacity: 0;
     transition: opacity 1.5s cubic-bezier(.4,0,.2,1), transform 8s ease-out;
     will-change: transform, opacity;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 30px 80px rgba(0,0,0,.5);
   }
   .slide.active {
     opacity: 1;
@@ -41,13 +34,13 @@
   }
   .slide.prev {
     opacity: 0;
-    transform: scale(1.05);
+    transform: scale(1.15);
   }
   @keyframes breathe {
     0%   { transform: scale(1) translate(0, 0) rotate(0deg); }
-    25%  { transform: scale(1.03) translate(-5px, 3px) rotate(-.3deg); }
-    50%  { transform: scale(1.05) translate(3px, -5px) rotate(.3deg); }
-    75%  { transform: scale(1.02) translate(-2px, -2px) rotate(-.2deg); }
+    25%  { transform: scale(1.05) translate(-8px, 5px) rotate(-.5deg); }
+    50%  { transform: scale(1.08) translate(5px, -8px) rotate(.5deg); }
+    75%  { transform: scale(1.03) translate(-3px, -3px) rotate(-.3deg); }
     100% { transform: scale(1) translate(0, 0) rotate(0deg); }
   }
   #bg-overlay {
@@ -100,10 +93,10 @@
 
   /* ===== Card ===== */
   #card {
-    position: fixed; left: 50%; top: auto; bottom: 6vh; z-index: 5;
-    transform: translateX(-50%);
-    width: min(700px, 90vw);
-    padding: 44px 40px;
+    position: fixed; right: 6vw; top: 50%; z-index: 5;
+    transform: translateY(-50%);
+    width: min(440px, 88vw);
+    padding: 52px 44px;
     background: rgba(10,10,10,.5);
     backdrop-filter: blur(32px);
     -webkit-backdrop-filter: blur(32px);
@@ -115,8 +108,8 @@
     transition: transform .15s ease-out;
   }
   @keyframes cardIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(30px) scale(.95); }
-    to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    from { opacity: 0; transform: translateY(-50%) translateX(40px) scale(.95); }
+    to   { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
   }
 
   /* ===== Logo ===== */
@@ -211,7 +204,7 @@
 
   /* ===== Footer ===== */
   #footer {
-    position: fixed; bottom: 16px; left: 0; right: 0; z-index: 5; text-align: center;
+    position: fixed; bottom: 32px; left: 0; right: 0; z-index: 5; text-align: center;
     font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: rgba(255,255,255,.2);
     opacity: 0; animation: fadeIn .8s 1.2s ease forwards;
   }
@@ -245,9 +238,9 @@
   /* ===== Mobile ===== */
   @media (max-width: 768px) {
     #card {
-      right: 3vw; left: 3vw; bottom: 2vh; top: auto;
+      right: 3vw; left: 3vw; bottom: 3vh; top: auto;
       transform: none; width: auto;
-      padding: 32px 24px;
+      padding: 40px 28px;
       animation-name: cardInMobile;
       border-radius: 24px;
     }
@@ -258,8 +251,8 @@
     #email-form { flex-direction: column; }
     #submit { width: 100%; }
     #progress-bar { height: 2px; }
-    #slide-dots { right: 50%; transform: translateX(50%); bottom: 12px; }
-    #footer { bottom: 12px; font-size: 10px; }
+    #slide-dots { right: 50%; transform: translateX(50%); bottom: 20px; }
+    #footer { bottom: 20px; font-size: 10px; }
     h1 { font-size: clamp(28px, 7vw, 40px); }
     #desc { font-size: 13px; }
   }
@@ -402,9 +395,9 @@
 
     // Card parallax
     document.addEventListener('mousemove', (e) => {
-      const x = (e.clientX / window.innerWidth - .5) * 20;
-      const y = (e.clientY / window.innerHeight - .5) * 20;
-      card.style.transform = `translateX(calc(-50% + ${x * .2}px)) translateY(${y * .15}px)`;
+      const x = (e.clientX / window.innerWidth - .5) * 25;
+      const y = (e.clientY / window.innerHeight - .5) * 25;
+      card.style.transform = `translateY(-50%) translate(${x * .3}px, ${y * .3}px)`;
       overlay.style.background = `linear-gradient(135deg, rgba(0,0,0,${.85 - Math.abs(x) * .001}) 0%, rgba(0,0,0,${.78 - Math.abs(y) * .001}) 50%, rgba(0,0,0,${.82 - Math.abs(x) * .001}) 100%)`;
     });
 
