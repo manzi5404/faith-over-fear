@@ -107,21 +107,6 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
         this.selectedDrop = null;
     },
 
-    applyQualityDescriptions(levels) {
-        if (!Array.isArray(levels)) return levels;
-        const fallbacks = {
-            'basic': 'Standard cotton tee. Comfortable everyday fit with solid construction. Great value for regular wear.',
-            'premium': 'Upgraded heavyweight fabric. Softer feel, reinforced seams, and a structured collar. Built to last longer.',
-            'luxe': 'Premium combed cotton, ultra-soft handfeel, and precision tailoring. The highest quality construction for a premium look and feel.',
-        };
-        return levels.map(level => {
-            if (!level || level.quality_description) return level;
-            const name = (level.quality_name || '').toLowerCase();
-            const desc = fallbacks[name] || fallbacks['essential'];
-            return { ...level, quality_description: desc };
-        });
-    },
-
     animateProductReveal() {
         const g = window.gsap;
         if (!g) return;
@@ -306,8 +291,8 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             existing.innerHTML = `
                 <div id="site-gate-overlay" style="position:fixed;inset:0;z-index:999999;background:#000;display:flex;align-items:center;justify-content:center;">
                     <div style="width:min(920px,92vw);padding:26px 18px;display:flex;flex-direction:column;gap:16px;align-items:center;">
-                        <div style="color:#fff;font-weight:900;letter-spacing:-1px;font-size:42px;line-height:1;">F<span style="color:#fff;">></span>F</div>
-                        <div style="color:#999;text-transform:uppercase;letter-spacing:6px;font-size:10px;font-weight:700;">SITE CLOSED</div>
+                        <div style="color:#fff;font-weight:900;letter-spacing:-1px;font-size:42px;line-height:1;">F<span style="color:#ff3b3b;">></span>F</div>
+                        <div style="color:#ccc;text-transform:uppercase;letter-spacing:6px;font-size:10px;font-weight:700;">SITE CLOSED</div>
 
                         <div id="site-gate-card" style="width:100%;max-width:680px;background:rgba(10,10,10,.9);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.7);padding:18px;">
                             <div id="site-gate-image-strip" style="display:flex;gap:14px;align-items:center;white-space:nowrap;overflow:hidden;">
@@ -324,10 +309,10 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
 
                         <div style="width:100%;max-width:520px;display:flex;gap:10px;align-items:center;">
                             <input id="site-gate-email" type="email" placeholder="Enter your email" style="flex:1;min-width:0;padding:16px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#0b0b0b;color:#fff;outline:none;" />
-                            <button id="site-gate-notify" style="padding:16px 20px;border-radius:12px;border:1px solid #fff;background:#fff;color:#000;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">Notify me</button>
+                            <button id="site-gate-notify" style="padding:16px 20px;border-radius:12px;border:1px solid #ff3b3b;background:#ff3b3b;color:#000;font-weight:900;text-transform:uppercase;letter-spacing:2px;cursor:pointer;">Notify me</button>
                         </div>
 
-                        <div id="site-gate-status" style="color:#999;font-size:12px;min-height:18px;text-align:center;"></div>
+                        <div id="site-gate-status" style="color:#ccc;font-size:12px;min-height:18px;text-align:center;"></div>
                     </div>
                 </div>
             `;
@@ -339,6 +324,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
         if (imgWrap) {
             const imgs = this.siteGate.images?.length ? this.siteGate.images : ['https://placehold.co/680x420/000000/FFFFFF/png?text=F%3EF'];
             const html = imgs.map(src => `<img src="${src}" alt="model" style="width:260px;max-width:38vw;height:160px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.08);" />`).join('');
+            // duplicate for smooth slide loop
             imgWrap.innerHTML = html + html;
         }
 
@@ -417,11 +403,9 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
         this.selectedProduct = product;
         this.activeProduct = product;
         this.selectedSize = product.sizes && product.sizes.length > 0 ? product.sizes[0] : "M";
-        const variants = product.product_variants || product.variants || [];
-        this.selectedColor = product.colors && product.colors.length > 0 ? product.colors[0] : (variants.length > 0 ? variants[0].color : "");
-        this.qualityLevels = this.applyQualityDescriptions(product.product_quality_prices || product.quality_prices || []);
-        const defaultQlId = product.default_quality_level_id;
-        this.selectedQuality = this.qualityLevels.find(q => q.quality_level_id === defaultQlId) || (this.qualityLevels.length > 0 ? this.qualityLevels[0] : null);
+        this.selectedColor = product.colors && product.colors.length > 0 ? product.colors[0] : "";
+        this.qualityLevels = product.product_quality_prices || product.quality_prices || [];
+        this.selectedQuality = this.qualityLevels.length > 0 ? this.qualityLevels[0] : null;
     },
 
     preloadProduct(productId) {
@@ -433,9 +417,6 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             .then(data => {
                 if (data.success && data.product) {
                     const p = data.product;
-                    const variants = p.product_variants || [];
-                    const variantColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
-                    const variantSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
                     const product = {
                         ...p,
                         dropName: p.dropName || p.drop?.title || '',
@@ -445,10 +426,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
                         uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
                         images: p.images || p.image_urls || [],
                         quality_prices: p.product_quality_prices || p.quality_prices || [],
-                        status: p.status || "live",
-                        default_quality_level_id: p.default_quality_level_id,
-                        colors: variantColors.length > 0 ? variantColors : (Array.isArray(p.colors) ? p.colors : []),
-                        sizes: variantSizes.length > 0 ? variantSizes : (Array.isArray(p.sizes) ? p.sizes : [])
+                        status: p.status || "live"
                     };
                     this.cacheProducts([product]);
                 }
@@ -458,32 +436,24 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
 
     async fetchDropAndProducts() {
         try {
-            const isLookbook = document.body && document.body.dataset.page === 'lookbook';
+            const isLookbook = window.location.pathname === '/lookbook.html';
             const typeFilter = isLookbook ? 'recent-drop' : 'new-drop';
             const res = await fetch(`${API_BASE_URL}/api/drops?includeProducts=true&type=${typeFilter}`);
             const data = await res.json();
             if (data.success && Array.isArray(data.drops)) {
                 this.drops = data.drops.map(drop => {
-                    const mappedProducts = (drop.products || []).map(p => {
-                        const variants = p.product_variants || [];
-                        const variantColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
-                        const variantSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
-                        return {
-                            ...p,
-                            dropName: drop.title || drop.name || '',
-                            dropType: drop.type || 'new-drop',
-                            dropSlug: drop.slug || '',
-                            showDetails: false,
-                            uiQuantity: 1,
-                            uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
-                            images: p.images || p.image_urls || [],
-                            quality_prices: p.product_quality_prices || p.quality_prices || [],
-                            status: drop.status || "live",
-                            default_quality_level_id: p.default_quality_level_id,
-                            colors: variantColors.length > 0 ? variantColors : (Array.isArray(p.colors) ? p.colors : []),
-                            sizes: variantSizes.length > 0 ? variantSizes : (Array.isArray(p.sizes) ? p.sizes : [])
-                        };
-                    });
+                    const mappedProducts = (drop.products || []).map(p => ({
+                        ...p,
+                        dropName: drop.title || drop.name || '',
+                        dropType: drop.type || 'new-drop',
+                        dropSlug: drop.slug || '',
+                        showDetails: false,
+                        uiQuantity: 1,
+                        uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
+                        images: p.images || p.image_urls || [],
+                        quality_prices: p.product_quality_prices || p.quality_prices || [],
+                        status: drop.status || "live"
+                    }));
                     return {
                         ...drop,
                         products: mappedProducts,
@@ -519,9 +489,6 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             const data = await res.json();
             if (data.success && data.product) {
                 const p = data.product;
-                const variants = p.product_variants || [];
-                const variantColors = [...new Set(variants.map(v => v.color).filter(Boolean))];
-                const variantSizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
                 const product = {
                     ...p,
                     dropName: p.dropName || p.drop?.title || '',
@@ -531,9 +498,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
                     uiSize: p.sizes && p.sizes.length > 0 ? p.sizes[0] : "M",
                     images: p.images || p.image_urls || [],
                     quality_prices: p.product_quality_prices || p.quality_prices || [],
-                    status: p.status || "live",
-                    colors: variantColors.length > 0 ? variantColors : (Array.isArray(p.colors) ? p.colors : []),
-                    sizes: variantSizes.length > 0 ? variantSizes : (Array.isArray(p.sizes) ? p.sizes : [])
+                    status: p.status || "live"
                 };
                 this.products = [product];
                 this.cacheProducts([product]);
@@ -738,18 +703,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             }).join("\n");
         } else {
             const variant = this.variantBySizeColor(checkoutProduct, this.modalSize, this.modalColor);
-            const variantId = variant ? variant.id : null;
-
-            // Hard-fail early: backend expects non-null variantId (UUID)
-            if (!variantId) {
-                window.dispatchEvent(new CustomEvent('notify', {
-                    detail: { message: 'Select a valid size/color before paying.', type: 'error' }
-                }));
-                this.loading = false;
-                return;
-            }
-
-            orderItems = [{ variantId, quantity: parseInt(this.modalQuantity) }];
+            orderItems = [{ variantId: variant ? variant.id : null, quantity: parseInt(this.modalQuantity) }];
             const colorStr = this.modalColor ? ` / ${this.modalColor}` : '';
             itemsList = `- ${checkoutProduct.name}${colorStr} (${this.modalSize}) x${this.modalQuantity} [${this.totalPrice} FRW]`;
         }
@@ -772,28 +726,15 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
                     customer_phone: this.senderPhone
                 })
             });
-            
-            let result;
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                result = await response.json();
-            } else {
-                const text = await response.text();
-                throw new Error(`Server error (${response.status}): ${text || 'Unknown error'}`);
-            }
-            
-            if (!response.ok) {
-                throw new Error(result?.error || result?.message || `HTTP ${response.status}: ${response.statusText}`);
-            }
-            
+            const result = await response.json();
             if (result.success && result.order) {
                 createdOrderIds.push(result.order.id);
             } else if (!result.success) {
-                throw new Error(result.error || result.message || "Failed to create order");
+                throw new Error(result.message || "Failed to create order");
             }
 
             const orderIdStr = createdOrderIds.length > 0 ? createdOrderIds.join(', ') : 'N/A';
-            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
+            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
 
             window.open(`https://wa.me/250791832523?text=${encodeURIComponent(message)}`, "_blank");
 
@@ -806,24 +747,17 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
                 this.showMomoModal = false;
                 this.activeProduct = null;
             }, 500);
-            window.dispatchEvent(new CustomEvent("notify", { 
-                detail: { 
-                    message: `Order #${orderIdStr} placed successfully!`, 
-                    type: "success" 
-                } 
-            }));
+            window.dispatchEvent(new CustomEvent("notify", { detail: { message: "Order placed! Please verify your payment on WhatsApp.", type: "success" } }));
         } catch (err) {
-            console.error("Order creation failed:", err);
-            const errorMessage = err?.message || "Failed to create order";
-            const detailedError = `Order creation failed: ${errorMessage}`;
-            
-            window.dispatchEvent(new CustomEvent("notify", { 
-                detail: { message: detailedError, type: "error" } 
-            }));
+            console.error("Order creation failed, using fallback:", err);
 
-            const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.\nNote: Order creation encountered an issue. Please contact support with your order details.`;
+            const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.`;
 
             window.open(`https://wa.me/250791832523?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
+
+            window.dispatchEvent(new CustomEvent("notify", {
+                detail: { message: "Redirecting to WhatsApp for manual verification.", type: "success" }
+            }));
 
             if (isCartCheckout) {
                 this.cartItems = [];
