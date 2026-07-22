@@ -1,31 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <script>
-      (function () {
-        try {
-          var played = sessionStorage.getItem('DOTTIE_intro_played') === '1';
-          var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          if (played || reduced) document.documentElement.classList.add('DOTTIE-intro-skip');
-        } catch (e) {}
-        setTimeout(function () {
-          var el = document.getElementById('DOTTIE-intro');
-          if (el) el.remove();
-        }, 9000);
-        var apiBase = document.body && document.body.dataset && document.body.dataset.apiBaseUrl;
-        if (apiBase) window.API_BASE_URL = apiBase;
-      })();
-    </script>
+  <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DOTTIE.YZ</title>
-    <script>
-      window.location.replace('/shop.html');
-    </script>
-</head>
-<body data-api-base-url="https://dottie-yz-mqgz.onrender.com" style="background:#000;margin:0;">
-</body>
+    <meta name="description" content="Faith Over Fear - Premium streetwear drops" />
+    <title>Faith Over Fear</title>
+  </head>
+  <body>
+    <div id="root"></div>
+<script type="module" src="/src/admin/drops/main.js"></script>  </body>
 </html>
-
-
-

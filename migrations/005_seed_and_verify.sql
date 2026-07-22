@@ -12,7 +12,7 @@ ON CONFLICT DO NOTHING;
 
 -- Seed store config singleton
 INSERT INTO store_config (id, store_mode, announcement)
-VALUES (1, 'closed', 'Welcome to DOTTIE.YZ')
+VALUES (1, 'closed', 'Welcome to Faith Over Fear')
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed default settings
@@ -21,7 +21,7 @@ ON CONFLICT (key) DO NOTHING;
 
 -- Seed announcement singleton
 INSERT INTO announcements (id, title, message, button_text, is_enabled, version, status)
-VALUES (1, 'Welcome to D>Y', 'New drops are coming.', 'SHOP THE DROP', FALSE, 1, 'live')
+VALUES (1, 'Welcome to F>F', 'New drops are coming.', 'SHOP THE DROP', FALSE, 1, 'live')
 ON CONFLICT (id) DO NOTHING;
 
 COMMIT;
@@ -34,4 +34,3 @@ COMMIT;
 -- SELECT * FROM quality_levels;
 -- SELECT * FROM store_config;
 -- SELECT proname FROM pg_proc WHERE pronamespace = 'public'::regnamespace ORDER BY proname;
-

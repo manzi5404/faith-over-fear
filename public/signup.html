@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Join the Movement | D>Y</title>
+    <title>Join the Movement | F>F</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
@@ -16,17 +16,17 @@
   <link rel="modulepreload" crossorigin href="/assets/auth-BOYXTq4x.js">
   <link rel="stylesheet" crossorigin href="/assets/style-ESBS-82G.css">
 </head>
-<body class="bg-DOTTIE-black text-DOTTIE-white font-sans antialiased overflow-x-hidden min-h-screen flex items-center justify-center p-6"
+<body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden min-h-screen flex items-center justify-center p-6"
       x-data="signupLogic()">
 
     <div class="w-full max-w-md">
         <div class="text-center mb-10">
-            <a href="/shop.html" class="text-4xl font-display font-bold tracking-tighter">F<span class="text-DOTTIE-accent">&gt;</span>F</a>
-            <p class="text-gray-500 text-xs uppercase tracking-[0.3em] mt-2">DOTTIE.YZ</p>
+            <a href="/shop.html" class="text-4xl font-display font-bold tracking-tighter">F<span class="text-fof-accent">&gt;</span>F</a>
+            <p class="text-gray-500 text-xs uppercase tracking-[0.3em] mt-2">Faith Over Fear</p>
         </div>
 
-        <div class="bg-zinc-900 border border-DOTTIE-gray p-8 sm:p-10 shadow-2xl relative overflow-hidden">
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-DOTTIE-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="bg-zinc-900 border border-fof-gray p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-fof-accent/5 rounded-full blur-3xl pointer-events-none"></div>
 
             <h1 class="text-2xl font-display font-bold uppercase tracking-tight mb-8">Join the Movement</h1>
 
@@ -34,33 +34,33 @@
                 <div class="space-y-2">
                     <label class="block text-[10px] uppercase tracking-widest text-gray-400 font-bold">Full Name</label>
                     <input type="text" x-model="name" required
-                           class="w-full bg-black border border-zinc-800 p-4 text-sm focus:border-DOTTIE-accent outline-none transition-all rounded-none placeholder-gray-700"
+                           class="w-full bg-black border border-zinc-800 p-4 text-sm focus:border-fof-accent outline-none transition-all rounded-none placeholder-gray-700"
                            placeholder="Your name">
                 </div>
 
                 <div class="space-y-2">
                     <label class="block text-[10px] uppercase tracking-widest text-gray-400 font-bold">Email Address</label>
                     <input type="email" x-model="email" required
-                           class="w-full bg-black border border-zinc-800 p-4 text-sm focus:border-DOTTIE-accent outline-none transition-all rounded-none placeholder-gray-700"
+                           class="w-full bg-black border border-zinc-800 p-4 text-sm focus:border-fof-accent outline-none transition-all rounded-none placeholder-gray-700"
                            placeholder="name@example.com">
                 </div>
 
                 <div class="space-y-2">
                     <label class="block text-[10px] uppercase tracking-widest text-gray-400 font-bold">Password</label>
                     <input type="password" x-model="password" required
-                           class="w-full bg-black border border-zinc-800 p-4 text-sm focus:border-DOTTIE-accent outline-none transition-all rounded-none placeholder-gray-700"
+                           class="w-full bg-black border border-zinc-800 p-4 text-sm focus:border-fof-accent outline-none transition-all rounded-none placeholder-gray-700"
                            placeholder="Min. 8 characters">
                 </div>
 
                 <div class="space-y-2">
                     <label class="block text-[10px] uppercase tracking-widest text-gray-400 font-bold">Confirm Password</label>
                     <input type="password" x-model="confirmPassword" required
-                           class="w-full bg-black border border-zinc-800 p-4 text-sm focus:border-DOTTIE-accent outline-none transition-all rounded-none placeholder-gray-700"
+                           class="w-full bg-black border border-zinc-800 p-4 text-sm focus:border-fof-accent outline-none transition-all rounded-none placeholder-gray-700"
                            placeholder="Repeat password">
                 </div>
 
                 <button type="submit"
-                        class="w-full bg-DOTTIE-white text-black font-bold uppercase py-4 text-xs tracking-[0.2em] hover:bg-DOTTIE-accent hover:text-white transition-all transform active:scale-[0.98]"
+                        class="w-full bg-fof-white text-black font-bold uppercase py-4 text-xs tracking-[0.2em] hover:bg-fof-accent hover:text-white transition-all transform active:scale-[0.98]"
                         :disabled="loading">
                     <span x-show="!loading">Create Account</span>
                     <span x-show="loading" x-cloak>Processing...</span>
@@ -68,7 +68,7 @@
             </form>
 
             <p class="text-center text-[10px] uppercase tracking-widest text-gray-500 mt-10 font-bold">
-                Already part of the movement? <a href="/login.html" class="text-DOTTIE-accent hover:text-white transition-colors">Login</a>
+                Already part of the movement? <a href="/login.html" class="text-fof-accent hover:text-white transition-colors">Login</a>
             </p>
         </div>
     </div>
@@ -83,10 +83,9 @@
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 translate-y-2"
          class="fixed bottom-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3"
-         :class="type === 'success' ? 'bg-zinc-800 text-DOTTIE-accent border border-DOTTIE-accent/20' : 'bg-red-900/90 text-white'">
+         :class="type === 'success' ? 'bg-zinc-800 text-fof-accent border border-fof-accent/20' : 'bg-red-900/90 text-white'">
          <span x-text="message"></span>
     </div>
 
 </body>
 </html>
-

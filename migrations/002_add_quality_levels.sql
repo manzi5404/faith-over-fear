@@ -1,6 +1,6 @@
--- =========================================================
+﻿-- =========================================================
 -- Migration: Align Database with Backend Quality Level Support
--- DOTTIE.YZ E-Commerce Platform
+-- Faith Over Fear E-Commerce Platform
 --
 -- This migration updates the database schema to match the current
 -- backend source of truth. It adds quality level master data,
@@ -98,4 +98,3 @@ ALTER TABLE order_items
 -- - The backend order flow now has DB support for quality_level_id.
 -- - Quantities, size, color, and product_name fields are now aligned with createOrder().
 -- =========================================================
-

@@ -21,7 +21,7 @@
 */
 
     body {
-        @apply bg-DOTTIE-black text-DOTTIE-white;
+        @apply bg-fof-black text-fof-white;
     }
 
     [x-cloak] {
@@ -31,10 +31,10 @@
 
 @layer components {
     .btn-primary {
-        @apply px-8 py-4 bg-DOTTIE-accent text-DOTTIE-black font-bold uppercase tracking-widest hover:bg-DOTTIE-white transition-all transform hover:scale-105;
+        @apply px-8 py-4 bg-fof-accent text-fof-black font-bold uppercase tracking-widest hover:bg-fof-white transition-all transform hover:scale-105;
     }
 
-    /* Modern Header Redesign - D>Y */
+    /* Modern Header Redesign - F>F */
     .site-header {
         position: fixed;
         top: 0;
@@ -79,7 +79,7 @@
         font-size: 1.75rem;
         font-weight: 700;
         letter-spacing: -0.05em;
-        color: var(--DOTTIE-white);
+        color: var(--fof-white);
         text-decoration: none;
         transition: transform 0.3s ease;
         display: flex;
@@ -241,11 +241,11 @@
 
     /* Product Card Hover Effects */
     .product-card {
-        @apply relative overflow-hidden bg-DOTTIE-black border border-DOTTIE-gray transition-all duration-500;
+        @apply relative overflow-hidden bg-fof-black border border-fof-gray transition-all duration-500;
     }
 
     .product-card .image-container {
-        @apply relative aspect-[4/5] overflow-hidden bg-DOTTIE-dark;
+        @apply relative aspect-[4/5] overflow-hidden bg-fof-dark;
     }
 
     .product-card img {
@@ -273,7 +273,7 @@
     }
 
     .product-card-cta {
-        @apply px-6 py-3 bg-DOTTIE-white text-DOTTIE-black font-bold uppercase tracking-widest text-xs transform translate-y-4 transition-transform duration-300 hover:bg-DOTTIE-accent hover:text-white;
+        @apply px-6 py-3 bg-fof-white text-fof-black font-bold uppercase tracking-widest text-xs transform translate-y-4 transition-transform duration-300 hover:bg-fof-accent hover:text-white;
     }
 
     .product-card:hover .product-card-cta {
@@ -281,7 +281,7 @@
     }
 
     .product-card .price-tag {
-        @apply absolute bottom-4 right-4 bg-DOTTIE-black/80 backdrop-blur-md border border-DOTTIE-gray px-3 py-1 font-mono text-sm font-bold transition-opacity duration-300;
+        @apply absolute bottom-4 right-4 bg-fof-black/80 backdrop-blur-md border border-fof-gray px-3 py-1 font-mono text-sm font-bold transition-opacity duration-300;
     }
 
     .product-card:hover .price-tag {

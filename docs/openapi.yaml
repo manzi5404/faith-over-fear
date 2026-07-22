@@ -1,15 +1,15 @@
 openapi: 3.0.3
 info:
-  title: DOTTIE.YZ (D>Y) Backend API
-  description: Production-grade ecommerce backend for the D>Y drop store. Built on Supabase PostgreSQL with atomic inventory management.
+  title: Faith Over Fear (F>F) Backend API
+  description: Production-grade ecommerce backend for the F>F drop store. Built on Supabase PostgreSQL with atomic inventory management.
   version: 2.0.0
   contact:
-    name: D>Y Engineering
+    name: F>F Engineering
 
 servers:
   - url: http://localhost:3000
     description: Local development
-  - url: https://dottie-backend.onrender.com
+  - url: https://fof-backend.onrender.com
     description: Production
 
 security:
@@ -763,4 +763,3 @@ paths:
                 properties:
                   status: { type: string, example: ok }
                   timestamp: { type: string, format: date-time }
-

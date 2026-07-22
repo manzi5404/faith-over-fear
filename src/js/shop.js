@@ -2,7 +2,7 @@ const API_BASE_URL = window.API_BASE_URL || document.body?.dataset?.apiBaseUrl |
     const host = window.location.hostname;
     if (host === 'localhost') return 'http://localhost:5000';
     if (host === '127.0.0.1') return 'http://localhost:5000';
-    return 'https://dottie-backend-production.up.railway.app';
+    return 'https://fof-backend-production.up.railway.app';
 })();
 
 const shopLogic = () => ({
@@ -159,7 +159,7 @@ const shopLogic = () => ({
     },
 
     async init() {
-        this.user = JSON.parse(localStorage.getItem('DOTTIE_user') || 'null');
+        this.user = JSON.parse(localStorage.getItem('fof_user') || 'null');
         if (!this.requireLoginForProductPages()) return;
 
         this.loading = true;
@@ -197,7 +197,7 @@ const shopLogic = () => ({
     },
 
     ensureLoggedIn() {
-        const token = localStorage.getItem('DOTTIE_token');
+        const token = localStorage.getItem('fof_token');
         if (!token) {
             window.dispatchEvent(new CustomEvent('notify', {
                 detail: {
@@ -212,10 +212,10 @@ const shopLogic = () => ({
     },
 
     getSessionId() {
-        let sessionId = localStorage.getItem('DOTTIE_session_id');
+        let sessionId = localStorage.getItem('fof_session_id');
         if (!sessionId) {
             sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('DOTTIE_session_id', sessionId);
+            localStorage.setItem('fof_session_id', sessionId);
         }
         return sessionId;
     },
@@ -224,7 +224,7 @@ const shopLogic = () => ({
         const path = window.location.pathname.toLowerCase();
         const protectedPaths = ['/', '/index.html', '/shop.html', '/product.html', '/lookbook.html'];
         if (protectedPaths.some(p => path === p || path.startsWith(p))) {
-            const token = localStorage.getItem('DOTTIE_token');
+            const token = localStorage.getItem('fof_token');
             if (!token) {
                 window.location.href = '/login.html';
                 return false;
@@ -354,7 +354,7 @@ const shopLogic = () => ({
         this.paymentModalOpen = true;
     },
 
-    initCart() { this.cartItems = JSON.parse(localStorage.getItem("DOTTIE_cart")) || []; },
+    initCart() { this.cartItems = JSON.parse(localStorage.getItem("fof_cart")) || []; },
 
     openMomoQuickPay(product, qty = 1, size = "M", color = null, qualityLevel = null) {
         if (this.storeSettings.purchasingDisabled) {
@@ -405,7 +405,7 @@ const shopLogic = () => ({
     get grandTotal() { return this.cartTotalRaw.toFixed(2); },
 
     persistCart() {
-        localStorage.setItem("DOTTIE_cart", JSON.stringify(this.cartItems));
+        localStorage.setItem("fof_cart", JSON.stringify(this.cartItems));
         window.dispatchEvent(new CustomEvent("cart-updated"));
     },
 
@@ -458,7 +458,7 @@ const shopLogic = () => ({
 
         this.loading = true;
 
-        const token = localStorage.getItem('DOTTIE_token');
+        const token = localStorage.getItem('fof_token');
         const sessionId = this.getSessionId();
 
         // Prepare WhatsApp message components
@@ -543,7 +543,7 @@ const shopLogic = () => ({
             }
 
             const orderIdStr = createdOrderIds.length > 0 ? createdOrderIds.join(', ') : 'N/A';
-            const message = `D>Y PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
+            const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
 
             window.open(`https://wa.me/250791832523?text=${encodeURIComponent(message)}`, "_blank");
 
@@ -571,7 +571,7 @@ const shopLogic = () => ({
                 detail: { message: detailedError, type: "error" } 
             }));
 
-            const fallbackMessage = `D>Y PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.\nNote: Order creation encountered an issue. Please contact support with your order details.`;
+            const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.\nNote: Order creation encountered an issue. Please contact support with your order details.`;
 
             window.open(`https://wa.me/250791832523?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
 
@@ -666,8 +666,8 @@ const shopLogic = () => ({
 
         this.loading = true;
 
-        const user = JSON.parse(localStorage.getItem('DOTTIE_user'));
-        const token = localStorage.getItem('DOTTIE_token');
+        const user = JSON.parse(localStorage.getItem('fof_user'));
+        const token = localStorage.getItem('fof_token');
         const payload = {
             ...this.reservationData,
             productId: this.selectedProduct.id,
@@ -714,4 +714,3 @@ const shopLogic = () => ({
 });
 
 export default shopLogic;
-

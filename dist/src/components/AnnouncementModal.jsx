@@ -25,7 +25,7 @@ const AnnouncementModal = () => {
                 const isCheckoutPath = window.location.pathname.includes('checkout') || window.location.pathname.includes('cart');
                 if (isCheckoutPath) return;
 
-                const savedVersion = localStorage.getItem('DOTTIE_announcement_version');
+                const savedVersion = localStorage.getItem('fof_announcement_version');
                 const response = await axios.get('/api/announcement');
                 const data = response.data;
 
@@ -67,7 +67,7 @@ const AnnouncementModal = () => {
     const handleDismiss = () => {
         setIsVisible(false);
         if (announcement) {
-            localStorage.setItem('DOTTIE_announcement_version', announcement.version.toString());
+            localStorage.setItem('fof_announcement_version', announcement.version.toString());
         }
     };
 
@@ -163,4 +163,3 @@ const AnnouncementModal = () => {
 };
 
 export default AnnouncementModal;
-

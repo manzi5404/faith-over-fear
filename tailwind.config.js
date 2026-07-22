@@ -7,15 +7,11 @@ export default {
     theme: {
         extend: {
             colors: {
-                'DOTTIE-black': '#000000',
-                'DOTTIE-dark': '#0a0a0a',
-                'DOTTIE-gray': '#1a1a1a',
-                'DOTTIE-accent': '#60a5fa',
-                'DOTTIE-white': '#f5f5f5',
-                'DOTTIE-blue': '#60a5fa',
-                'DOTTIE-blue-hover': '#3b82f6',
-                'DOTTIE-green': '#4b5320',
-                'DOTTIE-green-hover': '#3d4219',
+                'fof-black': '#050505',
+                'fof-dark': '#0a0a0a',
+                'fof-gray': '#1a1a1a',
+                'fof-accent': '#ff3b3b', // Bold Red for streetwear vibe
+                'fof-white': '#f5f5f5',
             },
             fontFamily: {
                 sans: ['Inter', 'sans-serif'], // We will import Inter in CSS
@@ -40,4 +36,3 @@ export default {
     },
     plugins: [],
 }
-
