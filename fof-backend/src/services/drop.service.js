@@ -288,6 +288,8 @@ async function updateDrop(id, data) {
         delete normalizedProduct.uploading;
         delete normalizedProduct.quality_prices;
         delete normalizedProduct.colorsInput;
+        delete normalizedProduct.default_quality_level;
+        delete normalizedProduct.is_active;
         await productRepo.update(product.id, normalizedProduct);
         await createQualityPrices(product.id, product.quality_prices);
         await syncProductVariants(product.id, normalizedProduct.colors, normalizedProduct.sizes, product.quantity);
@@ -321,6 +323,8 @@ async function updateDrop(id, data) {
         delete normalizedProduct.uploading;
         delete normalizedProduct.quality_prices;
         delete normalizedProduct.colorsInput;
+        delete normalizedProduct.default_quality_level;
+        delete normalizedProduct.is_active;
         const newProduct = await productRepo.create(normalizedProduct);
         await createQualityPrices(newProduct.id, product.quality_prices);
         await syncProductVariants(newProduct.id, normalizedProduct.colors, normalizedProduct.sizes, product.quantity);
