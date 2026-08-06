@@ -9,7 +9,7 @@ async function createProduct(product) {
     await client.query('BEGIN');
 
     const result = await client.query(
-      'INSERT INTO products (drop_id, name, description, price, sizes, colors, image_urls, is_active) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+      'INSERT INTO products (drop_id, name, description, price, sizes, colors, image_urls, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
       [
         drop_id,
         name,
@@ -18,7 +18,7 @@ async function createProduct(product) {
         JSON.stringify(sizes || []),
         JSON.stringify(colors || []),
         JSON.stringify(image_urls || []),
-        is_active ? 1 : 0
+        is_active ? 'active' : 'draft'
       ]
     );
 
@@ -62,7 +62,8 @@ async function getProductsByDropId(dropId) {
     ...row,
     sizes: safeParseJSON(row.sizes) || [],
     colors: safeParseJSON(row.colors) || [],
-    image_urls: safeParseJSON(row.image_urls) || []
+    image_urls: safeParseJSON(row.image_urls) || [],
+    is_active: row.status === 'active' ? 1 : 0
   }));
 
   const productIds = products.map(p => p.id);
@@ -82,7 +83,8 @@ async function getProductById(id) {
     ...row,
     sizes: safeParseJSON(row.sizes) || [],
     colors: safeParseJSON(row.colors) || [],
-    image_urls: safeParseJSON(row.image_urls) || []
+    image_urls: safeParseJSON(row.image_urls) || [],
+    is_active: row.status === 'active' ? 1 : 0
   };
 
   const qualityPrices = await qualityPriceService.getQualityPricesByProductId(id);
@@ -97,7 +99,8 @@ async function getAllProducts() {
     ...row,
     sizes: safeParseJSON(row.sizes) || [],
     colors: safeParseJSON(row.colors) || [],
-    image_urls: safeParseJSON(row.image_urls) || []
+    image_urls: safeParseJSON(row.image_urls) || [],
+    is_active: row.status === 'active' ? 1 : 0
   }));
 
   const productIds = products.map(p => p.id);
@@ -117,7 +120,7 @@ async function updateProduct(id, product) {
     await client.query('BEGIN');
 
     await client.query(
-      'UPDATE products SET name = $1, description = $2, price = $3, sizes = $4, colors = $5, image_urls = $6, is_active = $7 WHERE id = $8',
+      'UPDATE products SET name = $1, description = $2, price = $3, sizes = $4, colors = $5, image_urls = $6, status = $7 WHERE id = $8',
       [
         name,
         description,
@@ -125,7 +128,7 @@ async function updateProduct(id, product) {
         JSON.stringify(sizes || []),
         JSON.stringify(colors || []),
         JSON.stringify(image_urls || []),
-        is_active ? 1 : 0,
+        is_active ? 'active' : 'draft',
         id
       ]
     );

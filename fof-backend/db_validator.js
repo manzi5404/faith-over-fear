@@ -4,7 +4,7 @@ require('dotenv').config();
 const expectedSchema = {
     users: ['id', 'email', 'password_hash', 'name', 'google_id', 'created_at'],
     drops: ['id', 'title', 'description', 'image_url', 'release_date', 'status', 'created_at'],
-    products: ['id', 'drop_id', 'name', 'description', 'price', 'sizes', 'colors', 'image_urls', 'is_active', 'created_at'],
+    products: ['id', 'drop_id', 'name', 'description', 'price', 'sizes', 'colors', 'image_urls', 'status', 'created_at'],
     reservations: ['id', 'user_id', 'full_name', 'email', 'phone', 'product_id', 'size', 'quantity', 'status', 'store_mode'],
     orders: ['id', 'user_id', 'product_id', 'product_name', 'total_price', 'status', 'payment_method'],
     announcements: ['id', 'title', 'message', 'image_url', 'is_enabled', 'status'],
