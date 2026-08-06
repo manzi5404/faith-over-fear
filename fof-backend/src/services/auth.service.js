@@ -1,4 +1,4 @@
-const { supabase } = require('../config/supabase');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const userRepo = require('../repositories/user.repository');
 const { AuthError, ValidationError, ConflictError } = require('../utils/errors');
 const { isAdminEmail } = require('../utils/env');
@@ -75,6 +75,19 @@ async function login(email, password) {
   const existingUser = await userRepo.findByEmail(email);
   if (!existingUser) {
     throw new AuthError('Incorrect email/username');
+  }
+
+  // Admins sign in instantly: auto-confirm the email so Supabase never
+  // returns an "email not confirmed" error and never sends a
+  // confirmation/magic-link email.
+  if (isAdminEmail(email)) {
+    try {
+      await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+        email_confirm: true,
+      });
+    } catch (confirmErr) {
+      logError(confirmErr, { context: 'admin auto-confirm', email });
+    }
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({

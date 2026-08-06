@@ -257,6 +257,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             this.siteGate.images = Array.isArray(imgs) ? imgs : [];
 
             this.renderSiteGate();
+            if (this.isClosedMode()) return;
 
         } catch (e) {
             console.warn('[SITE_GATE] settings fetch failed, defaulting to live', e);
