@@ -8,4 +8,4 @@ node_modules/
 
 # Temp admin build copy
 fof-frontend/src/admin/drops
-" "dist/admin/  
+dist/admin/
