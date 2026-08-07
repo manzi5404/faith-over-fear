@@ -25,14 +25,27 @@
           v-model="productData.price_category_id"
           class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
         >
-          <option :value="null">Select Price Category</option>
+          <option :value="null">No Category (use custom price)</option>
           <option v-for="cat in priceCategories" :key="cat.id" :value="cat.id">
             {{ cat.name }} — {{ Number(cat.price).toLocaleString() }} FRW
           </option>
         </select>
-        <p class="text-[10px] text-slate-500">Selecting a category sets the product base price automatically.</p>
+        <p class="text-[10px] text-slate-500">Selecting a category sets the product price automatically.</p>
       </div>
     </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-400">Custom Price (FRW)</label>
+        <input 
+          type="number"
+          step="0.01"
+          v-model="productData.price"
+          class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+          placeholder="0.00"
+        />
+        <p class="text-[10px] text-slate-500">Used when no price category is selected.</p>
+      </div>
 
     <div class="space-y-3">
       <label class="text-sm font-medium text-slate-400">Default Quality Level</label>
@@ -216,11 +229,10 @@ onMounted(() => {
 
 const handleSave = () => {
   errors.name = !productData.name ? 'Required' : '';
-  const hasCategory = !!productData.price_category_id;
-  const essentialQp = qualityPrices.value.find(q => q.quality_level_id === 1);
-  const effectivePrice = hasCategory
-    ? (priceCategories.value.find(c => c.id === productData.price_category_id)?.price || 0)
-    : (essentialQp?.price || productData.price || 0);
+  const customPrice = parseFloat(productData.price);
+  const hasCustomPrice = !isNaN(customPrice) && customPrice > 0;
+  const categoryPrice = priceCategories.value.find(c => c.id === productData.price_category_id)?.price;
+  const effectivePrice = hasCustomPrice ? customPrice : (categoryPrice || 0);
   errors.price = effectivePrice <= 0 ? 'Invalid' : '';
   
   if (errors.name || errors.price) return;

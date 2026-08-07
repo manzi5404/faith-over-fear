@@ -75,11 +75,11 @@ async function createProduct(data) {
 
   let price = null;
 
-  if (data.price_category_id) {
+  if (data.price && Number(data.price) > 0) {
+    price = Number(data.price);
+  } else if (data.price_category_id) {
     const category = await priceCategoryService.getPriceCategoryById(data.price_category_id);
     price = Number(category.price);
-  } else if (data.price && Number(data.price) > 0) {
-    price = Number(data.price);
   } else {
     throw new ValidationError('A price category or price is required');
   }
@@ -156,7 +156,9 @@ async function updateProduct(id, data) {
     }
   }
 
-  if (data.price_category_id && !data.price) {
+  if (data.price && !data.price_category_id) {
+    updateData.price = Number(data.price);
+  } else if (data.price_category_id && !data.price) {
     const category = await priceCategoryService.getPriceCategoryById(data.price_category_id);
     updateData.price = Number(category.price);
   }

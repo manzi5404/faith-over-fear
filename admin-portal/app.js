@@ -265,7 +265,8 @@ const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) =>
     images: "", 
     isActive: true,
     quality_prices: [],
-    price_category_id: ""
+    price_category_id: "",
+    price: ""
   });
   const [editingId, setEditingId] = useState(null);
 
@@ -281,7 +282,8 @@ const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) =>
       images: "", 
       isActive: true,
       quality_prices: [],
-      price_category_id: ""
+      price_category_id: "",
+      price: ""
     });
     setEditingId(null);
   };
@@ -296,13 +298,18 @@ const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) =>
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!form.price_category_id) {
-      onToast("Please select a price category");
+    const selectedCategory = (priceCategories || []).find(c => c.id === parseInt(form.price_category_id));
+    const categoryPrice = selectedCategory ? Number(selectedCategory.price) : 0;
+    const customPrice = parseFloat(form.price) || 0;
+    const finalPrice = categoryPrice || customPrice;
+    if (finalPrice <= 0) {
+      onToast("Select a price category or enter a custom price");
       return;
     }
     const payload = {
       name: form.name,
       price_category_id: form.price_category_id ? parseInt(form.price_category_id) : null,
+      price: finalPrice,
       sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()).filter(Boolean) : [],
       image_urls: form.images ? form.images.split(",").map((s) => s.trim()).filter(Boolean) : [],
       is_active: form.isActive ? 1 : 0,
@@ -336,7 +343,8 @@ const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) =>
       images: (product.image_urls || product.images || []).join(", "),
       isActive: product.isActive !== false && product.is_active !== 0,
       quality_prices: existingPrices,
-      price_category_id: categoryId
+      price_category_id: categoryId,
+      price: product.price || ""
     });
   };
 
@@ -377,11 +385,20 @@ const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) =>
           value={form.price_category_id}
           onChange={(event) => setForm({ ...form, price_category_id: event.target.value })}
         >
-          <option value="">Select Price Category</option>
+          <option value="">No Category (use custom price)</option>
           {(priceCategories || []).map(cat => (
             <option key={cat.id} value={cat.id}>{cat.name} — {Number(cat.price).toLocaleString()} FRW</option>
           ))}
         </select>
+        <input
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          placeholder="Custom Price (FRW) — used if no category selected"
+          type="number"
+          step="0.01"
+          min="0"
+          value={form.price}
+          onChange={(event) => setForm({ ...form, price: event.target.value })}
+        />
         <input
           className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
           placeholder="Sizes (S, M, L)"

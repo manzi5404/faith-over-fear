@@ -169,11 +169,23 @@
                   v-model="product.price_category_id"
                   class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 >
-                  <option :value="null">Select Price Category</option>
+                  <option :value="null">No Category (use custom price)</option>
                   <option v-for="cat in priceCategories" :key="cat.id" :value="cat.id">
                     {{ cat.name }} — {{ Number(cat.price).toLocaleString() }} FRW
                   </option>
                 </select>
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-xs font-medium text-slate-400">Custom Price (FRW)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  v-model="product.price"
+                  class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  placeholder="0.00"
+                />
+                <p class="text-[10px] text-slate-500">Used when no price category is selected.</p>
               </div>
 
               <div class="space-y-2 md:col-span-2">

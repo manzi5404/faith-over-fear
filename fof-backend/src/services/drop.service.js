@@ -27,12 +27,12 @@ function normalizeStatus(status) {
 }
 
 async function resolveBasePrice(product) {
+  if (product.price && Number(product.price) > 0) {
+    return Number(product.price);
+  }
   if (product.price_category_id) {
     const category = await priceCategoryService.getPriceCategoryById(product.price_category_id);
     return Number(category.price);
-  }
-  if (product.price && Number(product.price) > 0) {
-    return Number(product.price);
   }
   return 0;
 }
