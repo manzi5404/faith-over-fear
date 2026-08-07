@@ -86,12 +86,17 @@ const productLogic = () => ({
             'premium': 'Upgraded heavyweight fabric. Softer feel, reinforced seams, and a structured collar. Built to last longer.',
             'luxe': 'Premium combed cotton, ultra-soft handfeel, and precision tailoring. The highest quality construction for a premium look and feel.',
         };
-        return levels.map(level => {
-            if (!level || level.quality_description) return level;
-            const name = (level.quality_name || '').toLowerCase();
-            const desc = fallbacks[name] || fallbacks['premium'];
-            return { ...level, quality_description: desc };
-        });
+        return levels
+            .filter(level => {
+                const name = (level.quality_name || '').toLowerCase();
+                return name !== 'basic';
+            })
+            .map(level => {
+                if (!level || level.quality_description) return level;
+                const name = (level.quality_name || '').toLowerCase();
+                const desc = fallbacks[name] || fallbacks['premium'];
+                return { ...level, quality_description: desc };
+            });
     },
 
     loadProductData(id, products) {

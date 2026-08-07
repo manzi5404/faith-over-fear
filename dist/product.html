@@ -27,9 +27,9 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/module.esm-BjLr86Y6.js"></script>
-  <script type="module" crossorigin src="/assets/main-Ck4ih9Ib.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/module-MNjAsbSV.css">
+  <script type="module" crossorigin src="/assets/module.esm-K4udmkza.js"></script>
+  <script type="module" crossorigin src="/assets/main-DggBp5Rx.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/module-Bt-1f2TP.css">
 </head>
 <body class="bg-fof-black text-fof-white font-sans antialiased overflow-x-hidden" 
       x-data="shopLogic()"
@@ -150,8 +150,8 @@
                             <span class="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-500 mb-4 block">Select Color</span>
                             <div class="flex flex-wrap gap-3">
                                 <template x-for="color in product.colors">
-                                    <button class="px-6 py-3 border text-xs font-bold uppercase tracking-widest transition-all"
-                                            :class="selectedColor === color ? 'border-fof-accent bg-fof-accent text-white' : 'border-zinc-600 bg-zinc-800 text-white hover:border-white hover:bg-zinc-700'"
+                                    <button class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-[10px] font-bold uppercase tracking-wider transition-all"
+                                            :class="selectedColor === color ? 'border-fof-accent bg-fof-accent text-white shadow-lg shadow-fof-accent/30' : 'border-zinc-600 bg-zinc-800 text-white hover:border-white'"
                                             @click="selectedColor = color"
                                             x-text="color"></button>
                                 </template>
