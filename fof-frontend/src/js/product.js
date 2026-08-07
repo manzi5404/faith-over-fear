@@ -137,6 +137,7 @@ const productLogic = () => ({
         if (this.selectedQuality && this.selectedQuality.price != null) return parseFloat(this.selectedQuality.price);
         const qualityPrices = this.product.product_quality_prices || this.product.quality_prices || [];
         if (qualityPrices.length > 0) return parseFloat(qualityPrices[0].price || this.product.price || 0);
+        if (this.product.price_categories && this.product.price_categories.price != null) return parseFloat(this.product.price_categories.price);
         return parseFloat(this.product.base_price || this.product.price || 0);
     },
 

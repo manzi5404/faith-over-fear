@@ -2,6 +2,7 @@ const dropRepo = require('../repositories/drop.repository');
 const productRepo = require('../repositories/product.repository');
 const variantRepo = require('../repositories/variant.repository');
 const qualityPriceRepo = require('../repositories/quality-price.repository');
+const priceCategoryService = require('./price-category.service');
 const { supabaseAdmin } = require('../config/supabaseAdmin');
 const { events } = require('../events');
 const { NotFoundError, ConflictError, ValidationError } = require('../utils/errors');
@@ -22,6 +23,20 @@ function normalizeStatus(status) {
   if (normalized === 'draft') return 'upcoming';
   if (normalized === 'closed') return 'upcoming';
   return 'upcoming';
+}
+
+async function resolveBasePrice(product) {
+  if (product.price_category_id) {
+    const category = await priceCategoryService.getPriceCategoryById(product.price_category_id);
+    return Number(category.price);
+  }
+  if (product.base_price && Number(product.base_price) > 0) {
+    return Number(product.base_price);
+  }
+  if (product.price && Number(product.price) > 0) {
+    return Number(product.price);
+  }
+  return 0;
 }
 
 async function createQualityPrices(productId, qualityPrices) {
@@ -151,6 +166,7 @@ async function createDrop(data) {
     hero_video: data.hero_video || null,
     hero_image: data.hero_image || null,
     image_url: data.image_url || null,
+    video_url: data.video_url || null,
     release_date: data.release_date || new Date().toISOString(),
     close_date: data.close_date || null,
     status: data.status ? normalizeStatus(data.status) : (data.type === 'new-drop' || data.type === 'recent-drop' ? 'live' : 'upcoming'),
@@ -189,7 +205,15 @@ async function createDrop(data) {
         colors: Array.isArray(product.colors) ? product.colors : [],
         image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
         default_quality_level_id: defaultQualityLevelId,
+        price_category_id: product.price_category_id || null,
       };
+
+      let productPrice = parseFloat(product.price) || 0;
+      if (product.price_category_id && !productPrice) {
+        const category = await priceCategoryService.getPriceCategoryById(product.price_category_id);
+        productPrice = Number(category.price);
+      }
+
       delete normalizedProduct.size;
       delete normalizedProduct.image_url;
       delete normalizedProduct.title;
@@ -197,7 +221,10 @@ async function createDrop(data) {
       delete normalizedProduct.uploading;
       delete normalizedProduct.quality_prices;
       delete normalizedProduct.colorsInput;
-      const createdProduct = await productRepo.create(normalizedProduct);
+      const createdProduct = await productRepo.create({
+        ...normalizedProduct,
+        base_price: productPrice || normalizedProduct.base_price || 0,
+      });
 
       await createQualityPrices(createdProduct.id, product.quality_prices);
       await syncProductVariants(createdProduct.id, normalizedProduct.colors, normalizedProduct.sizes, product.quantity);
@@ -229,7 +256,7 @@ async function updateDrop(id, data) {
 
   const allowedFields = [
     'title', 'slug', 'description', 'theme_scripture',
-    'hero_video', 'hero_image', 'image_url',
+    'hero_video', 'hero_image', 'image_url', 'video_url',
     'release_date', 'close_date', 'status', 'type',
   ];
 
@@ -275,7 +302,6 @@ async function updateDrop(id, data) {
         const normalizedProduct = {
           name: product.name || product.title || 'Untitled Product',
           description: product.description || null,
-          price: parseFloat(product.price) || 0,
           slug,
           status: data.status || updateData.status || existing.status,
           sizes: Array.isArray(product.sizes) ? product.sizes : [],
@@ -283,14 +309,16 @@ async function updateDrop(id, data) {
           image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
           quantity: parseInt(product.quantity) || 1,
           default_quality_level_id: (() => { const ql = (product.default_quality_level || 'basic').toLowerCase(); const map = { basic: 1, premium: 2, luxe: 3 }; return map[ql] || 1; })(),
+          price_category_id: product.price_category_id || null,
         };
+        const resolvedBasePrice = await resolveBasePrice(product);
         delete normalizedProduct.tempId;
         delete normalizedProduct.uploading;
         delete normalizedProduct.quality_prices;
         delete normalizedProduct.colorsInput;
         delete normalizedProduct.default_quality_level;
         delete normalizedProduct.is_active;
-        await productRepo.update(product.id, normalizedProduct);
+        await productRepo.update(product.id, { ...normalizedProduct, base_price: resolvedBasePrice });
         await createQualityPrices(product.id, product.quality_prices);
         await syncProductVariants(product.id, normalizedProduct.colors, normalizedProduct.sizes, product.quantity);
       } else {
@@ -315,7 +343,9 @@ async function updateDrop(id, data) {
           image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
           quantity: parseInt(product.quantity) || 1,
           default_quality_level_id: (() => { const ql = (product.default_quality_level || 'basic').toLowerCase(); const map = { basic: 1, premium: 2, luxe: 3 }; return map[ql] || 1; })(),
+          price_category_id: product.price_category_id || null,
         };
+        const resolvedBasePrice = await resolveBasePrice(product);
         delete normalizedProduct.size;
         delete normalizedProduct.image_url;
         delete normalizedProduct.title;
@@ -325,7 +355,7 @@ async function updateDrop(id, data) {
         delete normalizedProduct.colorsInput;
         delete normalizedProduct.default_quality_level;
         delete normalizedProduct.is_active;
-        const newProduct = await productRepo.create(normalizedProduct);
+        const newProduct = await productRepo.create({ ...normalizedProduct, base_price: resolvedBasePrice });
         await createQualityPrices(newProduct.id, product.quality_prices);
         await syncProductVariants(newProduct.id, normalizedProduct.colors, normalizedProduct.sizes, product.quantity);
       }

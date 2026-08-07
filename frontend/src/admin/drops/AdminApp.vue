@@ -206,6 +206,7 @@
           <AdminDropForm 
             mode="collection"
             :initialData="editingDrop" 
+            :priceCategories="priceCategories"
             @submit="handleCollectionFormSubmit" 
             @cancel="showForm = false" 
           />
@@ -215,6 +216,7 @@
           <AdminDropForm 
             mode="drop"
             :initialData="editingDrop" 
+            :priceCategories="priceCategories"
             @submit="handleFormSubmit" 
             @cancel="showForm = false" 
           />
@@ -291,6 +293,7 @@ const collections = ref([]);
 const showForm = ref(false);
 const editingDrop = ref(null);
 const notifications = ref([]);
+const priceCategories = ref([]);
 
 const isAuthenticated = ref(false);
 const isLoggingIn = ref(false);
@@ -311,10 +314,22 @@ const checkAuth = async () => {
             await fetchDrops();
             await fetchCollections();
             await fetchNotifications();
+            await fetchPriceCategories();
         }
     } catch (error) {
         isAuthenticated.value = false;
         user.value = null;
+    }
+};
+
+const fetchPriceCategories = async () => {
+    try {
+        const response = await axios.get('/api/price-categories');
+        if (response.data.success) {
+            priceCategories.value = response.data.priceCategories || [];
+        }
+    } catch (error) {
+        console.error('Error fetching price categories:', error);
     }
 };
 

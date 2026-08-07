@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS reservations CASCADE;
 DROP TABLE IF EXISTS waitlist CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS price_categories CASCADE;
 DROP TABLE IF EXISTS quality_levels CASCADE;
 DROP TABLE IF EXISTS drops CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -98,6 +99,7 @@ CREATE TABLE drops (
     title           VARCHAR(255) NOT NULL,
     description     TEXT,
     image_url       VARCHAR(512),
+    video_url       VARCHAR(512),
     release_date    TIMESTAMPTZ,
     status          drop_status_type NOT NULL DEFAULT 'upcoming',
     type            drop_type_type NOT NULL DEFAULT 'new-drop',
@@ -113,7 +115,31 @@ CREATE INDEX idx_drops_type ON drops (type);
 -- stock: added by migration, never used in any code
 
 -- ============================================================
--- 5. QUALITY_LEVELS
+-- 5. PRICE_CATEGORIES
+-- ============================================================
+
+CREATE TABLE price_categories (
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    price       NUMERIC(15, 2) NOT NULL,
+    sort_order  INTEGER NOT NULL DEFAULT 0,
+    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_price_categories_active ON price_categories (is_active) WHERE is_active = TRUE;
+CREATE INDEX idx_price_categories_sort ON price_categories (sort_order);
+
+-- Seed defaults
+INSERT INTO price_categories (name, price, sort_order, is_active) VALUES
+    ('Standard', 15000, 1, TRUE),
+    ('Premium', 25000, 2, TRUE),
+    ('Luxe', 40000, 3, TRUE)
+ON CONFLICT DO NOTHING;
+
+-- ============================================================
+-- 6. QUALITY_LEVELS
 -- ============================================================
 
 CREATE TABLE quality_levels (
@@ -146,6 +172,7 @@ CREATE TABLE products (
     name            VARCHAR(255) NOT NULL,
     description     TEXT,
     price           NUMERIC(15, 2) NOT NULL,
+    price_category_id BIGINT,
     sizes           JSONB,
     colors          JSONB,
     image_urls      JSONB,
@@ -154,7 +181,9 @@ CREATE TABLE products (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_products_drop
-        FOREIGN KEY (drop_id) REFERENCES drops(id) ON DELETE SET NULL
+        FOREIGN KEY (drop_id) REFERENCES drops(id) ON DELETE SET NULL,
+    CONSTRAINT fk_products_price_category
+        FOREIGN KEY (price_category_id) REFERENCES price_categories(id) ON DELETE SET NULL
 );
 
 CREATE INDEX idx_products_drop ON products (drop_id);
@@ -465,6 +494,10 @@ CREATE TRIGGER trg_drops_updated_at
 
 CREATE TRIGGER trg_quality_levels_updated_at
     BEFORE UPDATE ON quality_levels
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER trg_price_categories_updated_at
+    BEFORE UPDATE ON price_categories
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_products_updated_at

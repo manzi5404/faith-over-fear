@@ -134,7 +134,129 @@ const useFetch = (fetcher, deps = []) => {
   return { data, loading, error, reload: run };
 };
 
-const ProductsSection = ({ onToast }) => {
+const PriceCategoriesSection = ({ onToast }) => {
+  const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/price-categories"), []);
+  const [form, setForm] = useState({ name: "", price: "", sort_order: 0, is_active: true });
+  const [editingId, setEditingId] = useState(null);
+
+  const resetForm = () => {
+    setForm({ name: "", price: "", sort_order: 0, is_active: true });
+    setEditingId(null);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const payload = {
+      name: form.name,
+      price: parseFloat(form.price),
+      sort_order: parseInt(form.sort_order) || 0,
+      is_active: form.is_active
+    };
+    try {
+      if (editingId) {
+        await api.put(`/api/admin/price-categories/${editingId}`, payload);
+        onToast("Price category updated");
+      } else {
+        await api.post("/api/admin/price-categories", payload);
+        onToast("Price category created");
+      }
+      resetForm();
+      reload();
+    } catch (err) {
+      onToast(err.response?.data?.message || "Failed to save price category");
+    }
+  };
+
+  const handleEdit = (cat) => {
+    setEditingId(cat.id);
+    setForm({
+      name: cat.name || "",
+      price: cat.price || "",
+      sort_order: cat.sort_order || 0,
+      is_active: cat.is_active !== false
+    });
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this price category? Products using it will lose their category.")) return;
+    try {
+      await api.delete(`/api/admin/price-categories/${id}`);
+      onToast("Price category deleted");
+      reload();
+    } catch (err) {
+      onToast(err.response?.data?.message || "Delete failed");
+    }
+  };
+
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Price Categories</h3>
+        <button onClick={resetForm} className="text-xs uppercase text-slate-300">Clear</button>
+      </div>
+      <form onSubmit={handleSubmit} className="grid gap-3 md:grid-cols-4">
+        <input
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          placeholder="Category Name"
+          value={form.name}
+          onChange={(event) => setForm({ ...form, name: event.target.value })}
+          required
+        />
+        <input
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          placeholder="Price (FRW)"
+          type="number"
+          step="0.01"
+          min="0"
+          value={form.price}
+          onChange={(event) => setForm({ ...form, price: event.target.value })}
+          required
+        />
+        <input
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          placeholder="Sort Order"
+          type="number"
+          value={form.sort_order}
+          onChange={(event) => setForm({ ...form, sort_order: event.target.value })}
+        />
+        <label className="flex items-center gap-2 text-sm text-slate-300">
+          <input
+            type="checkbox"
+            checked={form.is_active}
+            onChange={(event) => setForm({ ...form, is_active: event.target.checked })}
+          />
+          Active
+        </label>
+        <button className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-900 md:col-span-4">
+          {editingId ? "Update Category" : "Add Category"}
+        </button>
+      </form>
+      {loading && <p className="mt-4 text-sm text-slate-400">Loading...</p>}
+      {error && <p className="mt-4 text-sm text-rose-400">{error}</p>}
+      <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {(data?.priceCategories || []).map((cat) => (
+          <div key={cat.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold">{cat.name}</p>
+                <p className="text-xs text-slate-400">{Number(cat.price).toLocaleString()} FRW</p>
+              </div>
+              <span className={`text-xs ${cat.is_active ? "text-emerald-400" : "text-rose-400"}`}>
+                {cat.is_active ? "Active" : "Inactive"}
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              <button onClick={() => handleEdit(cat)} className="rounded bg-slate-800 px-2 py-1">Edit</button>
+              <button onClick={() => handleDelete(cat.id)} className="rounded bg-rose-600 px-2 py-1">Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) => {
   const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/products"), []);
   const [qualityLevels, setQualityLevels] = useState([{ id: 1, name: 'Essential' }, { id: 2, name: 'Premium' }, { id: 3, name: 'Luxe' }]);
   const [form, setForm] = useState({ 
@@ -142,7 +264,8 @@ const ProductsSection = ({ onToast }) => {
     sizes: "", 
     images: "", 
     isActive: true,
-    quality_prices: []
+    quality_prices: [],
+    price_category_id: ""
   });
   const [editingId, setEditingId] = useState(null);
 
@@ -157,7 +280,8 @@ const ProductsSection = ({ onToast }) => {
       sizes: "", 
       images: "", 
       isActive: true,
-      quality_prices: []
+      quality_prices: [],
+      price_category_id: ""
     });
     setEditingId(null);
   };
@@ -175,7 +299,7 @@ const ProductsSection = ({ onToast }) => {
     const essentialPrice = form.quality_prices.find(qp => qp.quality_level_id === 1)?.price || 0;
     const payload = {
       name: form.name,
-      price: essentialPrice,
+      price_category_id: form.price_category_id ? parseInt(form.price_category_id) : null,
       sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()).filter(Boolean) : [],
       image_urls: form.images ? form.images.split(",").map((s) => s.trim()).filter(Boolean) : [],
       is_active: form.isActive ? 1 : 0,
@@ -202,12 +326,14 @@ const ProductsSection = ({ onToast }) => {
       quality_level_id: qp.quality_level_id,
       price: qp.price
     }));
+    const categoryId = product.price_category_id || (product.price_categories?.id ? String(product.price_categories.id) : "");
     setForm({
       name: product.name || "",
       sizes: (product.sizes || []).join(", "),
       images: (product.image_urls || product.images || []).join(", "),
       isActive: product.isActive !== false && product.is_active !== 0,
-      quality_prices: existingPrices
+      quality_prices: existingPrices,
+      price_category_id: categoryId
     });
   };
 
@@ -243,6 +369,16 @@ const ProductsSection = ({ onToast }) => {
           value={form.name}
           onChange={(event) => setForm({ ...form, name: event.target.value })}
         />
+        <select
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          value={form.price_category_id}
+          onChange={(event) => setForm({ ...form, price_category_id: event.target.value })}
+        >
+          <option value="">Select Price Category</option>
+          {(priceCategories || []).map(cat => (
+            <option key={cat.id} value={cat.id}>{cat.name} — {Number(cat.price).toLocaleString()} FRW</option>
+          ))}
+        </select>
         <input
           className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
           placeholder="Sizes (S, M, L)"
@@ -297,7 +433,11 @@ const ProductsSection = ({ onToast }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold">{product.name}</p>
-                <p className="text-xs text-slate-400">{Number(product.price).toLocaleString()} FRW</p>
+                {product.price_categories ? (
+                  <p className="text-xs text-slate-400">{product.price_categories.name} — {Number(product.price).toLocaleString()} FRW</p>
+                ) : (
+                  <p className="text-xs text-slate-400">{Number(product.price).toLocaleString()} FRW</p>
+                )}
                 {(product.quality_prices || []).length > 0 && (
                   <p className="text-[10px] text-slate-500 mt-0.5">
                     {product.quality_prices.map(qp => `${qp.quality_name}: ${Number(qp.price).toLocaleString()}`).join(' · ')}
@@ -326,7 +466,7 @@ const ProductsSection = ({ onToast }) => {
 
 const CollectionsSection = ({ onToast }) => {
   const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/drops"), []);
-  const [form, setForm] = useState({ title: "", description: "", image_url: "", status: "upcoming", type: "new-drop" });
+  const [form, setForm] = useState({ title: "", description: "", image_url: "", video_url: "", status: "upcoming", type: "new-drop" });
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
@@ -334,7 +474,7 @@ const CollectionsSection = ({ onToast }) => {
   }, [data]);
 
   const resetForm = () => {
-    setForm({ title: "", description: "", image_url: "", status: "upcoming", type: "new-drop" });
+    setForm({ title: "", description: "", image_url: "", video_url: "", status: "upcoming", type: "new-drop" });
     setEditingId(null);
   };
 
@@ -344,6 +484,7 @@ const CollectionsSection = ({ onToast }) => {
       title: form.title,
       description: form.description,
       image_url: form.image_url,
+      video_url: form.video_url,
       status: form.status,
       type: form.type
     };
@@ -368,6 +509,7 @@ const CollectionsSection = ({ onToast }) => {
       title: item.title || "",
       description: item.description || "",
       image_url: item.image_url || "",
+      video_url: item.video_url || "",
       status: item.status || "upcoming",
       type: item.type || "new-drop"
     });
@@ -413,6 +555,12 @@ const CollectionsSection = ({ onToast }) => {
           value={form.image_url}
           onChange={(event) => setForm({ ...form, image_url: event.target.value })}
         />
+        <input
+          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+          placeholder="Cover Video URL (optional)"
+          value={form.video_url}
+          onChange={(event) => setForm({ ...form, video_url: event.target.value })}
+        />
         <select
           className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
           value={form.status}
@@ -449,6 +597,9 @@ const CollectionsSection = ({ onToast }) => {
             <div className="flex items-start gap-4">
               {item.image_url && (
                 <img src={item.image_url} alt={item.title} className="h-12 w-12 rounded object-cover border border-slate-800" />
+              )}
+              {item.video_url && !item.image_url && (
+                <div className="h-12 w-12 rounded bg-slate-800 border border-slate-800 flex items-center justify-center text-[10px] text-slate-400">VIDEO</div>
               )}
               <div className="flex-1">
                 <div className="flex items-center justify-between">
@@ -1152,10 +1303,25 @@ const ReservationsSection = ({ onToast }) => {
 
 const Dashboard = () => {
   const [toast, setToast] = useState("");
+  const [priceCategories, setPriceCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const notify = (message) => {
     setToast(message);
     setTimeout(() => setToast(""), 2400);
+  };
+
+  useEffect(() => {
+    api.get("/api/price-categories")
+      .then(res => { if (res.data?.priceCategories) setPriceCategories(res.data.priceCategories); })
+      .catch(() => {})
+      .finally(() => setLoadingCategories(false));
+  }, []);
+
+  const reloadPriceCategories = () => {
+    api.get("/api/price-categories")
+      .then(res => { if (res.data?.priceCategories) setPriceCategories(res.data.priceCategories); })
+      .catch(() => {});
   };
 
   return (
@@ -1168,7 +1334,8 @@ const Dashboard = () => {
       <div className="grid gap-6">
         <ReservationsSection onToast={notify} />
         <OrdersSection onToast={notify} />
-        <ProductsSection onToast={notify} />
+        <PriceCategoriesSection onToast={notify} />
+        <ProductsSection onToast={notify} priceCategories={priceCategories} reloadPriceCategories={reloadPriceCategories} />
         <CollectionsSection onToast={notify} />
         <AnnouncementSection onToast={notify} />
         <StoreConfigSection onToast={notify} />

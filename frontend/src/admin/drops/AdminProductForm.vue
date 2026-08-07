@@ -20,15 +20,17 @@
         />
       </div>
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-400">Base Price ($)</label>
-        <input 
-          type="number"
-          step="0.01"
-          v-model="productData.price"
-          :class="['w-full bg-slate-900 border text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all', errors.price ? 'border-red-500' : 'border-slate-700']"
-          placeholder="0.00"
-        />
-        <p class="text-[10px] text-slate-500">Used as a fallback. The three quality inputs below are what the admin portal sends in <code>quality_prices</code>.</p>
+        <label class="text-sm font-medium text-slate-400">Price Category</label>
+        <select
+          v-model="productData.price_category_id"
+          class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+        >
+          <option :value="null">Select Price Category</option>
+          <option v-for="cat in priceCategories" :key="cat.id" :value="cat.id">
+            {{ cat.name }} — {{ Number(cat.price).toLocaleString() }} FRW
+          </option>
+        </select>
+        <p class="text-[10px] text-slate-500">Selecting a category sets the product base price automatically.</p>
       </div>
     </div>
 
@@ -127,7 +129,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, onMounted } from 'vue';
 import SizeSelector from './SizeSelector.vue';
 import ImageUploader from './ImageUploader.vue';
 
@@ -135,6 +137,10 @@ const props = defineProps({
   initialData: {
     type: Object,
     default: null
+  },
+  priceCategories: {
+    type: Array,
+    default: () => []
   }
 });
 
@@ -148,7 +154,8 @@ const productData = reactive({
   colors: [],
   image_urls: [],
   is_active: true,
-  default_quality_level: 'basic'
+  default_quality_level: 'basic',
+  price_category_id: null
 });
 
 const colorsInput = ref('');
@@ -186,6 +193,7 @@ const applyInitialData = (initialData) => {
     image_urls: [],
     is_active: true,
     default_quality_level: 'basic',
+    price_category_id: null,
     ...(initialData || {})
   });
 
@@ -200,10 +208,15 @@ const applyInitialData = (initialData) => {
 
 watch(() => props.initialData, applyInitialData, { immediate: true });
 
+onMounted(() => {
+  if (props.initialData) {
+    applyInitialData(props.initialData);
+  }
+});
+
 const handleSave = () => {
   errors.name = !productData.name ? 'Required' : '';
-  const hasQualityPrices = qualityPrices.value.length > 0;
-  errors.price = (!hasQualityPrices && productData.price <= 0) ? 'Invalid' : '';
+  errors.price = productData.price <= 0 ? 'Invalid' : '';
   
   if (errors.name || errors.price) return;
 

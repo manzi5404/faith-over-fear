@@ -5,7 +5,7 @@ const { NotFoundError, ConflictError } = require('../utils/errors');
 async function findByDropId(dropId) {
   const { data, error } = await supabase
     .from('products')
-    .select('*, product_variants(*)')
+    .select('*, product_variants(*), price_categories(*)')
     .eq('drop_id', dropId)
     .order('created_at', { ascending: false });
 
@@ -14,12 +14,9 @@ async function findByDropId(dropId) {
 }
 
 async function findById(id) {
-  // Important: do not select broken relationships here.
-  // The frontend PDP fallback relies on this endpoint; selecting `collections(*)`
-  // can fail when the relationship is missing from the schema cache.
   const { data, error } = await supabase
     .from('products')
-    .select('*, product_variants(*), product_quality_prices(*)')
+    .select('*, product_variants(*), product_quality_prices(*), price_categories(*)')
     .eq('id', id)
     .maybeSingle();
 
@@ -31,7 +28,7 @@ async function findById(id) {
 async function findBySlug(slug) {
   const { data, error } = await supabase
     .from('products')
-    .select('*, product_variants(*)')
+    .select('*, product_variants(*), product_quality_prices(*), price_categories(*)')
     .eq('slug', slug)
     .maybeSingle();
 
@@ -55,7 +52,7 @@ async function create(data) {
   const { data: row, error } = await supabase
     .from('products')
     .insert(data)
-    .select('*, product_variants(*)')
+    .select('*, product_variants(*), product_quality_prices(*), price_categories(*)')
     .single();
 
   if (error) throw error;
@@ -67,7 +64,7 @@ async function update(id, data) {
     .from('products')
     .update(data)
     .eq('id', id)
-    .select('*, product_variants(*)')
+    .select('*, product_variants(*), product_quality_prices(*), price_categories(*)')
     .single();
 
   if (error) throw error;

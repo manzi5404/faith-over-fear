@@ -498,7 +498,9 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
     get filteredProducts() {
         return this.products.filter(r => {
             const t = this.filters.category.length === 0 || this.filters.category.includes(r.category);
-            const price = (r.product_variants && r.product_variants[0]?.price_override) || r.base_price || r.price || 0;
+            const categoryPrice = r.price_categories ? parseFloat(r.price_categories.price) : null;
+            const variantPrice = r.product_variants && r.product_variants[0]?.price_override;
+            const price = variantPrice || categoryPrice || r.base_price || r.price || 0;
             const e = price >= this.filters.minPrice && price <= this.filters.maxPrice;
             return t && e;
         }).sort((r, t) => this.sortBy === "price-asc" ? (r.base_price || 0) - (t.base_price || 0) : this.sortBy === "price-desc" ? (t.base_price || 0) - (r.base_price || 0) : t.id > r.id ? 1 : -1);
@@ -521,6 +523,8 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
           const first = qualityPrices.find(qp => qp.price != null);
           if (first) return parseFloat(first.price);
         }
+
+        if (product.price_categories && product.price_categories.price != null) return parseFloat(product.price_categories.price);
 
         return parseFloat(product.base_price || product.price || 0);
     },
@@ -773,9 +777,10 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
         if (this.storeSettings.purchasingDisabled) return;
 
         const variant = this.variantBySizeColor(product, size, color);
+        const categoryPrice = product.price_categories ? parseFloat(product.price_categories.price) : null;
         const effectivePrice = variant && variant.price_override != null
             ? parseFloat(variant.price_override)
-            : parseFloat(product.base_price || product.price || 0);
+            : categoryPrice || parseFloat(product.base_price || product.price || 0);
         const variantId = variant ? variant.id : null;
 
         const existingItemIndex = this.cartItems.findIndex(item =>

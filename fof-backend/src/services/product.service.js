@@ -1,6 +1,7 @@
 const productRepo = require('../repositories/product.repository');
 const variantRepo = require('../repositories/variant.repository');
 const dropService = require('./drop.service');
+const priceCategoryService = require('./price-category.service');
 const { events } = require('../events');
 const { NotFoundError, ConflictError, ValidationError } = require('../utils/errors');
 
@@ -47,8 +48,15 @@ async function createProduct(data) {
     throw new ValidationError('Invalid drop_id: drop does not exist');
   }
 
-  if (!data.base_price || Number(data.base_price) <= 0) {
-    throw new ValidationError('base_price must be greater than 0');
+  let basePrice = null;
+
+  if (data.price_category_id) {
+    const category = await priceCategoryService.getPriceCategoryById(data.price_category_id);
+    basePrice = Number(category.price);
+  } else if (data.base_price && Number(data.base_price) > 0) {
+    basePrice = Number(data.base_price);
+  } else {
+    throw new ValidationError('A price category or base_price is required');
   }
 
   const drop = await dropService.getActiveDrop();
@@ -75,7 +83,8 @@ async function createProduct(data) {
     name: data.name.trim(),
     slug,
     description: data.description || null,
-    base_price: Number(data.base_price),
+    base_price: basePrice,
+    price_category_id: data.price_category_id || null,
     images: data.images || [],
     status: data.status || 'live',
   });
@@ -112,7 +121,7 @@ async function updateProduct(id, data) {
   }
 
   const allowedFields = [
-    'name', 'slug', 'description', 'base_price', 'images', 'status', 'drop_id', 'default_quality_level_id',
+    'name', 'slug', 'description', 'base_price', 'price_category_id', 'images', 'status', 'drop_id', 'default_quality_level_id',
   ];
 
   const updateData = {};
@@ -120,6 +129,13 @@ async function updateProduct(id, data) {
     if (data[field] !== undefined) {
       updateData[field] = data[field];
     }
+  }
+
+  if (data.price_category_id && !data.base_price) {
+    const category = await priceCategoryService.getPriceCategoryById(data.price_category_id);
+    updateData.base_price = Number(category.price);
+  } else if (data.base_price && !data.price_category_id) {
+    updateData.base_price = Number(data.base_price);
   }
 
   if (Object.keys(updateData).length === 0) {

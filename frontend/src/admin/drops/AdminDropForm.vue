@@ -57,6 +57,24 @@
         </div>
 
         <div class="space-y-2">
+          <label class="text-sm font-medium text-slate-400">Drop Video URL (optional)</label>
+          <div class="space-y-3">
+            <div v-if="formData.video_url" class="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 bg-black">
+              <video :src="formData.video_url" class="w-full h-full object-cover" muted></video>
+              <button @click="formData.video_url = ''" type="button" class="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white p-1 rounded-full">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <input
+              type="text"
+              v-model="formData.video_url"
+              class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+              placeholder="Paste video URL (MP4, WebM, etc.)"
+            />
+          </div>
+        </div>
+
+        <div class="space-y-2">
           <label class="text-sm font-medium text-slate-400">Type</label>
           <select
             v-model="formData.type"
@@ -146,13 +164,16 @@
               </div>
 
               <div class="space-y-2">
-                <label class="text-xs font-medium text-slate-400">Base Price (FRW)</label>
-                <input
-                  type="number"
-                  v-model="product.price"
+                <label class="text-xs font-medium text-slate-400">Price Category</label>
+                <select
+                  v-model="product.price_category_id"
                   class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                  placeholder="15000"
-                />
+                >
+                  <option :value="null">Select Price Category</option>
+                  <option v-for="cat in priceCategories" :key="cat.id" :value="cat.id">
+                    {{ cat.name }} — {{ Number(cat.price).toLocaleString() }} FRW
+                  </option>
+                </select>
               </div>
 
               <div class="space-y-2 md:col-span-2">
@@ -313,6 +334,10 @@ const props = defineProps({
   initialData: {
     type: Object,
     default: null
+  },
+  priceCategories: {
+    type: Array,
+    default: () => []
   }
 });
 
@@ -346,6 +371,7 @@ const emptyProduct = () => ({
   image_urls: [],
   quality_prices: { essential: '', premium: '', luxe: '' },
   default_quality_level: 'basic',
+  price_category_id: null,
   tempId: Date.now() + Math.random(),
   uploading: false
 });
@@ -358,7 +384,8 @@ onMounted(async () => {
       const image_urls = Array.isArray(p.image_urls) ? p.image_urls : (p.image_url ? [p.image_url] : []);
       const quality_prices = p.quality_prices || { essential: '', premium: '', luxe: '' };
       const default_quality_level = p.default_quality_level || (p.default_quality_level_id ? (p.default_quality_level_id === 2 ? 'premium' : p.default_quality_level_id === 3 ? 'luxe' : 'basic') : 'basic');
-      return { ...p, sizes, colors, colorsInput: colors.join(', '), image_urls, quality_prices, default_quality_level, uploading: false };
+      const price_category_id = p.price_category_id || (p.price_categories?.id ? p.price_categories.id : null);
+      return { ...p, sizes, colors, colorsInput: colors.join(', '), image_urls, quality_prices, default_quality_level, price_category_id, uploading: false };
     };
     Object.assign(formData, {
       name: props.initialData.title || props.initialData.name || '',

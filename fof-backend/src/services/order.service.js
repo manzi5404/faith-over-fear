@@ -57,7 +57,7 @@ async function createFromCart(userId, customerData, sessionId = null) {
 
     seenDropIds.add(p.drop_id);
 
-    const unitPrice = v.price_override || p.base_price;
+    const unitPrice = v.price_override || (p.price_categories ? parseFloat(p.price_categories.price) : null) || p.base_price;
     enrichedItems.push({
       variantId: v.id,
       productId: p.id,
@@ -174,7 +174,7 @@ async function createDirect(userId, customerData, items, sessionId = null) {
       throw new AppError(`Not enough stock for ${variant.color}/${variant.size}. Available: ${variant.stock}, requested: ${qty}.`, 400);
     }
 
-    const unitPrice = variant.price_override || product.base_price;
+    const unitPrice = variant.price_override || (product.price_categories ? parseFloat(product.price_categories.price) : null) || product.base_price;
     const productImages = Array.isArray(product.images) ? product.images : (Array.isArray(product.image_urls) ? product.image_urls : null);
     enrichedItems.push({
       variantId: variant.id,

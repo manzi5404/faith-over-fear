@@ -13,6 +13,8 @@ const dropRoutes = require('./routes/drop.routes');
 const dropAdminRoutes = require('./routes/drop.admin.routes');
 const productRoutes = require('./routes/product.routes');
 const productAdminRoutes = require('./routes/product.admin.routes');
+const priceCategoryRoutes = require('./routes/price-category.routes');
+const priceCategoryAdminRoutes = require('./routes/price-category.admin.routes');
 const collectionRoutes = require('./routes/collection.routes');
 const collectionAdminRoutes = require('./routes/collection.admin.routes');
 const cartRoutes = require('./routes/cart.routes');
@@ -66,6 +68,7 @@ const uploadRoutes = require('./routes/upload.routes');
 app.use('/api/auth', authRoutes);
 app.use('/api/drops', dropRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/price-categories', priceCategoryRoutes);
 app.use('/api/collections', collectionRoutes);
 app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/contact', messageRoutes);
@@ -79,6 +82,7 @@ app.use('/api/upload', requireAuth, requireAdmin, uploadRoutes);
 // Admin routes for drops and products
 app.use('/api/admin/drops', requireAuth, requireAdmin, dropAdminRoutes);
 app.use('/api/admin/products', requireAuth, requireAdmin, productAdminRoutes);
+app.use('/api/admin/price-categories', requireAuth, requireAdmin, priceCategoryAdminRoutes);
 app.use('/api/admin/collections', requireAuth, requireAdmin, collectionAdminRoutes);
 
 // Admin notification routes
