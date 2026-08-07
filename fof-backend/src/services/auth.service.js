@@ -77,32 +77,53 @@ async function login(email, password) {
     throw new AuthError('Incorrect email/username');
   }
 
-  // Admins sign in instantly: auto-confirm the email so Supabase never
-  // returns an "email not confirmed" error and never sends a
-  // confirmation/magic-link email.
-  if (isAdminEmail(email)) {
-    try {
-      await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
-        email_confirm: true,
-      });
-    } catch (confirmErr) {
-      logError(confirmErr, { context: 'admin auto-confirm', email });
-    }
-  }
-
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
+    if (error.message?.toLowerCase().includes('confirm') || error.message?.toLowerCase().includes('not confirmed')) {
+      try {
+        await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+          email_confirm: true,
+        });
+      } catch (confirmErr) {
+        logError(confirmErr, { context: 'auto-confirm', email });
+      }
+      const retry = await supabase.auth.signInWithPassword({ email, password });
+      if (retry.error) {
+        throw new AuthError('Please confirm your email before logging in. Check your inbox for the confirmation link.');
+      }
+      if (!retry.data?.session?.access_token) {
+        throw new AuthError('Incorrect password');
+      }
+      const authUser = retry.data.user ?? retry.data.session?.user;
+      let user = await userRepo.findById(authUser.id);
+      if (!user) {
+        user = await userRepo.findByEmail(authUser.email);
+        if (!user) {
+          user = await userRepo.create(authUser.id, {
+            email: authUser.email,
+            name: authUser.user_metadata?.name || authUser.user_metadata?.full_name || null,
+            role: resolveRole(authUser.email),
+          });
+        }
+      }
+      return {
+        access_token: retry.data.session.access_token,
+        refresh_token: retry.data.session.refresh_token,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+      };
+    }
     logError(error, { statusCode: 401, context: { email } });
-
     if (error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('credentials')) {
       throw new AuthError('Incorrect password');
-    }
-    if (error.message?.toLowerCase().includes('confirm') || error.message?.toLowerCase().includes('not confirmed')) {
-      throw new AuthError('Please confirm your email before logging in. Check your inbox for the confirmation link.');
     }
     if (error.message?.toLowerCase().includes('disabled') || error.message?.toLowerCase().includes('not allowed')) {
       throw new AuthError('Authentication is disabled for this user. Contact support if you believe this is an error.');
