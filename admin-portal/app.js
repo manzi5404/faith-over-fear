@@ -258,7 +258,7 @@ const PriceCategoriesSection = ({ onToast }) => {
 
 const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) => {
   const { data, loading, error, reload } = useFetch(() => api.get("/api/admin/products"), []);
-  const [qualityLevels, setQualityLevels] = useState([{ id: 1, name: 'Essential' }, { id: 2, name: 'Premium' }, { id: 3, name: 'Luxe' }]);
+  const [qualityLevels, setQualityLevels] = useState([{ id: 1, name: 'Premium' }, { id: 2, name: 'Luxe' }]);
   const [form, setForm] = useState({ 
     name: "", 
     sizes: "", 

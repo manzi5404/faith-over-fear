@@ -261,11 +261,6 @@
               <div class="space-y-2 md:col-span-2">
                 <label class="text-xs font-medium text-slate-400">Default Quality Level</label>
                 <div class="flex gap-3">
-                  <button type="button" @click="product.default_quality_level = 'basic'"
-                    :class="product.default_quality_level === 'basic' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600'"
-                    class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
-                    Basic
-                  </button>
                   <button type="button" @click="product.default_quality_level = 'premium'"
                     :class="product.default_quality_level === 'premium' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600'"
                     class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
@@ -282,20 +277,16 @@
               <!-- Quality Prices -->
               <div class="space-y-2 md:col-span-2">
                 <label class="text-xs font-medium text-slate-400">Quality Prices (FRW)</label>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                     <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Basic</span>
-                    <input type="number" v-model="product.quality_prices.essential" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1" placeholder="15000" />
-                  </div>
-                  <div>
-                    <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Premium</span>
-                    <input type="number" v-model="product.quality_prices.premium" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1" placeholder="25000" />
-                  </div>
-                  <div>
-                    <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Luxe</span>
-                    <input type="number" v-model="product.quality_prices.luxe" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1" placeholder="40000" />
-                  </div>
-                </div>
+                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                   <div>
+                     <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Premium</span>
+                     <input type="number" v-model="product.quality_prices.premium" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1" placeholder="25000" />
+                   </div>
+                   <div>
+                     <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Luxe</span>
+                     <input type="number" v-model="product.quality_prices.luxe" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1" placeholder="40000" />
+                   </div>
+                 </div>
               </div>
             </div>
           </div>
@@ -381,8 +372,8 @@ const emptyProduct = () => ({
   colorsInput: '',
   quantity: 1,
   image_urls: [],
-  quality_prices: { essential: '', premium: '', luxe: '' },
-  default_quality_level: 'basic',
+  quality_prices: { premium: '', luxe: '' },
+  default_quality_level: 'premium',
   price_category_id: null,
   tempId: Date.now() + Math.random(),
   uploading: false
@@ -394,8 +385,8 @@ onMounted(async () => {
       const sizes = Array.isArray(p.sizes) ? p.sizes : (p.size ? [p.size] : []);
       const colors = Array.isArray(p.colors) ? p.colors : (p.colorsInput ? p.colorsInput.split(',').map(c => c.trim()).filter(Boolean) : []);
       const image_urls = Array.isArray(p.image_urls) ? p.image_urls : (p.image_url ? [p.image_url] : []);
-      const quality_prices = p.quality_prices || { essential: '', premium: '', luxe: '' };
-      const default_quality_level = p.default_quality_level || (p.default_quality_level_id ? (p.default_quality_level_id === 2 ? 'premium' : p.default_quality_level_id === 3 ? 'luxe' : 'basic') : 'basic');
+      const quality_prices = p.quality_prices || { premium: '', luxe: '' };
+      const default_quality_level = p.default_quality_level || (p.default_quality_level_id ? (p.default_quality_level_id === 2 ? 'premium' : p.default_quality_level_id === 3 ? 'luxe' : 'premium') : 'premium');
       const price_category_id = p.price_category_id || (p.price_categories?.id ? p.price_categories.id : null);
       return { ...p, sizes, colors, colorsInput: colors.join(', '), image_urls, quality_prices, default_quality_level, price_category_id, uploading: false };
     };

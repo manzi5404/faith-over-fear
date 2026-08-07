@@ -5,9 +5,8 @@ BEGIN;
 
 -- Ensure default quality levels exist (legacy, not used by new backend)
 INSERT INTO quality_levels (name, description, sort_order, is_active) VALUES
-    ('Essential', 'Everyday tees, solid quality, standard cotton.', 1, TRUE),
-    ('Premium', 'Softer fabrics, better fit, stronger collar and seams.', 2, TRUE),
-    ('Luxe', 'High-end fabrics, very soft handfeel, best construction.', 3, TRUE)
+    ('Premium', 'Softer fabrics, better fit, stronger collar and seams.', 1, TRUE),
+    ('Luxe', 'High-end fabrics, very soft handfeel, best construction.', 2, TRUE)
 ON CONFLICT DO NOTHING;
 
 -- Seed store config singleton

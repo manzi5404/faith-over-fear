@@ -208,8 +208,8 @@ async function createDrop(data) {
         isConflict = await productRepo.findBySlugConflict(slug);
       }
 
-      const qualityLevelName = (product.default_quality_level || 'basic').toLowerCase();
-      const qualityLevelMap = { basic: 1, premium: 2, luxe: 3 };
+      const qualityLevelName = (product.default_quality_level || 'premium').toLowerCase();
+      const qualityLevelMap = { premium: 1, luxe: 2 };
       const defaultQualityLevelId = qualityLevelMap[qualityLevelName] || 1;
 
       const normalizedProduct = {
@@ -323,13 +323,13 @@ async function updateDrop(id, data) {
           status: data.status || updateData.status || existing.status,
           sizes: Array.isArray(product.sizes) ? product.sizes : [],
           colors: Array.isArray(product.colors) ? product.colors : [],
-          image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
-          quantity: parseInt(product.quantity) || 1,
-          default_quality_level_id: (() => { const ql = (product.default_quality_level || 'basic').toLowerCase(); const map = { basic: 1, premium: 2, luxe: 3 }; return map[ql] || 1; })(),
-          price_category_id: product.price_category_id || null,
-        };
-        const resolvedBasePrice = await resolveBasePrice(product);
-        delete normalizedProduct.tempId;
+           image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
+           quantity: parseInt(product.quantity) || 1,
+           default_quality_level_id: (() => { const ql = (product.default_quality_level || 'premium').toLowerCase(); const map = { premium: 1, luxe: 2 }; return map[ql] || 1; })(),
+           price_category_id: product.price_category_id || null,
+         };
+         const resolvedBasePrice = await resolveBasePrice(product);
+         delete normalizedProduct.tempId;
         delete normalizedProduct.uploading;
         delete normalizedProduct.quality_prices;
         delete normalizedProduct.colorsInput;
@@ -357,14 +357,14 @@ async function updateDrop(id, data) {
           status: data.status || updateData.status || existing.status,
           sizes: Array.isArray(product.sizes) ? product.sizes : [],
           colors: Array.isArray(product.colors) ? product.colors : [],
-          image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
-          quantity: parseInt(product.quantity) || 1,
-          default_quality_level_id: (() => { const ql = (product.default_quality_level || 'basic').toLowerCase(); const map = { basic: 1, premium: 2, luxe: 3 }; return map[ql] || 1; })(),
-          price_category_id: product.price_category_id || null,
-        };
-        const resolvedBasePrice = await resolveBasePrice(product);
-        delete normalizedProduct.size;
-        delete normalizedProduct.image_url;
+           image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_url ? [product.image_url] : []),
+           quantity: parseInt(product.quantity) || 1,
+           default_quality_level_id: (() => { const ql = (product.default_quality_level || 'premium').toLowerCase(); const map = { premium: 1, luxe: 2 }; return map[ql] || 1; })(),
+           price_category_id: product.price_category_id || null,
+         };
+         const resolvedBasePrice = await resolveBasePrice(product);
+         delete normalizedProduct.size;
+         delete normalizedProduct.image_url;
         delete normalizedProduct.title;
         delete normalizedProduct.tempId;
         delete normalizedProduct.uploading;

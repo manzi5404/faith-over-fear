@@ -50,11 +50,6 @@
     <div class="space-y-3">
       <label class="text-sm font-medium text-slate-400">Default Quality Level</label>
       <div class="flex gap-3">
-        <button type="button" @click="productData.default_quality_level = 'basic'"
-          :class="productData.default_quality_level === 'basic' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600'"
-          class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
-          Basic
-        </button>
         <button type="button" @click="productData.default_quality_level = 'premium'"
           :class="productData.default_quality_level === 'premium' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600'"
           class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
@@ -167,7 +162,7 @@ const productData = reactive({
   colors: [],
   image_urls: [],
   is_active: true,
-  default_quality_level: 'basic',
+  default_quality_level: 'premium',
   price_category_id: null
 });
 
@@ -176,9 +171,8 @@ const errors = reactive({});
 const isEditing = ref(false);
 
 const qualityLevels = [
-  { id: 1, name: 'Basic' },
-  { id: 2, name: 'Premium' },
-  { id: 3, name: 'Luxe' }
+  { id: 1, name: 'Premium' },
+  { id: 2, name: 'Luxe' }
 ];
 
 const qualityPrices = ref([]);
@@ -194,7 +188,7 @@ const setQualityPrice = (levelId, value) => {
   if (price > 0) qualityPrices.value.push({ quality_level_id: levelId, price });
 };
 
-const nameToId = { 'Basic': 1, 'Premium': 2, 'Luxe': 3 };
+const nameToId = { 'Premium': 1, 'Luxe': 2 };
 
 const applyInitialData = (initialData) => {
   Object.assign(productData, {
@@ -205,13 +199,13 @@ const applyInitialData = (initialData) => {
     colors: [],
     image_urls: [],
     is_active: true,
-    default_quality_level: 'basic',
+    default_quality_level: 'premium',
     price_category_id: null,
     ...(initialData || {})
   });
 
   isEditing.value = !!initialData?.id || !!initialData?.tempId;
-  productData.default_quality_level = initialData?.default_quality_level || (initialData?.default_quality_level_id === 2 ? 'premium' : initialData?.default_quality_level_id === 3 ? 'luxe' : 'basic');
+  productData.default_quality_level = initialData?.default_quality_level || (initialData?.default_quality_level_id === 2 ? 'luxe' : initialData?.default_quality_level_id === 1 ? 'premium' : 'premium');
   colorsInput.value = Array.isArray(productData.colors) ? productData.colors.join(', ') : '';
   qualityPrices.value = (initialData?.quality_prices || []).map(q => ({
     quality_level_id: q.quality_level_id || nameToId[q.quality_name],

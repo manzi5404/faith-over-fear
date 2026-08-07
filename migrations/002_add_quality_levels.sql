@@ -25,9 +25,8 @@ CREATE TABLE IF NOT EXISTS quality_levels (
 
 -- Seed default quality levels only if the table is empty.
 INSERT IGNORE INTO quality_levels (id, name, description, sort_order, is_active) VALUES
-(1, 'Basic', 'Entry-level quality for budget-conscious shoppers', 1, 1),
-(2, 'Standard', 'Balanced quality and value for everyday wear', 2, 1),
-(3, 'Premium', 'Highest quality with premium materials and finishes', 3, 1);
+(1, 'Premium', 'Upgraded heavyweight fabric. Softer feel, reinforced seams, and a structured collar. Built to last longer.', 1, 1),
+(2, 'Luxe', 'Premium combed cotton, ultra-soft handfeel, and precision tailoring. The highest quality construction for a premium look and feel.', 2, 1);
 
 -- 2. PRODUCT_QUALITY_PRICES TABLE
 --    Junction table linking products to quality levels with their prices.
