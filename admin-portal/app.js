@@ -296,7 +296,10 @@ const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) =>
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const essentialPrice = form.quality_prices.find(qp => qp.quality_level_id === 1)?.price || 0;
+    if (!form.price_category_id) {
+      onToast("Please select a price category");
+      return;
+    }
     const payload = {
       name: form.name,
       price_category_id: form.price_category_id ? parseInt(form.price_category_id) : null,

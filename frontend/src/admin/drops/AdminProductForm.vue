@@ -216,13 +216,17 @@ onMounted(() => {
 
 const handleSave = () => {
   errors.name = !productData.name ? 'Required' : '';
-  errors.price = productData.price <= 0 ? 'Invalid' : '';
+  const hasCategory = !!productData.price_category_id;
+  const essentialQp = qualityPrices.value.find(q => q.quality_level_id === 1);
+  const effectivePrice = hasCategory
+    ? (priceCategories.value.find(c => c.id === productData.price_category_id)?.price || 0)
+    : (essentialQp?.price || productData.price || 0);
+  errors.price = effectivePrice <= 0 ? 'Invalid' : '';
   
   if (errors.name || errors.price) return;
 
   productData.colors = colorsInput.value.split(',').map(c => c.trim()).filter(Boolean);
-  const essentialQp = qualityPrices.value.find(q => q.quality_level_id === 1);
-  if (essentialQp && productData.price <= 0) productData.price = essentialQp.price;
+  productData.price = effectivePrice;
   const levelId = nameToId[productData.default_quality_level] || 1;
   emit('save', { ...productData, default_quality_level_id: levelId, quality_prices: qualityPrices.value });
 };
