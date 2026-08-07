@@ -89,7 +89,7 @@ const productLogic = () => ({
         return levels
             .filter(level => {
                 const name = (level.quality_name || level.quality_level?.name || '').toLowerCase();
-                return name !== 'basic';
+                return name !== 'basic' && name !== 'essential';
             })
             .map(level => {
                 if (!level || level.quality_description) return level;

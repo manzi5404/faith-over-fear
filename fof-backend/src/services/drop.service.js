@@ -128,7 +128,7 @@ async function attachQualityPrices(products) {
     for (const row of prices || []) {
       const quality = qualityMap.get(row.quality_level_id) || {};
       const name = (quality.name || '').toLowerCase();
-      if (name === 'basic') continue;
+      if (name === 'basic' || name === 'essential') continue;
       if (!byProduct.has(row.product_id)) byProduct.set(row.product_id, []);
       byProduct.get(row.product_id).push({
         ...row,
