@@ -69,7 +69,7 @@ on(DROP_ACTIVATED, async ({ drop }) => {
 
 on(PRODUCT_CREATED, async ({ product }) => {
   try {
-    await auditService.logProductChange(null, 'product_created', product.id, null, { name: product.name, base_price: product.base_price });
+    await auditService.logProductChange(null, 'product_created', product.id, null, { name: product.name, price: product.price });
   } catch (err) {
     console.error('Failed to process PRODUCT_CREATED event:', err);
   }

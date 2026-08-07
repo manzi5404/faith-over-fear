@@ -73,15 +73,15 @@ async function createProduct(data) {
     throw new ValidationError('Invalid drop_id: drop does not exist');
   }
 
-  let basePrice = null;
+  let price = null;
 
   if (data.price_category_id) {
     const category = await priceCategoryService.getPriceCategoryById(data.price_category_id);
-    basePrice = Number(category.price);
-  } else if (data.base_price && Number(data.base_price) > 0) {
-    basePrice = Number(data.base_price);
+    price = Number(category.price);
+  } else if (data.price && Number(data.price) > 0) {
+    price = Number(data.price);
   } else {
-    throw new ValidationError('A price category or base_price is required');
+    throw new ValidationError('A price category or price is required');
   }
 
   const drop = await dropService.getActiveDrop();
@@ -108,7 +108,7 @@ async function createProduct(data) {
     name: data.name.trim(),
     slug,
     description: data.description || null,
-    base_price: basePrice,
+    price: price,
     price_category_id: data.price_category_id || null,
     images: data.images || [],
     status: data.status || 'live',
@@ -146,7 +146,7 @@ async function updateProduct(id, data) {
   }
 
   const allowedFields = [
-    'name', 'slug', 'description', 'base_price', 'price_category_id', 'images', 'status', 'drop_id', 'default_quality_level_id',
+    'name', 'slug', 'description', 'price', 'price_category_id', 'images', 'status', 'drop_id', 'default_quality_level_id',
   ];
 
   const updateData = {};
@@ -156,11 +156,9 @@ async function updateProduct(id, data) {
     }
   }
 
-  if (data.price_category_id && !data.base_price) {
+  if (data.price_category_id && !data.price) {
     const category = await priceCategoryService.getPriceCategoryById(data.price_category_id);
-    updateData.base_price = Number(category.price);
-  } else if (data.base_price && !data.price_category_id) {
-    updateData.base_price = Number(data.base_price);
+    updateData.price = Number(category.price);
   }
 
   if (Object.keys(updateData).length === 0) {

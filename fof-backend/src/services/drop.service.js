@@ -31,9 +31,6 @@ async function resolveBasePrice(product) {
     const category = await priceCategoryService.getPriceCategoryById(product.price_category_id);
     return Number(category.price);
   }
-  if (product.base_price && Number(product.base_price) > 0) {
-    return Number(product.base_price);
-  }
   if (product.price && Number(product.price) > 0) {
     return Number(product.price);
   }
@@ -243,7 +240,7 @@ async function createDrop(data) {
       delete normalizedProduct.colorsInput;
       const createdProduct = await productRepo.create({
         ...normalizedProduct,
-        base_price: productPrice || normalizedProduct.base_price || 0,
+        price: productPrice || normalizedProduct.price || 0,
       });
 
       await createQualityPrices(createdProduct.id, product.quality_prices);
@@ -338,7 +335,7 @@ async function updateDrop(id, data) {
         delete normalizedProduct.colorsInput;
         delete normalizedProduct.default_quality_level;
         delete normalizedProduct.is_active;
-        await productRepo.update(product.id, { ...normalizedProduct, base_price: resolvedBasePrice });
+        await productRepo.update(product.id, { ...normalizedProduct, price: resolvedBasePrice });
         await createQualityPrices(product.id, product.quality_prices);
         await syncProductVariants(product.id, normalizedProduct.colors, normalizedProduct.sizes, product.quantity);
       } else {
@@ -375,7 +372,7 @@ async function updateDrop(id, data) {
         delete normalizedProduct.colorsInput;
         delete normalizedProduct.default_quality_level;
         delete normalizedProduct.is_active;
-        const newProduct = await productRepo.create({ ...normalizedProduct, base_price: resolvedBasePrice });
+        const newProduct = await productRepo.create({ ...normalizedProduct, price: resolvedBasePrice });
         await createQualityPrices(newProduct.id, product.quality_prices);
         await syncProductVariants(newProduct.id, normalizedProduct.colors, normalizedProduct.sizes, product.quantity);
       }

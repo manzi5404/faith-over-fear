@@ -21,7 +21,7 @@ async function getCart(userId, sessionId) {
     const p = v ? productMap[v.product_id] : null;
     if (!v || !p) return null;
     const categoryPrice = p.price_categories ? parseFloat(p.price_categories.price) : null;
-    const unitPrice = v.price_override || categoryPrice || p.base_price;
+    const unitPrice = v.price_override || categoryPrice || p.price;
     return {
       cartItemId: item.id,
       variantId: v.id,
