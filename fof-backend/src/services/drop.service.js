@@ -126,8 +126,10 @@ async function attachQualityPrices(products) {
 
     const byProduct = new Map();
     for (const row of prices || []) {
-      if (!byProduct.has(row.product_id)) byProduct.set(row.product_id, []);
       const quality = qualityMap.get(row.quality_level_id) || {};
+      const name = (quality.name || '').toLowerCase();
+      if (name === 'basic') continue;
+      if (!byProduct.has(row.product_id)) byProduct.set(row.product_id, []);
       byProduct.get(row.product_id).push({
         ...row,
         quality_level_id: row.quality_level_id,
@@ -481,4 +483,5 @@ module.exports = {
   activateDrop,
   deleteDrop,
   validateDropWindow,
+  attachQualityPrices,
 };

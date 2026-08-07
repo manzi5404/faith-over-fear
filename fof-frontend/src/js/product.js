@@ -88,12 +88,12 @@ const productLogic = () => ({
         };
         return levels
             .filter(level => {
-                const name = (level.quality_name || '').toLowerCase();
+                const name = (level.quality_name || level.quality_level?.name || '').toLowerCase();
                 return name !== 'basic';
             })
             .map(level => {
                 if (!level || level.quality_description) return level;
-                const name = (level.quality_name || '').toLowerCase();
+                const name = (level.quality_name || level.quality_level?.name || '').toLowerCase();
                 const desc = fallbacks[name] || fallbacks['premium'];
                 return { ...level, quality_description: desc };
             });

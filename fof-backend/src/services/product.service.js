@@ -42,6 +42,7 @@ async function getProductBySlug(slug) {
       product.price_categories = await priceCategoryService.getPriceCategoryById(product.price_category_id);
     } catch (_) {}
   }
+  await dropService.attachQualityPrices([product]);
   return product;
 }
 
@@ -55,6 +56,7 @@ async function getProductById(id) {
       product.price_categories = await priceCategoryService.getPriceCategoryById(product.price_category_id);
     } catch (_) {}
   }
+  await dropService.attachQualityPrices([product]);
   return product;
 }
 
