@@ -2,6 +2,7 @@ const productRepo = require('../repositories/product.repository');
 const variantRepo = require('../repositories/variant.repository');
 const dropService = require('./drop.service');
 const priceCategoryService = require('./price-category.service');
+const priceCategoryRepo = require('../repositories/price-category.repository');
 const { events } = require('../events');
 const { NotFoundError, ConflictError, ValidationError } = require('../utils/errors');
 
@@ -12,8 +13,22 @@ function generateSlug(name) {
     .replace(/^-+|-+$/g, '');
 }
 
+async function attachPriceCategories(products) {
+  if (!products || products.length === 0) return;
+  const categoryIds = [...new Set(products.map(p => p.price_category_id).filter(Boolean))];
+  if (categoryIds.length === 0) return;
+  const categories = await priceCategoryRepo.findByProductIds(categoryIds);
+  const categoryMap = new Map(categories.map(c => [c.id, c]));
+  for (const product of products) {
+    if (product.price_category_id && categoryMap.has(product.price_category_id)) {
+      product.price_categories = categoryMap.get(product.price_category_id);
+    }
+  }
+}
+
 async function getProductsByDrop(dropId) {
   const products = await productRepo.findByDropId(dropId);
+  await attachPriceCategories(products);
   return products;
 }
 
@@ -22,6 +37,11 @@ async function getProductBySlug(slug) {
   if (!product) {
     throw new NotFoundError('Product not found');
   }
+  if (product.price_category_id) {
+    try {
+      product.price_categories = await priceCategoryService.getPriceCategoryById(product.price_category_id);
+    } catch (_) {}
+  }
   return product;
 }
 
@@ -29,6 +49,11 @@ async function getProductById(id) {
   const product = await productRepo.findById(id);
   if (!product) {
     throw new NotFoundError('Product not found');
+  }
+  if (product.price_category_id) {
+    try {
+      product.price_categories = await priceCategoryService.getPriceCategoryById(product.price_category_id);
+    } catch (_) {}
   }
   return product;
 }

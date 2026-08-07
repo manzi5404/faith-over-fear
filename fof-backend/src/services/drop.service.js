@@ -2,6 +2,7 @@ const dropRepo = require('../repositories/drop.repository');
 const productRepo = require('../repositories/product.repository');
 const variantRepo = require('../repositories/variant.repository');
 const qualityPriceRepo = require('../repositories/quality-price.repository');
+const priceCategoryRepo = require('../repositories/price-category.repository');
 const priceCategoryService = require('./price-category.service');
 const { supabaseAdmin } = require('../config/supabaseAdmin');
 const { events } = require('../events');
@@ -85,6 +86,7 @@ async function getActiveDrop(includeProducts = false) {
     if (!drop || !includeProducts) return drop;
     const products = await productRepo.findByDropId(drop.id);
     await attachQualityPrices(products);
+    await attachPriceCategories(products);
     return { ...drop, products };
 }
 
@@ -97,6 +99,7 @@ async function getAllDrops(includeAll = false, includeProducts = false, type = n
             row.products = productsByDrop[index] || [];
         });
         await attachQualityPrices(filtered.flatMap(d => d.products || []));
+        await attachPriceCategories(filtered.flatMap(d => d.products || []));
     }
     return filtered;
 }
@@ -138,6 +141,23 @@ async function attachQualityPrices(products) {
     }
     for (const product of products) {
       product.product_quality_prices = byProduct.get(product.id) || [];
+    }
+  } catch (_) {
+    // table may not exist yet; fail silently
+  }
+}
+
+async function attachPriceCategories(products) {
+  if (!products || products.length === 0) return;
+  try {
+    const categoryIds = [...new Set(products.map(p => p.price_category_id).filter(Boolean))];
+    if (categoryIds.length === 0) return;
+    const categories = await priceCategoryRepo.findByProductIds(categoryIds);
+    const categoryMap = new Map(categories.map(c => [c.id, c]));
+    for (const product of products) {
+      if (product.price_category_id && categoryMap.has(product.price_category_id)) {
+        product.price_categories = categoryMap.get(product.price_category_id);
+      }
     }
   } catch (_) {
     // table may not exist yet; fail silently

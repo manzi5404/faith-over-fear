@@ -5,7 +5,7 @@ const { NotFoundError, ConflictError } = require('../utils/errors');
 async function findByDropId(dropId) {
   const { data, error } = await supabase
     .from('products')
-    .select('*, product_variants(*), price_categories(*)')
+    .select('*, product_variants(*)')
     .eq('drop_id', dropId)
     .order('created_at', { ascending: false });
 
@@ -16,7 +16,7 @@ async function findByDropId(dropId) {
 async function findById(id) {
   const { data, error } = await supabase
     .from('products')
-    .select('*, product_variants(*), product_quality_prices(*), price_categories(*)')
+    .select('*, product_variants(*), product_quality_prices(*)')
     .eq('id', id)
     .maybeSingle();
 
@@ -28,7 +28,7 @@ async function findById(id) {
 async function findBySlug(slug) {
   const { data, error } = await supabase
     .from('products')
-    .select('*, product_variants(*), product_quality_prices(*), price_categories(*)')
+    .select('*, product_variants(*), product_quality_prices(*)')
     .eq('slug', slug)
     .maybeSingle();
 
@@ -52,7 +52,7 @@ async function create(data) {
   const { data: row, error } = await supabase
     .from('products')
     .insert(data)
-    .select('*, product_variants(*), product_quality_prices(*), price_categories(*)')
+    .select('*, product_variants(*)')
     .single();
 
   if (error) throw error;
@@ -64,7 +64,7 @@ async function update(id, data) {
     .from('products')
     .update(data)
     .eq('id', id)
-    .select('*, product_variants(*), product_quality_prices(*), price_categories(*)')
+    .select('*, product_variants(*)')
     .single();
 
   if (error) throw error;

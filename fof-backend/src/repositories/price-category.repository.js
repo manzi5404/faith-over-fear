@@ -84,6 +84,17 @@ async function findByName(name) {
   return data;
 }
 
+async function findByProductIds(productIds) {
+  if (!productIds || productIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('price_categories')
+    .select('*')
+    .in('id', productIds);
+
+  if (error) throw error;
+  return data || [];
+}
+
 module.exports = {
   findAll,
   findById,
@@ -92,4 +103,5 @@ module.exports = {
   update,
   remove,
   findByName,
+  findByProductIds,
 };
