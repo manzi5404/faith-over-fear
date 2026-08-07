@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:admin": "vite --config src/admin/drops/vite.config.js --port 5174",
     "build": "vite build && npm run build:admin",
-    "build:admin": "npx vite build --config ../frontend/src/admin/drops/vite.config.js && node -e \"const fs=require('fs');const path=require('path');const target=path.join(process.cwd(),'dist','admin');if(fs.existsSync(target)){console.log('Admin build ready at',target)}else{console.error('Admin build not found at',target);process.exit(1)}\"",
+    "build:admin": "node scripts/build-admin.js",
     "preview": "vite preview"
   },
   "dependencies": {
