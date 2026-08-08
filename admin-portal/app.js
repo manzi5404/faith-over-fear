@@ -433,7 +433,7 @@ const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) =>
                     min="0"
                     className="w-32 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1 text-sm"
                     placeholder="Price"
-                    value={existingQp?.price || ''}
+                    value={existingQp ? (existingQp.price ?? '') : ''}
                     onChange={(event) => handleQualityPriceChange(level.id, event.target.value)}
                   />
                 </div>

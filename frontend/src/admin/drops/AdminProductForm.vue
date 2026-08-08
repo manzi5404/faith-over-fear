@@ -201,8 +201,8 @@ const applyInitialData = (initialData) => {
   colorsInput.value = Array.isArray(productData.colors) ? productData.colors.join(', ') : '';
   qualityPrices.value = (initialData?.quality_prices || []).map(q => ({
     quality_level_id: q.quality_level_id || nameToId[q.quality_name],
-    price: parseFloat(q.price)
-  })).filter(q => q.quality_level_id && q.price > 0);
+    price: q.price !== undefined && q.price !== null && q.price !== '' ? parseFloat(q.price) : 0
+  })).filter(q => q.quality_level_id);
 };
 
 watch(() => props.initialData, applyInitialData, { immediate: true });
