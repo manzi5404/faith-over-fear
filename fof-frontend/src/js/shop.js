@@ -340,7 +340,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
         this.selectedColor = product.colors && product.colors.length > 0 ? product.colors[0] : (variants.length > 0 ? variants[0].color : "");
         this.qualityLevels = this.applyQualityDescriptions(product.product_quality_prices || product.quality_prices || []);
         const defaultQlId = product.default_quality_level_id;
-        this.selectedQuality = this.qualityLevels.find(q => q.quality_level_id === defaultQlId) || (this.qualityLevels.length > 0 ? this.qualityLevels[0] : null);
+        this.selectedQuality = this.qualityLevels.find(q => q.quality_level_id === defaultQlId) || (this.qualityLevels.find(q => q.quality_level_id === 2) || this.qualityLevels[0] || null);
     },
 
     preloadProduct(productId) {

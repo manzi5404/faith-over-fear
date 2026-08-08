@@ -484,4 +484,5 @@ module.exports = {
   deleteDrop,
   validateDropWindow,
   attachQualityPrices,
+  createQualityPrices,
 };

@@ -114,6 +114,7 @@ async function createProduct(data) {
     price_category_id: data.price_category_id || null,
     images: data.images || [],
     status: data.status || 'live',
+    default_quality_level_id: data.default_quality_level_id || null,
   });
 
   events.emit(events.PRODUCT_CREATED, { product });
@@ -121,6 +122,10 @@ async function createProduct(data) {
   if (data.variants && Array.isArray(data.variants) && data.variants.length > 0) {
     const variantsService = require('./variant.service');
     await variantsService.createVariants(product.id, data.variants);
+  }
+
+  if (data.quality_prices) {
+    await dropService.createQualityPrices(product.id, data.quality_prices);
   }
 
   return product;
@@ -177,6 +182,11 @@ async function updateProduct(id, data) {
 
   const updated = await productRepo.update(id, updateData);
   events.emit(events.PRODUCT_UPDATED, { product: updated, changes: updateData });
+
+  if (data.quality_prices) {
+    await dropService.createQualityPrices(id, data.quality_prices);
+  }
+
   return updated;
 }
 

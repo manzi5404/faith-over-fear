@@ -386,7 +386,7 @@ onMounted(async () => {
       const colors = Array.isArray(p.colors) ? p.colors : (p.colorsInput ? p.colorsInput.split(',').map(c => c.trim()).filter(Boolean) : []);
       const image_urls = Array.isArray(p.image_urls) ? p.image_urls : (p.image_url ? [p.image_url] : []);
       const quality_prices = p.quality_prices || { premium: '', luxe: '' };
-      const default_quality_level = p.default_quality_level || (p.default_quality_level_id ? (p.default_quality_level_id === 2 ? 'premium' : p.default_quality_level_id === 3 ? 'luxe' : 'premium') : 'premium');
+      const default_quality_level = p.default_quality_level || (p.default_quality_level_id ? (p.default_quality_level_id === 1 ? 'premium' : p.default_quality_level_id === 2 ? 'luxe' : 'premium') : 'premium');
       const price_category_id = p.price_category_id || (p.price_categories?.id ? p.price_categories.id : null);
       return { ...p, sizes, colors, colorsInput: colors.join(', '), image_urls, quality_prices, default_quality_level, price_category_id, uploading: false };
     };

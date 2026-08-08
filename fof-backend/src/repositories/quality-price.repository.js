@@ -25,8 +25,14 @@ async function upsert(productId, qualityPrices) {
 
   const results = [];
   for (const level of qualityLevels.data) {
-    const key = level.name.toLowerCase();
-    const price = parseFloat(qualityPrices[key]);
+    let price = 0;
+    if (Array.isArray(qualityPrices)) {
+      const match = qualityPrices.find(qp => qp.quality_level_id === level.id);
+      price = match ? parseFloat(match.price) : 0;
+    } else {
+      const key = level.name.toLowerCase();
+      price = parseFloat(qualityPrices[key]);
+    }
     if (!price || price <= 0) continue;
 
     const { data, error } = await supabaseAdmin
