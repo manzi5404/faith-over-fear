@@ -5,6 +5,7 @@ const productController = require('../controllers/product.controller');
 
 const router = express.Router();
 
+router.get('/', requireAuth, requireAdmin, productController.getAllProducts);
 router.post('/', requireAuth, requireAdmin, productController.createProduct);
 router.put('/:id', requireAuth, requireAdmin, productController.updateProduct);
 router.delete('/:id', requireAuth, requireAdmin, productController.deleteProduct);

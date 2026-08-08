@@ -83,6 +83,16 @@ async function softDelete(id) {
   return data;
 }
 
+async function findAll() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*, product_variants(*), product_quality_prices(*)')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
 async function deleteVariants(productId) {
   const { error } = await supabaseAdmin
     .from('product_variants')
@@ -101,4 +111,5 @@ module.exports = {
   update,
   softDelete,
   deleteVariants,
+  findAll,
 };

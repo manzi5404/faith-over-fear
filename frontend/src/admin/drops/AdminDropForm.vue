@@ -272,11 +272,11 @@
                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                    <div>
                      <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Premium</span>
-                     <input type="number" v-model="product.quality_prices.premium" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1" placeholder="25000" />
+                      <input type="number" v-model="product.quality_prices.premium" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1" placeholder="Premium price" />
                    </div>
                    <div>
                      <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Luxe</span>
-                     <input type="number" v-model="product.quality_prices.luxe" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1" placeholder="40000" />
+                      <input type="number" v-model="product.quality_prices.luxe" class="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1" placeholder="Luxe price" />
                    </div>
                  </div>
               </div>

@@ -131,12 +131,8 @@ CREATE TABLE price_categories (
 CREATE INDEX idx_price_categories_active ON price_categories (is_active) WHERE is_active = TRUE;
 CREATE INDEX idx_price_categories_sort ON price_categories (sort_order);
 
--- Seed defaults
-INSERT INTO price_categories (name, price, sort_order, is_active) VALUES
-    ('Standard', 15000, 1, TRUE),
-    ('Premium', 25000, 2, TRUE),
-    ('Luxe', 40000, 3, TRUE)
-ON CONFLICT DO NOTHING;
+-- Price categories are managed through the admin UI.
+-- Use the admin portal to create and update price categories.
 
 -- ============================================================
 -- 6. QUALITY_LEVELS

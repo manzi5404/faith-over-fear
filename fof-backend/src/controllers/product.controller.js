@@ -21,6 +21,15 @@ async function getProducts(req, res) {
   }
 }
 
+async function getAllProducts(req, res) {
+  try {
+    const products = await productService.getAllProducts();
+    return res.status(200).json({ success: true, products });
+  } catch (err) {
+    return handleServiceError(res, err, req);
+  }
+}
+
 async function getProductBySlug(req, res) {
   try {
     const product = await productService.getProductBySlug(req.params.slug);
@@ -68,6 +77,7 @@ async function deleteProduct(req, res) {
 
 module.exports = {
   getProducts,
+  getAllProducts,
   getProductBySlug,
   getProductById,
   createProduct,

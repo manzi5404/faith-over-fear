@@ -32,6 +32,15 @@ async function getProductsByDrop(dropId) {
   return products;
 }
 
+async function getAllProducts() {
+  const products = await productRepo.findAll();
+  await attachPriceCategories(products);
+  for (const product of products) {
+    await dropService.attachQualityPrices([product]);
+  }
+  return products;
+}
+
 async function getProductBySlug(slug) {
   const product = await productRepo.findBySlug(slug);
   if (!product) {
@@ -203,6 +212,7 @@ async function softDelete(id) {
 module.exports = {
   generateSlug,
   getProductsByDrop,
+  getAllProducts,
   getProductBySlug,
   getProductById,
   createProduct,
