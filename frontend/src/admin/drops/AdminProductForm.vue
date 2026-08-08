@@ -49,18 +49,10 @@
 
     <div class="space-y-3">
       <label class="text-sm font-medium text-slate-400">Default Quality Level</label>
-      <div class="flex gap-3">
-        <button type="button" @click="productData.default_quality_level = 'premium'"
-          :class="productData.default_quality_level === 'premium' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600'"
-          class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
-          Premium
-        </button>
-        <button type="button" @click="productData.default_quality_level = 'luxe'"
-          :class="productData.default_quality_level === 'luxe' ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/20' : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600'"
-          class="flex-1 px-4 py-2.5 rounded-lg border text-xs font-bold uppercase tracking-widest transition-all">
-          Luxe
-        </button>
-      </div>
+      <select v-model="productData.default_quality_level" class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm">
+        <option value="premium">Premium</option>
+        <option value="luxe">Luxe</option>
+      </select>
     </div>
 
     <div class="space-y-3">
