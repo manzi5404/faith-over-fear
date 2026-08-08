@@ -290,8 +290,9 @@ const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) =>
 
   const handleQualityPriceChange = (levelId, price) => {
     const existing = form.quality_prices.filter(qp => qp.quality_level_id !== levelId);
-    if (price && parseFloat(price) > 0) {
-      existing.push({ quality_level_id: parseInt(levelId), price: parseFloat(price) });
+    const num = price === '' ? 0 : parseFloat(price);
+    if (!isNaN(num) && num >= 0) {
+      existing.push({ quality_level_id: parseInt(levelId), price: num });
     }
     setForm({ ...form, quality_prices: existing });
   };
@@ -332,9 +333,11 @@ const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) =>
 
   const handleEdit = (product) => {
     setEditingId(product._id || product.id);
-    const existingPrices = (product.quality_prices || []).map(qp => ({
-      quality_level_id: qp.quality_level_id,
-      price: qp.price
+    const rawPrices = product.product_quality_prices || product.quality_prices || [];
+    const priceMap = new Map(rawPrices.map(qp => [qp.quality_level_id, qp.price]));
+    const existingPrices = qualityLevels.map(level => ({
+      quality_level_id: level.id,
+      price: priceMap.has(level.id) ? (priceMap.get(level.id) ?? 0) : 0
     }));
     const categoryId = product.price_category_id || (product.price_categories?.id ? String(product.price_categories.id) : "");
     setForm({
@@ -344,7 +347,7 @@ const ProductsSection = ({ onToast, priceCategories, reloadPriceCategories }) =>
       isActive: product.isActive !== false && product.is_active !== 0,
       quality_prices: existingPrices,
       price_category_id: categoryId,
-      price: product.price || ""
+      price: product.price != null ? String(product.price) : ""
     });
   };
 

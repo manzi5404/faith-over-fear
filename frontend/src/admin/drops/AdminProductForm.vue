@@ -175,9 +175,9 @@ const getQualityPrice = (levelId) => {
 };
 
 const setQualityPrice = (levelId, value) => {
-  const price = parseFloat(value);
+  const price = value === '' ? 0 : parseFloat(value);
   qualityPrices.value = qualityPrices.value.filter(q => q.quality_level_id !== levelId);
-  if (price > 0) qualityPrices.value.push({ quality_level_id: levelId, price });
+  if (!isNaN(price) && price >= 0) qualityPrices.value.push({ quality_level_id: levelId, price });
 };
 
 const nameToId = { 'Premium': 1, 'Luxe': 2 };
