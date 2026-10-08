@@ -718,7 +718,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
             const orderIdStr = createdOrderIds.length > 0 ? createdOrderIds.join(', ') : 'N/A';
             const message = `F>F PAYMENT VERIFICATION\n----------------------------\nOrder ID: ${orderIdStr}\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment. Please verify this order.`;
 
-            window.open(`https://wa.me/250791832523?text=${encodeURIComponent(message)}`, "_blank");
+            window.open(`https://wa.me/250781718450?text=${encodeURIComponent(message)}`, "_blank");
 
             if (isCartCheckout) {
                 this.cartItems = [];
@@ -746,7 +746,7 @@ const res = await fetch(`${API_BASE_URL}/api/contact`, {
 
             const fallbackMessage = `F>F PAYMENT VERIFICATION (Direct)\n----------------------------\nCustomer: ${this.senderName}\nPhone: ${this.senderPhone}\n\nItems:\n${itemsList}\n\nTOTAL: ${total} FRW\n----------------------------\nI have already sent the payment for these items. Please verify and process my order.\nNote: Order creation encountered an issue. Please contact support with your order details.`;
 
-            window.open(`https://wa.me/250791832523?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
+            window.open(`https://wa.me/250781718450?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
 
             if (isCartCheckout) {
                 this.cartItems = [];
