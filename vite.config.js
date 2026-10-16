@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
+import { layoutInjectPlugin } from './vite-plugin-layout-inject';
 
 // List of root HTML pages that need to be built
 const rootHtmlFiles = [
@@ -72,7 +73,7 @@ rootHtmlFiles.forEach(file => {
 export default defineConfig({
   root: '.',
   base: '/',
-  plugins: [vue(), react(), copyStaticAssets()],
+  plugins: [vue(), react(), layoutInjectPlugin(), copyStaticAssets()],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
