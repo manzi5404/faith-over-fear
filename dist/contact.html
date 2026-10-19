@@ -70,19 +70,19 @@
 
   <div id="ov" class="mobile-overlay">
     <label for="menu-toggle" id="mx">Close</label>
-    <a href="/index.html">Home</a>
-    <a href="/shop.html">New Arrivals</a>
-    <a href="/lookbook.html">LOOKBOOK</a>
-    <a href="/about.html">About</a>
-    <a href="/contact.html" aria-current="page">Contact</a>
+    <a href="/index.html" onclick="document.getElementById('menu-toggle').click()">Home</a>
+    <a href="/shop.html" onclick="document.getElementById('menu-toggle').click()">New Arrivals</a>
+    <a href="/lookbook.html" onclick="document.getElementById('menu-toggle').click()">LOOKBOOK</a>
+    <a href="/about.html" onclick="document.getElementById('menu-toggle').click()">About</a>
+    <a href="/contact.html" aria-current="page" onclick="document.getElementById('menu-toggle').click()">Contact</a>
     <template x-if="!user">
-      <a href="/login.html" class="text-fof-accent">Login</a>
+      <a href="/login.html" class="text-fof-accent" onclick="document.getElementById('menu-toggle').click()">Login</a>
     </template>
     <template x-if="user">
-      <a href="/reservations.html">My Reservations</a>
+      <a href="/reservations.html" onclick="document.getElementById('menu-toggle').click()">My Reservations</a>
       <button @click="localStorage.removeItem('fof_token'); localStorage.removeItem('fof_user'); window.location.reload()" style="text-align:left">Logout</button>
     </template>
-    <a href="/cart.html">Cart (<span x-text="(cartItems || []).reduce((a, b) => a + (b.quantity || b.q || 0), 0)">0</span>)</a>
+    <a href="/cart.html" onclick="document.getElementById('menu-toggle').click()">Cart (<span x-text="(cartItems || []).reduce((a, b) => a + (b.quantity || b.q || 0), 0)">0</span>)</a>
   </div>
 
 </header>
