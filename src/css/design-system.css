@@ -96,6 +96,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* Page entrance padding */
 main { margin-left: 210px; min-height: 100vh; }
+body.has-rail main { margin-left: 210px; }
 .pg-entrance { padding: 130px 40px 80px; max-width: 1300px; animation: pin .55s ease-out; }
 @keyframes pin {
   from { opacity: 0; transform: perspective(900px) rotateX(7deg) translateY(28px); }
