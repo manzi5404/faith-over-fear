@@ -52,6 +52,7 @@
     </style>
   <script type="module" crossorigin src="/assets/module.esm-DQPk4OUU.js"></script>
   <script type="module" crossorigin src="/assets/main-kPnXLOvt.js"></script>
+  <script type="module" crossorigin src="/assets/tilt-BsmG9Tr4.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/module-DPnVjx0T.css">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -248,7 +249,7 @@
                     <p class="text-gray-400 text-lg max-w-2xl mb-12" x-text="selectedDrop.description || ''"></p>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         <template x-for="product in selectedDropProducts" :key="product.id">
-                            <div class="group bg-fof-black border border-fof-gray p-4 flex flex-col relative" 
+                            <div class="group bg-fof-black border border-fof-gray p-4 flex flex-col relative" data-tilt
                                  x-data="{ flipped: false }"
                                  @mouseenter="window.innerWidth >= 768 ? flipped = true : null"
                                  @mouseleave="window.innerWidth >= 768 ? flipped = false : null">
@@ -572,6 +573,6 @@
             </div>
         </div>
 
-    <div id="announcement-root"></div>
+    <div id="announcement-root"></div>
 </body>
 </html>

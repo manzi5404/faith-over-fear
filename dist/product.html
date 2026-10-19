@@ -29,6 +29,7 @@
     </style>
   <script type="module" crossorigin src="/assets/module.esm-DQPk4OUU.js"></script>
   <script type="module" crossorigin src="/assets/main-kPnXLOvt.js"></script>
+  <script type="module" crossorigin src="/assets/tilt-BsmG9Tr4.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/module-DPnVjx0T.css">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -117,7 +118,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24">
                 <!-- Image Gallery -->
                 <div class="space-y-6" x-data="{ zooming: false, mouseX: 50, mouseY: 50, flipped: false }">
-                    <div class="relative aspect-[4/5] bg-fof-dark overflow-hidden flip-card"
+                    <div class="relative aspect-[4/5] bg-fof-dark overflow-hidden flip-card" data-tilt
                          :class="{ 'zooming': zooming }"
                          @mouseenter="zooming = true"
                          @mouseleave="zooming = false; mouseX = 50; mouseY = 50"
@@ -650,6 +651,6 @@
             </div>
         </div>
 
-    <div id="announcement-root"></div>
+    <div id="announcement-root"></div>
 </body>
 </html>

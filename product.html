@@ -52,7 +52,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24">
                 <!-- Image Gallery -->
                 <div class="space-y-6" x-data="{ zooming: false, mouseX: 50, mouseY: 50, flipped: false }">
-                    <div class="relative aspect-[4/5] bg-fof-dark overflow-hidden flip-card"
+                    <div class="relative aspect-[4/5] bg-fof-dark overflow-hidden flip-card" data-tilt
                          :class="{ 'zooming': zooming }"
                          @mouseenter="zooming = true"
                          @mouseleave="zooming = false; mouseX = 50; mouseY = 50"
@@ -537,5 +537,6 @@
 
     <div id="announcement-root"></div>
     <script type="module" src="/src/js/main.js"></script>
+    <script type="module" src="/src/js/tilt.js"></script>
 </body>
 </html>
